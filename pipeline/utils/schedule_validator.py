@@ -1,4 +1,46 @@
 def validate_schedule(skills, objects, drones, subtasks_with_drones, travel_times, schedule):
+    """
+    Validate a drone task schedule and compute its makespan.
+
+    This function checks whether a generated schedule is feasible and
+    consistent with the mission definition, drone capabilities, and
+    travel-time model.
+
+    Validation includes:
+    1. Verifying that every drone in the schedule exists in the drone set.
+    2. Verifying that every object referenced by a scheduled task is valid.
+    3. Ensuring each required subtask appears exactly once in the schedule.
+    4. Ensuring each assigned drone has the required skill for its task.
+    5. Checking temporal consistency:
+       - a task cannot start before the previous one finishes,
+       - travel time matches the expected drone-to-object or object-to-object time,
+       - service time matches the required skill duration.
+
+    Args:
+        skills (dict): Mapping from skill name to required service time.
+        objects (dict): Mapping from object name to object position/metadata.
+        drones (dict): Mapping from drone name to drone properties, including skills.
+        subtasks_with_drones (list[dict]): List of required subtasks with allowed drones.
+        travel_times (dict): Precomputed travel-time structure containing:
+            - drone_to_object
+            - drone_object_to_object
+        schedule (dict): Mapping from drone name to an ordered list of assigned tasks.
+            Each task should contain:
+            - name
+            - object
+            - skill
+            - departure_time
+            - arrival_time
+            - finish_time
+
+    Returns:
+        tuple:
+            - (str, None) if the schedule is invalid, where the string describes
+              the first detected scheduling error.
+            - (None, float) if the schedule is valid, where the float is the
+              makespan (maximum finish time across all drones).
+    """
+        
     # Check if drones and objects are valid
     for drone, tasks in schedule.items():
         if drone not in drones:
