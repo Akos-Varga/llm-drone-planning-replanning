@@ -1,0 +1,7 @@
+matplotlib
+ollama
+openai
+dotenv
+ortools
+rclpy-intellisense
+PyYAML
