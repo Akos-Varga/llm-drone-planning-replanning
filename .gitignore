@@ -1,0 +1,5 @@
+.env
+venv
+saved_gifs/
+misc/
+__pycache__/
