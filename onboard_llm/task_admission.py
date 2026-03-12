@@ -1,6 +1,8 @@
 from ollama import chat
 import time
 
+### Probably a section here to retreive this data from actual drones/simulator
+
 schema = {
     "type": "object",
     "properties": {
