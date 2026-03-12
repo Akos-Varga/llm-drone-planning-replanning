@@ -127,13 +127,12 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         "--save", 
-        action="store_true", 
+        action="store_true",
         help="Save results to CSV."
     )
     parser.add_argument(
         "--vrp", 
-        action="store_true", 
-        default=False,
+        action="store_true",
         help="Calculate VRP solution for comparison."
     )
     parser.add_argument(
