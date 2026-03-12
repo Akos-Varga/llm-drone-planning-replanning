@@ -54,7 +54,7 @@ def append_row_csv(save, path, row, fieldnames):
 def pipeline(model, task, skills, objects, drones, solution = None, calculate_vrp = None):
     ## Decomposer
     decomposer_message = build_message(decomposer_prompt, f'task = {task}\n\nskills = {skills}\n\nobjects = {objects}')
-    decomposed_task_str = LM(model=model, messages=decomposer_message, printing=False)
+    decomposed_task_str = LM(model=model, messages=decomposer_message)
     print(f'\n\nDecomposed task: {decomposed_task_str}')
     decomposed_task = str_to_code(decomposed_task_str)
     
@@ -68,7 +68,7 @@ def pipeline(model, task, skills, objects, drones, solution = None, calculate_vr
     
     # Allocator
     allocator_message = build_message(allocator_prompt, f'drones = {drones}\n\nsubtasks = {decomposed_task}')
-    subtasks_with_drones_str = LM(model=model, messages=allocator_message, printing=False)
+    subtasks_with_drones_str = LM(model=model, messages=allocator_message)
     print(f'\n\nAllocated task: {subtasks_with_drones_str}')
     subtasks_with_drones = str_to_code(subtasks_with_drones_str)
     
@@ -79,7 +79,7 @@ def pipeline(model, task, skills, objects, drones, solution = None, calculate_vr
 
     # Scheduler
     scheduler_message = build_message(scheduler_prompt, f'subtasks_with_drones = {subtasks_with_drones_str}\n\ntravel_times = {travel_times}')
-    schedule_str = LM(model=model, messages=scheduler_message, printing=False)
+    schedule_str = LM(model=model, messages=scheduler_message)
     print(f'\n\nScheduled task: {schedule_str}')
     schedule = str_to_code(schedule_str)
     
