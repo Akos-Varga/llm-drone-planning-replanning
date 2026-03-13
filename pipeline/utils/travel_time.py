@@ -1,6 +1,13 @@
 import math
 
 def compute_travel_times(objects, drones, subtasks_with_drones):
+    """
+    Computes travel times for drones between their current positions and task objects,
+    as well as travel times between objects for the same drone.
+
+    The function calculates Euclidean distances in 3D space and converts them to
+    travel times using each drone's speed.
+    """
     def euclidean(p1, p2):
         return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2 + (p1[2]-p2[2])**2)
     
