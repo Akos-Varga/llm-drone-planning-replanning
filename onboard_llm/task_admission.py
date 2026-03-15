@@ -8,7 +8,7 @@ def accept_task():
     "Dummy simulation! Returns true with 75% chance."
     return random.random() < 0.80
 
-if __name__ == '__main__':
+def drone_pipeline():
     schema = {
         "type": "object",
         "properties": {
@@ -187,12 +187,12 @@ if __name__ == '__main__':
             {
                 "role": "user",
                 "content": """
-    battery_percentage: 38
-    battery_health: 75
+    battery_percentage: 72
+    battery_health: 85
     link_quality: 4
-    drone_state: LANDED
-    distance_to_destination: 5
-    task_duration: 10
+    drone_state: FLYING
+    distance_to_destination: 14
+    task_duration: 25
     """
             }
         ],
@@ -203,3 +203,7 @@ if __name__ == '__main__':
 
     print(response.message.content)
     print(f"Inference time: {end - start:.3f} seconds")
+
+if __name__ == "__main__":
+    for i in range(10):
+        drone_pipeline()
