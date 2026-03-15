@@ -50,21 +50,21 @@ def append_row_csv(save, path, row, fieldnames):
     
 # Pipeline --------------------------------------------------------------------------------
 def pipeline_decomposer(model, task, skills, objects):
-    "Returns decomposed task."
+    """Returns decomposed task."""
     decomposer_message = build_message(decomposer_prompt, f'task = {task}\n\nskills = {skills}\n\nobjects = {objects}')
     decomposed_task_str = LM(model=model, messages=decomposer_message)
     print(f'\n\nDecomposed task: {decomposed_task_str}')
     return str_to_code(decomposed_task_str)
 
 def pipeline_allocator(model, drones, decomposed_task):
-    "Returns allocated task."
+    """Returns allocated task."""
     allocator_message = build_message(allocator_prompt, f'drones = {drones}\n\nsubtasks = {decomposed_task}')
     subtasks_with_drones_str = LM(model=model, messages=allocator_message)
     print(f'\n\nAllocated task: {subtasks_with_drones_str}')
     return str_to_code(subtasks_with_drones_str)
 
 def pipeline_scheduler(model, subtasks_with_drones, travel_times):
-    "Returns scheduled task."
+    """Returns scheduled task."""
     scheduler_message = build_message(scheduler_prompt, f'subtasks_with_drones = {subtasks_with_drones}\n\ntravel_times = {travel_times}')
     schedule_str = LM(model=model, messages=scheduler_message)
     print(f'\n\nScheduled task: {schedule_str}')
@@ -77,21 +77,29 @@ def remove_drone_from_subtask(subtasks, task, drone):
             if drone in subtask["drones"]:
                 subtask["drones"].remove(drone)
                 
-def remove_subtask_from_allocated(subtasks_with_drones, subtask_name):
+def remove_subtask_from_allocated(subtasks_with_drones, task):
     subtasks_with_drones[:] = [
-        subtask for subtask in subtasks_with_drones
-        if subtask["name"] != subtask_name
+        t for t in subtasks_with_drones
+        if t["name"] != task["name"]
     ]
 
+def remove_subtask_from_schedule(schedule, task):
+    """Remove a subtask from all drone schedules."""
+    
+    for drone, tasks in schedule.items():
+        schedule[drone] = [
+            t for t in tasks if t["name"] != task["name"]
+        ]
+
 def offset_travel_times(travel_times, drone_status):
-    "Offset `travel_times['drone_to_object']` with remaining flight time for current subtask for busy drones."
+    """Offset `travel_times["drone_to_object"]` with remaining flight time for current subtask for busy drones."""
     for drone, info in drone_status.items():
         if info["busy"]:
             for obj in travel_times["drone_to_object"][drone]:
-                travel_times["drone_to_object"][drone][obj] += info["available_time"]
+                travel_times["drone_to_object"][drone][obj] += round(travel_times["drone_to_object"][drone][obj] + info["available_time"], 1)
 
 def next_event_time(drone_status):
-    "Returns next time a drone is available."
+    """Returns next time a drone is available."""
     busy_times = [
         info["available_time"]
         for info in drone_status.values()
@@ -100,7 +108,7 @@ def next_event_time(drone_status):
     return min(busy_times) if busy_times else None
 
 def assign_mission(drone_status, drone, subtask):
-    "Sets params in `drone_status`."
+    """Sets params in `drone_status`."""
     drone_status[drone]["busy"] = True
     drone_status[drone]["subtask"] = subtask["name"]
     drone_status[drone]["available_time"] = subtask["finish_time"]
@@ -113,7 +121,7 @@ def update_finished_drones(drone_status, current_time):
             info["subtask"] = None
 
 def drone_status_reset(drone_status, current_time):
-    "Sets `available_time` to 0 for idle drones and to `available_time - current_time` for busy drones."
+    """Sets `available_time` to 0 for idle drones and to `available_time - current_time` for busy drones."""
     for info in drone_status.values():
         if info["busy"]:
             info["available_time"] -= current_time
@@ -148,12 +156,13 @@ def assign_idle_drones(schedule, drone_status, subtasks_with_drones):
         assign_mission(drone_status, drone, first_task)
         update_drone_pos(drones, drone, objects, first_task)
         remove_subtask_from_allocated(subtasks_with_drones, first_task)
+        remove_subtask_from_schedule(schedule, first_task)
 
     return False
 
 # Inference --------------------------------------------------------------------------------
 model = "gpt-5-mini"
-task = "Inspect both rooftops and all solar panels, and measure wind at the Tower and Base."
+task = "Take RGB images of House1 and House2, collect a thermal image of House2, inspect RoofTop1, and measure wind at the Tower."
 
 current_time = 0.0 # For simulation only
 
@@ -170,8 +179,9 @@ if decomposed_task:
     if subtasks_with_drones:
         needs_replan = True
         while True:
-            if not subtasks_with_drones:
+            if not subtasks_with_drones and not any(info["busy"] for info in drone_status.values()):
                 print("All subtasks are completed.")
+                break
 
             if any(not subtask["drones"] for subtask in subtasks_with_drones):
                 print("Stopping: at least one subtask has no drones allocated.")
@@ -179,6 +189,7 @@ if decomposed_task:
 
             # Scheduler
             if needs_replan:
+                needs_replan = False
                 drone_status_reset(drone_status, current_time)
                 travel_times = compute_travel_times(objects, drones, subtasks_with_drones)
                 offset_travel_times(travel_times, drone_status)
@@ -193,7 +204,7 @@ if decomposed_task:
                     print("Stopping: scheduler could not produce a schedule.")
                     break
 
-            rejected_any = assign_idle_drones(schedule, drone_status)
+            rejected_any = assign_idle_drones(schedule, drone_status, subtasks_with_drones)
 
             if rejected_any:
                 needs_replan = True
@@ -205,9 +216,9 @@ if decomposed_task:
                 print("No busy drones and no further assignments possible.")
                 break
 
-            current_time = next_event_time
+            current_time = next_time
 
-            update_finished_drones(drone_status, current_time, subtasks_with_drones)
+            update_finished_drones(drone_status, current_time)
      
     else:
         print("ERROR during task allocation.")
