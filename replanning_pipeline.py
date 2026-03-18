@@ -92,11 +92,20 @@ def remove_subtask_from_schedule(schedule, task):
         ]
 
 def offset_travel_times(travel_times, drone_status):
-    """Offset `travel_times["drone_to_object"]` with remaining flight time for current subtask for busy drones."""
+    """Offset `travel_times["drone_to_object"]` with remaining busy time for relevant busy drones only."""
+    drone_to_object = travel_times.get("drone_to_object", {})
+
     for drone, info in drone_status.items():
-        if info["busy"]:
-            for obj in travel_times["drone_to_object"][drone]:
-                travel_times["drone_to_object"][drone][obj] += round(travel_times["drone_to_object"][drone][obj] + info["available_time"], 1)
+        if not info["busy"]:
+            continue
+
+        if drone not in drone_to_object:
+            continue
+
+        for obj in drone_to_object[drone]:
+            drone_to_object[drone][obj] = round(
+                drone_to_object[drone][obj] + info["available_time"], 1
+            )
 
 def next_event_time(drone_status):
     """Returns next time a drone is available."""
@@ -162,7 +171,7 @@ def assign_idle_drones(schedule, drone_status, subtasks_with_drones):
 
 # Inference --------------------------------------------------------------------------------
 model = "gpt-5-mini"
-task = "Take RGB images of House1 and House2, collect a thermal image of House2, inspect RoofTop1, and measure wind at the Tower."
+task =  "Record videos of all solar panels, capture an RGB and thermal image of House1, and inspect the Tower."
 
 current_time = 0.0 # For simulation only
 
