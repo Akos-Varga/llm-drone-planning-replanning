@@ -4,7 +4,6 @@ import random
 from drone_process import drone_worker
 from planner_process import planner_loop
 
-
 if __name__ == "__main__":
     # random.seed(42)
     model = "gpt-5-mini"

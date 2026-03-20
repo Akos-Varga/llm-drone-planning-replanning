@@ -2,7 +2,7 @@ import queue
 import random
 import time
 
-from common import IDLE, BUSY, COMPLETED, DRONE_FAILED, TASK_FAILED
+from common import *
 
 # =============================================================================
 # Message / command types

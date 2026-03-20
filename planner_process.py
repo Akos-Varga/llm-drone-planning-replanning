@@ -15,7 +15,7 @@ from pipeline.utils.travel_time import compute_travel_times
 from pipeline.utils.schedule_validator import validate_schedule
 from pipeline.utils.inference import LM
 
-from common import IDLE, BUSY, COMPLETED, DRONE_FAILED, TASK_FAILED
+from common import *
 
 # =============================================================================
 # Message / command types
