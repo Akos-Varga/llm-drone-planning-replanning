@@ -1,14 +1,61 @@
 from ollama import chat
 import time
 import random
-
-### Probably a section here to retreive this data from actual drones/simulator
+import json
 
 def accept_task():
-    "Dummy simulation! Returns true with 75% chance."
+    "Dummy simulation! Returns true with x% chance."
     return random.random() < 0.80
 
-def drone_pipeline():
+def task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
+    OPERATIONAL_STATES = {"LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"}
+
+    drone_state_ok = drone_state in OPERATIONAL_STATES
+    link_qual_ok = link_qual > 3
+
+    available_time = max_flight * (bat_perc / 100) * (bat_health / 100)
+    required_time = flight_dur + task_dur
+
+    SAFETY_MARGIN = 1.0 
+    flight_ok = available_time * SAFETY_MARGIN >= required_time
+
+    return drone_state_ok, link_qual_ok, flight_ok
+
+def generate_values():
+    operational_states = ["LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"]
+    all_states = ["EMERGENCY", "DISCONNECTED", "CONNECTING"] + operational_states
+
+    # Bias toward operational states
+    drone_state = random.choices(
+        all_states,
+        weights=[1, 1, 1, 4, 4, 4, 4, 4],
+        k=1
+    )[0]
+
+    max_flight = random.randint(20, 30)
+
+    bat_perc = int(random.triangular(50, 100, 60))
+    bat_health = int(random.triangular(60, 100, 60))
+
+    link_qual = random.choices(
+        [0, 1, 2, 3, 4, 5],
+        weights=[1, 1, 1, 3, 10, 10],
+        k=1
+    )[0]
+
+    # Bias toward shorter missions
+    flight_dur = int(random.triangular(1, 10, 8))
+    task_dur = int(random.triangular(1, 10, 8))
+
+    return max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur
+
+def parse_llm_response(response_text):
+    data = json.loads(response_text)
+    return data["decision"] == "accept", data["reason"]
+
+
+def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
+    """Decides using LLM if the task should be accepted or rejected by the drone."""
     schema = {
         "type": "object",
         "properties": {
@@ -26,184 +73,110 @@ def drone_pipeline():
     SYSTEM_PROMPT = f"""
     You are a task admission module for a drone.
 
-    Your job is to decide whether the drone should ACCEPT or REJECT a task.
-
-    The decision must be based on whether the drone can likely:
-    1. Reach the destination
-    2. Execute the assigned task safely for the requested duration
+    Your job is to decide whether the drone should ACCEPT or REJECT a task. Use only the policy below.
 
     You will receive:
-    - battery_percentage (%) # 0 to 100, higher is better
-    - battery_health (0 = bad, 100 = good)
-    - link_quality (0 = bad, 5 = good)
-    - drone_state (CONNECTING, LANDED, TAKINGOFF, HOVERING, FLYING, LANDING, EMERGENCY, DISCONNECTED)
-    - distance_to_destination (m)
-    - task_duration (s)
+    - max_flight_time: maximum time the drone can spend in the air with full battery percentage and health, in minutes
+    - battery_percentage: current battery level in percent (0 to 100)
+    - battery_health: battery condition in percent (0 to 100)
+    - link_quality: radio/link quality from 0 to 5 (0 - worst, 5 - best)
+    - drone_state: one of CONNECTING, LANDED, TAKINGOFF, HOVERING, FLYING, LANDING, EMERGENCY, DISCONNECTED
+    - flight_duration: flight time needed to reach the destination, in minutes
+    - task_duration: task execution time at the destination, in minutes
 
-    Guidance:
-    - battery_percentage below 15 is usually too low
-    - battery_percentage from 15 to 35 is borderline and depends on distance and task duration
-    - battery_percentage above 35 can be acceptable for short missions
-    - link_quality 0 or 1 is poor and usually unsafe
-    - link_quality 2 is borderline, only works for short distance missions
-    - link_quality 3 to 5 is generally acceptable
-    - HOVERING, FLYING, and LANDED are generally operational states
-    - EMERGENCY and DISCONNECTED must be rejected
-
-    Accept only if the drone is operational and conditions are sufficient to reach the destination and execute the task.
-
-    Reject if:
-    - drone_state prevents mission execution
-    - battery or link quality is too low for the mission
-    - the destination is unlikely reachable
-    - the task duration is too long for the current conditions
+    Policy:
+    1. Reject if drone_state is CONNECTING, EMERGENCY, or DISCONNECTED.
+    2. Reject if link_quality <= 3.
+    3. Compute available_flight_time = max_flight_time * (battery_percentage / 100) * (battery_health / 100).
+    4. Compute required_mission_time = flight_duration + task_duration.
+    5. Reject if available_flight_time < required_mission_time.
+    6. If none of the rejection rules apply, accept the task.
 
     Return JSON only:
     {schema}
+
+    The reason must be short and refer only to the triggered rule or say that no rejection rule was triggered.
     """
 
     start = time.perf_counter()
 
     response = chat(
-        model="gemma3:4b",
+        model="qwen2.5:3b",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-
-            # ACCEPT 1: strong overall conditions
-            {
-                "role": "user",
-                "content": """
-    battery_percentage: 85
-    battery_health: 90
-    link_quality: 4
-    drone_state: HOVERING
-    distance_to_destination: 6
-    task_duration: 10
-    """
-            },
-            {
-                "role": "assistant",
-                "content": """
-    {"decision": "accept", "reason": "Battery, link quality, and drone state are sufficient, and the distance and task duration are feasible."}
-    """
-            },
-
-            # REJECT 1: battery too low
-            {
-                "role": "user",
-                "content": """
-    battery_percentage: 10
-    battery_health: 40
-    link_quality: 4
-    drone_state: HOVERING
-    distance_to_destination: 20
-    task_duration: 15
-    """
-            },
-            {
-                "role": "assistant",
-                "content": """
-    {"decision": "reject", "reason": "Battery level is too low to safely reach the destination and complete the task."}
-    """
-            },
-
-            # ACCEPT 2: moderate link, short mission
-            {
-                "role": "user",
-                "content": """
-    battery_percentage: 80
-    battery_health: 88
-    link_quality: 2
-    drone_state: FLYING
-    distance_to_destination: 5
-    task_duration: 20
-    """
-            },
-            {
-                "role": "assistant",
-                "content": """
-    {"decision": "accept", "reason": "The drone is operational, and the battery, link quality, distance, and task duration are sufficient for safe completion."}
-    """
-            },
-
-            # REJECT 2: invalid state
-            {
-                "role": "user",
-                "content": """
-    battery_percentage: 90
-    battery_health: 95
-    link_quality: 5
-    drone_state: EMERGENCY
-    distance_to_destination: 5
-    task_duration: 10
-    """
-            },
-            {
-                "role": "assistant",
-                "content": """
-    {"decision": "reject", "reason": "Drone is in an emergency state and cannot execute tasks."}
-    """
-            },
-
-            # REJECT 3: duration too long for current conditions
-            {
-                "role": "user",
-                "content": """
-    battery_percentage: 55
-    battery_health: 80
-    link_quality: 3
-    drone_state: HOVERING
-    distance_to_destination: 8
-    task_duration: 180
-    """
-            },
-            {
-                "role": "assistant",
-                "content": """
-    {"decision": "reject", "reason": "The requested task duration is too long for the current battery, link quality, and mission distance."}
-    """
-            },
-
-            # ACCEPT 3: lower battery but very short mission
-            {
-                "role": "user",
-                "content": """
-    battery_percentage: 40
-    battery_health: 75
-    link_quality: 3
-    drone_state: FLYING
-    distance_to_destination: 11
-    task_duration: 15
-    """
-            },
-            {
-                "role": "assistant",
-                "content": """
-    {"decision": "accept", "reason": "The drone is operational, and the short distance and short task duration make the mission feasible with the current battery and link quality."}
-    """
-            },        
-
             # Real query
             {
                 "role": "user",
-                "content": """
-    battery_percentage: 72
-    battery_health: 85
-    link_quality: 4
-    drone_state: FLYING
-    distance_to_destination: 14
-    task_duration: 25
-    """
+                "content": f"""
+                max_flight_time: {max_flight}
+                battery_percentage: {bat_perc}
+                battery_health: {bat_health}
+                link_quality: {link_qual}
+                drone_state: {drone_state}
+                flight_duration: {flight_dur}
+                task_duration: {task_dur}
+                """
             }
         ],
         format=schema
     )
 
     end = time.perf_counter()
+    resp = response.message.content
 
-    print(response.message.content)
-    print(f"Inference time: {end - start:.3f} seconds")
+    print(resp)
+    print(f"\nInference time: {end - start:.3f} seconds")
+
+    return resp
+
 
 if __name__ == "__main__":
-    for i in range(10):
-        drone_pipeline()
+    random.seed(22)
+    results = {
+        "accept": {"correct": 0, "total": 0},
+        "drone_state_err": {"correct": 0, "total": 0},
+        "link_qual_err": {"correct": 0, "total": 0},
+        "flight_time_err": {"correct": 0, "total": 0},
+    }
+    for i in range(50):
+        print("======================================\n\n")
+        max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur = generate_values()
+        print(f"""
+            max_flight_time: {max_flight}
+            battery_percentage: {bat_perc}
+            battery_health: {bat_health}
+            link_quality: {link_qual}
+            drone_state: {drone_state}
+            flight_duration: {flight_dur}
+            task_duration: {task_dur}
+            """)
+        drone_state_ok, link_qual_ok, flight_ok = task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
+        llm_response = drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
+        accept, reason = parse_llm_response(llm_response)
+        if not drone_state_ok:
+            print("DRONE STATE ERROR\n\n")
+            results["drone_state_err"]["total"] += 1
+            if not accept:
+                results["drone_state_err"]["correct"] += 1
+            continue
+        if not link_qual_ok:
+            print("LINK QUALITY ERRROR\n\n")
+            results["link_qual_err"]["total"] += 1
+            if not accept:
+                results["link_qual_err"]["correct"] += 1
+            continue
+        if not flight_ok:
+            print("FLIGHT TIME ERROR\n\n")
+            results["flight_time_err"]["total"] += 1
+            if not accept:
+                results["flight_time_err"]["correct"] += 1
+            continue
+        print("EXECUTABLE MISSION\n\n")
+        results["accept"]["total"] += 1
+        if accept:
+            results["accept"]["correct"] += 1
+
+    for item, value in results.items():
+        print(f"{item} total: {value["total"]} correct: {value["correct"]}")
+        
+

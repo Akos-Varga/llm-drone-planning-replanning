@@ -1,0 +1,114 @@
+
+            # ACCEPT 1
+            {
+                "role": "user",
+                "content": """
+                battery_percentage: 78
+                battery_health: 84
+                link_quality: 4
+                drone_state: HOVERING
+                flight_duration: 5
+                task_duration: 10
+                """
+            },
+            {
+                "role": "assistant",
+                "content": """
+                {"decision": "accept", "reason": "The drone is operational, link quality is sufficient, and the estimated available flight time is enough for the 15-minute mission."}
+                """
+            },
+
+            # ACCEPT 2
+            {
+                "role": "user",
+                "content": """
+                battery_percentage: 68
+                battery_health: 82
+                link_quality: 5
+                drone_state: FLYING
+                flight_duration: 4
+                task_duration: 8
+                """
+            },
+            {
+                "role": "assistant",
+                "content": """
+                {"decision": "accept", "reason": "The drone is in an operational state, the link quality is strong, and the mission time is still within the estimated available flight time."}
+                """
+            },
+
+            # ACCEPT 3
+            {
+                "role": "user",
+                "content": """
+                battery_percentage: 88
+                battery_health: 74
+                link_quality: 4
+                drone_state: LANDED
+                flight_duration: 3
+                task_duration: 12
+                """
+            },
+            {
+                "role": "assistant",
+                "content": """
+                {"decision": "accept", "reason": "Although the battery health is not perfect, the drone is operational, the link quality is acceptable, and the required mission time is still feasible."}
+                """
+            },
+
+            # REJECT 1
+            {
+                "role": "user",
+                "content": """
+                battery_percentage: 62
+                battery_health: 76
+                link_quality: 5
+                drone_state: HOVERING
+                flight_duration: 6
+                task_duration: 8
+                """
+            },
+            {
+                "role": "assistant",
+                "content": """
+                {"decision": "reject", "reason": "Even though the drone is operational and the link quality is good, the estimated available flight time is slightly too low for the required mission time."}
+                """
+            },
+
+            # REJECT 2
+            {
+                "role": "user",
+                "content": """
+                battery_percentage: 90
+                battery_health: 90
+                link_quality: 3
+                drone_state: FLYING
+                flight_duration: 4
+                task_duration: 10
+                """
+            },
+            {
+                "role": "assistant",
+                "content": """
+                {"decision": "reject", "reason": "The mission is otherwise feasible, but the link quality does not meet the minimum requirement for safe acceptance."}
+                """
+            },
+
+            # REJECT 3
+            {
+                "role": "user",
+                "content": """
+                battery_percentage: 72
+                battery_health: 70
+                link_quality: 4
+                drone_state: TAKINGOFF
+                flight_duration: 5
+                task_duration: 9
+                """
+            },
+            {
+                "role": "assistant",
+                "content": """
+                {"decision": "reject", "reason": "The drone is operational and link quality is acceptable, but the estimated available flight time is below the required mission time, so the mission should be rejected."}
+                """
+            },

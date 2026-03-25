@@ -1,0 +1,53 @@
+gemma3:1b
+accept total: 13 correct: 13
+drone_state_err total: 12 correct: 7
+link_qual_err total: 10 correct: 0
+flight_time_err total: 15 correct: 1
+
+gemma3:4b
+accept total: 13 correct: 13
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 8
+flight_time_err total: 15 correct: 1
+
+phi4-mini:3.8b
+accept total: 13 correct: 1
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 10
+flight_time_err total: 15 correct: 15
+
+llama3.2:3b
+accept total: 13 correct: 10
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 10
+flight_time_err total: 15 correct: 5
+
+qwen2.5:3b
+accept total: 13 correct: 6
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 10
+flight_time_err total: 15 correct: 11
+
+qwen2.5:7b
+accept total: 13 correct: 7
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 10
+flight_time_err total: 15 correct: 7
+
+mistral:7b
+accept total: 13 correct: 13
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 5
+flight_time_err total: 15 correct: 0
+
+llama3.1:8b
+accept total: 13 correct: 9
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 6
+flight_time_err total: 15 correct: 5
+
+
+accept total: 13 correct: 8
+drone_state_err total: 12 correct: 12
+link_qual_err total: 10 correct: 10
+flight_time_err total: 15 correct: 6
