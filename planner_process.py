@@ -18,21 +18,7 @@ from pipeline.utils.inference import LM
 from common import *
 
 # =============================================================================
-# Message / command types
-# =============================================================================
-ASSIGN_TASK = "ASSIGN_TASK"   # proposal only
-ACK = "ACK"
-REJECTED = "REJECTED"
-START_TASK = "START_TASK"     # start only after all selected drones ACK
-CANCEL_TASK = "CANCEL_TASK"   # cancel a previously ACKed proposal
-STATE_CHANGED = "STATE_CHANGED"
-COMPLETED_EVENT = "COMPLETED"
-TASK_FAILED_EVENT = "TASK_FAILED"
-DRONE_FAILED_EVENT = "DRONE_FAILED"
-STOP = "STOP"
-
-# =============================================================================
-# Tuning
+# Parameters
 # =============================================================================
 ACK_TIMEOUT_SECONDS = 30.0
 EVENT_WAIT_SECONDS = 0.5

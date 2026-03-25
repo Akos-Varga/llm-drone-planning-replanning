@@ -4,29 +4,14 @@ import time
 
 from common import *
 
-# =============================================================================
-# Message / command types
-# =============================================================================
-ASSIGN_TASK = "ASSIGN_TASK"
-ACK = "ACK"
-REJECTED = "REJECTED"
-START_TASK = "START_TASK"
-CANCEL_TASK = "CANCEL_TASK"
-STATE_CHANGED = "STATE_CHANGED"
-COMPLETED_EVENT = "COMPLETED"
-TASK_FAILED_EVENT = "TASK_FAILED"
-DRONE_FAILED_EVENT = "DRONE_FAILED"
-STOP = "STOP"
-
-
 def drone_worker(
     drone_name,
     event_queue,
     command_queue,
     ack_probability=0.9,
     finish_offset_range=(-0.5, 0.8),
-    p_drone_fail=0.3,
-    p_task_fail=0.05,
+    p_drone_fail=0.05,
+    p_task_fail=0.10,
 ):
     """
     Independent drone process.

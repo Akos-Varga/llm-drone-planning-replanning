@@ -7,7 +7,7 @@ from planner_process import planner_loop
 if __name__ == "__main__":
     # random.seed(42)
     model = "gpt-5-mini"
-    task = "Inspect both rooftops and all solar panels, and measure wind at the Tower and Base."
+    task = "Document the condition of all houses with video and inspect each rooftop, while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower."
 
     event_queue = mp.Queue()
 
