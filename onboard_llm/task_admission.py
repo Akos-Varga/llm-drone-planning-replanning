@@ -50,9 +50,15 @@ def generate_values():
     return max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur
 
 def parse_llm_response(response_text):
-    data = json.loads(response_text)
-    return data["decision"] == "accept", data["reason"]
-
+    try:
+        if not response_text:
+            return False, "LLM response was empty.", True
+        data = json.loads(response_text)
+        return data["decision"] == "accept", data["reason"], False
+    except json.JSONDecodeError as e:
+        return False, f"Invalid JSON from LLM: {e}. Raw response: {response_text!r}", True
+    except Exception as e:
+         return False, f"Unexpected error while parsing LLM response: {e}", True
 
 def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
     """Decides using LLM if the task should be accepted or rejected by the drone."""
@@ -101,7 +107,7 @@ def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, fli
     start = time.perf_counter()
 
     response = chat(
-        model="qwen2.5:3b",
+        model="qwen3:0.6b",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             # Real query
@@ -131,7 +137,7 @@ def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, fli
 
 
 if __name__ == "__main__":
-    random.seed(22)
+    random.seed(21)
     results = {
         "accept": {"correct": 0, "total": 0},
         "drone_state_err": {"correct": 0, "total": 0},
@@ -152,31 +158,32 @@ if __name__ == "__main__":
             """)
         drone_state_ok, link_qual_ok, flight_ok = task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
         llm_response = drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
-        accept, reason = parse_llm_response(llm_response)
+        accept, reason, error = parse_llm_response(llm_response)
+        if error:
+            print(f"{reason}\n\n")
         if not drone_state_ok:
             print("DRONE STATE ERROR\n\n")
             results["drone_state_err"]["total"] += 1
-            if not accept:
+            if not accept and not error:
                 results["drone_state_err"]["correct"] += 1
             continue
         if not link_qual_ok:
             print("LINK QUALITY ERRROR\n\n")
             results["link_qual_err"]["total"] += 1
-            if not accept:
+            if not accept and not error:
                 results["link_qual_err"]["correct"] += 1
             continue
         if not flight_ok:
             print("FLIGHT TIME ERROR\n\n")
             results["flight_time_err"]["total"] += 1
-            if not accept:
+            if not accept and not error:
                 results["flight_time_err"]["correct"] += 1
             continue
         print("EXECUTABLE MISSION\n\n")
         results["accept"]["total"] += 1
-        if accept:
+        if accept and not error:
             results["accept"]["correct"] += 1
 
     for item, value in results.items():
         print(f"{item} total: {value["total"]} correct: {value["correct"]}")
         
-
