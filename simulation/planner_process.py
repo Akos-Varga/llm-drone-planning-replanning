@@ -175,7 +175,7 @@ def commit_started_task(drone_status, drone, task, current_time):
     """
     drone_status[drone]["state"] = BUSY
     drone_status[drone]["subtask"] = task["name"]
-    drone_status[drone]["available_time"] = current_time + float(task["finish_time"])
+    drone_status[drone]["available_time"] = current_time + float(task["finish_time"]) - float(task["departure_time"])
     drone_status[drone]["waiting_ack"] = False
     drone_status[drone]["proposal_id"] = None
 
@@ -211,7 +211,7 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
     treated as debug metadata only.
 
     Returns:
-        updated_current_time, needs_replan
+        needs_replan
     """
     needs_replan = False
     event_type = event["type"]
@@ -297,7 +297,7 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
         clear_drone_to_idle(drone_status, drone, current_time)
         needs_replan = True
 
-    return current_time, needs_replan
+    return needs_replan
 
 
 # =============================================================================
@@ -339,10 +339,10 @@ def wait_for_all_acks(
       - subtask name
 
     Returns:
-        ok, acked, updated_current_time, needs_replan
+        ok, acked, needs_replan
     """
     if not proposals:
-        return True, {}, current_time, False
+        return True, {}, False
 
     for drone, task in proposals.items():
         proposal_id = f"{proposal_round_id}:{drone}:{task['name']}"
@@ -411,7 +411,7 @@ def wait_for_all_acks(
                 continue
 
         # Any other runtime event should still be processed while waiting.
-        current_time, replan_from_event = handle_runtime_event(
+        replan_from_event = handle_runtime_event(
             event,
             drone_status,
             subtasks_with_drones,
@@ -438,9 +438,9 @@ def wait_for_all_acks(
             })
             clear_drone_to_idle(drone_status, drone, current_time)
 
-        return False, {}, current_time, True
+        return False, {}, True
 
-    return True, acked, current_time, needs_replan
+    return True, acked, needs_replan
 
 
 def start_acked_tasks(
@@ -490,13 +490,13 @@ def dispatch_round_and_wait_for_ack(
     - otherwise: replan
 
     Returns:
-        updated_current_time, needs_replan
+        needs_replan
     """
     proposals = build_assignment_round(schedule, drone_status)
     if not proposals:
-        return current_time, False
+        return False
 
-    ok, acked, current_time, needs_replan = wait_for_all_acks(
+    ok, acked, needs_replan = wait_for_all_acks(
         proposals=proposals,
         proposal_round_id=proposal_round_id,
         event_queue=event_queue,
@@ -508,7 +508,7 @@ def dispatch_round_and_wait_for_ack(
     )
 
     if not ok:
-        return current_time, True
+        return True
 
     start_acked_tasks(
         acked=acked,
@@ -521,7 +521,7 @@ def dispatch_round_and_wait_for_ack(
         objects_dict=objects_dict,
         current_time=current_time,
     )
-    return current_time, needs_replan
+    return needs_replan
 
 
 # =============================================================================
@@ -631,7 +631,7 @@ def planner_loop(event_queue, command_queues, model, task):
         # ---------------------------------------------------------------------
         proposal_round_id = next(round_counter)
 
-        current_time, replan_after_dispatch = dispatch_round_and_wait_for_ack(
+        replan_after_dispatch = dispatch_round_and_wait_for_ack(
             schedule=schedule,
             proposal_round_id=proposal_round_id,
             event_queue=event_queue,
@@ -656,7 +656,7 @@ def planner_loop(event_queue, command_queues, model, task):
         except queue.Empty:
             continue
 
-        current_time, event_forces_replan = handle_runtime_event(
+        event_forces_replan = handle_runtime_event(
             event,
             drone_status,
             subtasks_with_drones,

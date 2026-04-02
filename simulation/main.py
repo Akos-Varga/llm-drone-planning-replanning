@@ -1,11 +1,8 @@
 import multiprocessing as mp
-import random
-
 from drone_process import drone_worker
 from planner_process import planner_loop
 
 if __name__ == "__main__":
-    # random.seed(42)
     model = "gpt-5-mini"
     task = "Document the condition of all houses with video and inspect each rooftop, while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower."
 

@@ -9,7 +9,7 @@ from std_msgs.msg import String, UInt8
 
 class AnafiTelemetry(Node):
     def __init__(self, namespace="anafi"):
-        super().__init__("anafi_telemetry")
+        super().__init__(f"{namespace}_telemetry")
 
         self.namespace = namespace
 
