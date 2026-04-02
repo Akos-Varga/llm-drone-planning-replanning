@@ -1,62 +1,98 @@
 from ollama import chat
 import time
-import random
 import json
 
-def accept_task():
-    "Dummy simulation! Returns true with x% chance."
-    return random.random() < 0.80
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String, UInt8
 
-def task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
-    OPERATIONAL_STATES = {"LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"}
 
-    drone_state_ok = drone_state in OPERATIONAL_STATES
-    link_qual_ok = link_qual > 3
+class AnafiTelemetry(Node):
+    def __init__(self, namespace="anafi"):
+        super().__init__("anafi_telemetry")
 
-    available_time = max_flight * (bat_perc / 100) * (bat_health / 100)
-    required_time = flight_dur + task_dur
+        self.namespace = namespace
 
-    SAFETY_MARGIN = 1.0 
-    flight_ok = available_time * SAFETY_MARGIN >= required_time
+        self.battery_percentage = None
+        self.battery_health = None
+        self.link_quality = None
+        self.drone_state = None
 
-    return drone_state_ok, link_qual_ok, flight_ok
+        self.create_subscription(
+            UInt8,
+            f"{self.namespace}/battery/percentage",
+            self._battery_percentage_cb,
+            10
+        )
 
-def generate_values():
-    operational_states = ["LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"]
-    all_states = ["EMERGENCY", "DISCONNECTED", "CONNECTING"] + operational_states
+        self.create_subscription(
+            UInt8,
+            f"{self.namespace}/battery/health",
+            self._battery_health_cb,
+            10
+        )
 
-    # Bias toward operational states
-    drone_state = random.choices(
-        all_states,
-        weights=[1, 1, 1, 4, 4, 4, 4, 4],
-        k=1
-    )[0]
+        self.create_subscription(
+            UInt8,
+            f"{self.namespace}/link/quality",
+            self._link_quality_cb,
+            10
+        )
 
-    max_flight = random.randint(20, 30)
+        self.create_subscription(
+            String,
+            f"{self.namespace}/drone/state",
+            self._drone_state_cb,
+            10
+        )
 
-    bat_perc = int(random.triangular(50, 100, 60))
-    bat_health = int(random.triangular(60, 100, 60))
+        self.get_logger().info("Anafi telemetry subscriber started")
 
-    link_qual = random.choices(
-        [0, 1, 2, 3, 4, 5],
-        weights=[1, 1, 1, 3, 10, 10],
-        k=1
-    )[0]
+    def _battery_percentage_cb(self, msg):
+        self.battery_percentage = int(msg.data)
 
-    # Bias toward shorter missions
-    flight_dur = int(random.triangular(1, 10, 8))
-    task_dur = int(random.triangular(1, 10, 8))
+    def _battery_health_cb(self, msg):
+        self.battery_health = int(msg.data)
 
-    return max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur
+    def _link_quality_cb(self, msg):
+        self.link_quality = int(msg.data)
 
-def parse_llm_response(response_text):
+    def _drone_state_cb(self, msg):
+        self.drone_state = msg.data
+
+    def telemetry_ready(self):
+        return all(v is not None for v in [
+            self.battery_percentage,
+            self.battery_health,
+            self.link_quality,
+            self.drone_state,
+        ])
+
+    def get_telemetry(self):
+        telemetry = {
+            "battery_percentage": self.battery_percentage,
+            "battery_health": self.battery_health,
+            "link_quality": self.link_quality,
+            "drone_state": self.drone_state,
+        }
+
+        self.get_logger().info(
+            f"State: {telemetry['drone_state']} | "
+            f"Battery: {telemetry['battery_percentage']}% | "
+            f"Health: {telemetry['battery_health']}% | "
+            f"Link: {telemetry['link_quality']}"
+        )
+
+        return telemetry
+
+def parse_llm_response(response_json):
     try:
-        if not response_text:
+        if not response_json:
             return False, "LLM response was empty.", True
-        data = json.loads(response_text)
+        data = json.loads(response_json)
         return data["decision"] == "accept", data["reason"], False
     except json.JSONDecodeError as e:
-        return False, f"Invalid JSON from LLM: {e}. Raw response: {response_text!r}", True
+        return False, f"Invalid JSON from LLM: {e}. Raw response: {response_json!r}", True
     except Exception as e:
          return False, f"Unexpected error while parsing LLM response: {e}", True
 
@@ -130,60 +166,56 @@ def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, fli
     end = time.perf_counter()
     resp = response.message.content
 
-    print(resp)
     print(f"\nInference time: {end - start:.3f} seconds")
 
     return resp
 
 
-if __name__ == "__main__":
-    random.seed(21)
-    results = {
-        "accept": {"correct": 0, "total": 0},
-        "drone_state_err": {"correct": 0, "total": 0},
-        "link_qual_err": {"correct": 0, "total": 0},
-        "flight_time_err": {"correct": 0, "total": 0},
-    }
-    for i in range(50):
-        print("======================================\n\n")
-        max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur = generate_values()
-        print(f"""
-            max_flight_time: {max_flight}
-            battery_percentage: {bat_perc}
-            battery_health: {bat_health}
-            link_quality: {link_qual}
-            drone_state: {drone_state}
-            flight_duration: {flight_dur}
-            task_duration: {task_dur}
-            """)
-        drone_state_ok, link_qual_ok, flight_ok = task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
-        llm_response = drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
-        accept, reason, error = parse_llm_response(llm_response)
-        if error:
-            print(f"{reason}\n\n")
-        if not drone_state_ok:
-            print("DRONE STATE ERROR\n\n")
-            results["drone_state_err"]["total"] += 1
-            if not accept and not error:
-                results["drone_state_err"]["correct"] += 1
-            continue
-        if not link_qual_ok:
-            print("LINK QUALITY ERRROR\n\n")
-            results["link_qual_err"]["total"] += 1
-            if not accept and not error:
-                results["link_qual_err"]["correct"] += 1
-            continue
-        if not flight_ok:
-            print("FLIGHT TIME ERROR\n\n")
-            results["flight_time_err"]["total"] += 1
-            if not accept and not error:
-                results["flight_time_err"]["correct"] += 1
-            continue
-        print("EXECUTABLE MISSION\n\n")
-        results["accept"]["total"] += 1
-        if accept and not error:
-            results["accept"]["correct"] += 1
+def admit_task_from_live_telemetry(node: AnafiTelemetry, max_flight, flight_dur, task_dur, wait_timeout=3.0):
+    """
+    Reads the latest live telemetry from ROS topics, then calls drone_pipeline.
+    """
 
-    for item, value in results.items():
-        print(f"{item} total: {value["total"]} correct: {value["correct"]}")
-        
+    start_wait = time.time()
+    while rclpy.ok() and not node.telemetry_ready():
+        rclpy.spin_once(node, timeout_sec=0.1)
+        if time.time() - start_wait > wait_timeout:
+            raise RuntimeError("Timed out waiting for telemetry topics")
+
+    telemetry = node.get_telemetry()
+
+    response = drone_pipeline(
+        max_flight=max_flight,
+        bat_perc=telemetry["battery_percentage"],
+        bat_health=telemetry["battery_health"],
+        link_qual=telemetry["link_quality"],
+        drone_state=telemetry["drone_state"],
+        flight_dur=flight_dur,
+        task_dur=task_dur,
+    )
+    return parse_llm_response(response)
+
+if __name__ == "__main__":
+    rclpy.init()
+
+    node = AnafiTelemetry(namespace="anafi")
+
+    try:
+        max_flight_time_minutes = 25.0
+
+        decision, reason, error = admit_task_from_live_telemetry(
+            node=node,
+            max_flight=max_flight_time_minutes,
+            flight_dur=1.0,
+            task_dur=1.0,
+        )
+
+        if error:
+            print(reason)
+        else:
+            print(f"ACCEPT | Reason: {reason}") if decision else print(f"REJECT | Reason: {reason}")
+
+
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
