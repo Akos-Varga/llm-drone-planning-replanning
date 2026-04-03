@@ -143,7 +143,7 @@ def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, fli
     start = time.perf_counter()
 
     response = chat(
-        model="qwen3:0.6b",
+        model="qwen3:1.7b",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             # Real query
