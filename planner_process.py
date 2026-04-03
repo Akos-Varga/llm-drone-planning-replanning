@@ -4,6 +4,7 @@ import os
 import queue
 import time
 import itertools
+from pprint import pprint
 
 # --- Imports ---
 from worlds.test_world import skills, objects, drones
@@ -11,7 +12,9 @@ from pipeline.decomposer import messages as decomposer_prompt
 from pipeline.allocator import messages as allocator_prompt
 from pipeline.scheduler import messages as scheduler_prompt
 
-from pipeline.utils.travel_time import compute_travel_times
+from pipeline.utils.vrp_scheduler import solve_vrp
+from pipeline.utils.rule_based_allocator import compute_allocation
+from pipeline.utils.travel_time_calculator import compute_travel_times
 from pipeline.utils.schedule_validator import validate_schedule
 from pipeline.utils.inference import LM
 
@@ -75,26 +78,35 @@ def pipeline_decomposer(model, task, skills, objects):
     return str_to_code(decomposed_task_str)
 
 
-def pipeline_allocator(model, drones, decomposed_task):
+def pipeline_allocator(model, drones, decomposed_task, rule_based=False):
     """Returns allocated task."""
-    allocator_message = build_message(
-        allocator_prompt,
-        f"drones = {drones}\n\nsubtasks = {decomposed_task}",
-    )
-    subtasks_with_drones_str = LM(model=model, messages=allocator_message)
-    print(f"\n\nAllocated task: {subtasks_with_drones_str}")
-    return str_to_code(subtasks_with_drones_str)
+    if rule_based:
+        subtasks_with_drones = compute_allocation(drones, decomposed_task)
+    else:
+        allocator_message = build_message(
+            allocator_prompt,
+            f"drones = {drones}\n\nsubtasks = {decomposed_task}",
+        )
+        subtasks_with_drones_str = LM(model=model, messages=allocator_message)
+        subtasks_with_drones = str_to_code(subtasks_with_drones_str)
+
+    return subtasks_with_drones
 
 
-def pipeline_scheduler(model, subtasks_with_drones, travel_times):
+def pipeline_scheduler(model, subtasks_with_drones, travel_times, vrp=False):
     """Returns scheduled task."""
-    scheduler_message = build_message(
-        scheduler_prompt,
-        f"subtasks_with_drones = {subtasks_with_drones}\n\ntravel_times = {travel_times}",
-    )
-    schedule_str = LM(model=model, messages=scheduler_message)
-    print(f"\n\nScheduled task: {schedule_str}")
-    return str_to_code(schedule_str)
+    if vrp:
+        schedule, _, _ = solve_vrp(objects, drones, subtasks_with_drones)
+    else:
+        scheduler_message = build_message(
+            scheduler_prompt,
+            f"subtasks_with_drones = {subtasks_with_drones}\n\ntravel_times = {travel_times}",
+        )
+        schedule_str = LM(model=model, messages=scheduler_message)
+        schedule = str_to_code(schedule_str)
+    print(f"\n\nScheduled task:")
+    pprint(schedule, sort_dicts=False)
+    return schedule
 
 
 # =============================================================================
@@ -322,7 +334,7 @@ def wait_for_all_acks(
     drone_status,
     subtasks_with_drones,
     task_catalog,
-    current_time,
+    start_time,
 ):
     """
     Send ASSIGN_TASK proposals and wait until every proposed drone sends ACK.
@@ -392,7 +404,7 @@ def wait_for_all_acks(
             ):
                 print(f"[PLANNER] REJECT from {drone} for {expected_task['name']} | Reason: {event_message}")
                 remove_drone_from_subtask(subtasks_with_drones, expected_task, drone)
-                clear_drone_to_idle(drone_status, drone, current_time)
+                clear_drone_to_idle(drone_status, drone, planner_now(start_time))
                 pending.remove(drone)
                 rejected_any = True
                 continue
@@ -412,7 +424,7 @@ def wait_for_all_acks(
             drone_status,
             subtasks_with_drones,
             task_catalog,
-            current_time,
+            planner_now(start_time),
         )
         needs_replan = needs_replan or replan_from_event
 
@@ -421,7 +433,7 @@ def wait_for_all_acks(
             task = proposals[drone]
             print(f"[PLANNER] ACK timeout from {drone} for {task['name']}")
             remove_drone_from_subtask(subtasks_with_drones, task, drone)
-            clear_drone_to_idle(drone_status, drone, current_time)
+            clear_drone_to_idle(drone_status, drone, planner_now(start_time))
         rejected_any = True
 
     if rejected_any:
@@ -432,7 +444,7 @@ def wait_for_all_acks(
                 "task_name": task["name"],
                 "proposal_id": cancel_proposal_id,
             })
-            clear_drone_to_idle(drone_status, drone, current_time)
+            clear_drone_to_idle(drone_status, drone, planner_now(start_time))
 
         return False, {}, True
 
@@ -448,7 +460,7 @@ def start_acked_tasks(
     schedule,
     drones_dict,
     objects_dict,
-    current_time,
+    start_time,
 ):
     """
     All selected drones ACKed. Start them and commit planner state.
@@ -461,7 +473,7 @@ def start_acked_tasks(
             "proposal_id": proposal_id,
         })
 
-        commit_started_task(drone_status, drone, task, current_time)
+        commit_started_task(drone_status, drone, task, planner_now(start_time))
         update_drone_pos(drones_dict, drone, objects_dict, task)
         remove_subtask_from_allocated(subtasks_with_drones, task)
         remove_subtask_from_schedule(schedule, task)
@@ -477,7 +489,7 @@ def dispatch_round_and_wait_for_ack(
     task_catalog,
     drones_dict,
     objects_dict,
-    current_time,
+    start_time,
 ):
     """
     Propose tasks to all currently IDLE scheduled drones.
@@ -500,7 +512,7 @@ def dispatch_round_and_wait_for_ack(
         drone_status=drone_status,
         subtasks_with_drones=subtasks_with_drones,
         task_catalog=task_catalog,
-        current_time=current_time,
+        start_time=start_time,
     )
 
     if not ok:
@@ -515,9 +527,30 @@ def dispatch_round_and_wait_for_ack(
         schedule=schedule,
         drones_dict=drones_dict,
         objects_dict=objects_dict,
-        current_time=current_time,
+        start_time=start_time,
     )
     return needs_replan
+
+
+def drain_ready_events(event_queue, drone_status, subtasks_with_drones, task_catalog, start_time):
+        needs_replan = False
+
+        while True:
+            try:
+                event = event_queue.get_nowait()
+            except queue.Empty:
+                break
+
+            event_forces_replan = handle_runtime_event(
+                event,
+                drone_status,
+                subtasks_with_drones,
+                task_catalog,
+                planner_now(start_time),
+            )
+            needs_replan = needs_replan or event_forces_replan
+
+        return needs_replan
 
 
 # =============================================================================
@@ -549,6 +582,7 @@ def planner_loop(event_queue, command_queues, model, task):
         model=model,
         drones=drones,
         decomposed_task=decomposed_task,
+        rule_based=True
     )
 
     task_catalog = {subtask["name"]: subtask.copy() for subtask in subtasks_with_drones}
@@ -563,6 +597,15 @@ def planner_loop(event_queue, command_queues, model, task):
     schedule = None
 
     while True:
+        drained_replan = drain_ready_events(
+            event_queue=event_queue,
+            drone_status=drone_status,
+            subtasks_with_drones=subtasks_with_drones,
+            task_catalog=task_catalog,
+            start_time=start_time,
+        )
+        if drained_replan:
+            needs_replan = True
         current_time = planner_now(start_time)
 
         if not subtasks_with_drones and not busy_exists(drone_status):
@@ -588,13 +631,14 @@ def planner_loop(event_queue, command_queues, model, task):
 
             travel_times = compute_travel_times(objects, drones, subtasks_with_drones)
             offset_travel_times(travel_times, drone_status, current_time)
-
-            print(f"\n\nNew allocated tasks: {subtasks_with_drones}")
+            print("\n\nNew allocated tasks:")
+            pprint(subtasks_with_drones, sort_dicts=False)
 
             schedule = pipeline_scheduler(
                 model=model,
                 subtasks_with_drones=subtasks_with_drones,
                 travel_times=travel_times,
+                vrp=True
             )
 
             if not schedule:
@@ -635,7 +679,7 @@ def planner_loop(event_queue, command_queues, model, task):
             task_catalog=task_catalog,
             drones_dict=drones,
             objects_dict=objects,
-            current_time=current_time,
+            start_time=start_time,
         )
 
         if replan_after_dispatch:
@@ -655,7 +699,7 @@ def planner_loop(event_queue, command_queues, model, task):
             drone_status,
             subtasks_with_drones,
             task_catalog,
-            current_time,
+            planner_now(start_time),
         )
 
         if event_forces_replan:
