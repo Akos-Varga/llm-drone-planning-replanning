@@ -91,7 +91,7 @@ def validate_schedule(skills, objects, drones, subtasks_with_drones, travel_time
 
 
 if __name__ == "__main__":
-    from travel_time import compute_travel_times
+    from pipeline.utils.travel_time_calculator import compute_travel_times
     
     skills = {
         'CaptureRGBImage': 2.3,
