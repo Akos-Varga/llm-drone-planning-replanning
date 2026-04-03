@@ -205,11 +205,6 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
     """
     Handle non-ACK runtime events.
 
-    Important:
-    We do NOT overwrite planner time from event['time'].
-    The planner owns its own relative clock, and drone event timestamps are
-    treated as debug metadata only.
-
     Returns:
         needs_replan
     """
@@ -548,8 +543,6 @@ def planner_loop(event_queue, command_queues, model, task):
         for q in command_queues.values():
             q.put({"type": STOP})
         return
-
-    # task_catalog = {subtask["name"]: subtask.copy() for subtask in decomposed_task}
 
     # --- Allocator ---
     subtasks_with_drones = pipeline_allocator(
