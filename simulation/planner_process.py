@@ -11,7 +11,7 @@ from pipeline.decomposer import messages as decomposer_prompt
 from pipeline.allocator import messages as allocator_prompt
 from pipeline.scheduler import messages as scheduler_prompt
 
-from pipeline.utils.travel_time import compute_travel_times
+from pipeline.utils.travel_time_calculator import compute_travel_times
 from pipeline.utils.schedule_validator import validate_schedule
 from pipeline.utils.inference import LM
 
