@@ -1,0 +1,7 @@
+--- TODO ---
+
+set up VRP
+replan if arrival time is too far from expected
+set up drone commanding
+drone and task failure
+fix proposal_id
