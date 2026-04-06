@@ -46,6 +46,7 @@ def generate_values():
 def get_respone(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
     llm_response, inference_time = drone_pipeline(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
     accept, reason, error = parse_llm_response(llm_response)
+    print(f"Inference time: {inference_time:.2f}")
     return accept, reason, error, inference_time
 
 if __name__ == "__main__":
@@ -150,4 +151,6 @@ if __name__ == "__main__":
         print(f"{item} total: {value['total']} correct: {value['correct']}")
         avg_inf = sum(inference_times) / len(inference_times)
     print(f"Average inference: {avg_inf:.2f}")
+    max_value = max(inference_times)
+    print(f"Max inference: {max_value:.2f}")
         
