@@ -37,26 +37,19 @@ class SimplePose:
 class PosePublisher(Node):
     """Publishes PoseCommand and reads PoseStamped from /vicon/parrot_4K/parrot_4K."""
 
-    def __init__(self, drone_name: str, name_map: dict):
-        self.drone_name = drone_name
+    def __init__(self, namespace="anafi"):
+        super().__init__(f"{namespace}_pose_publisher")
 
-        if self.drone_name not in name_map:
-            raise ValueError(f"No mapping found for {drone_name}.")
-
-        base_ns = name_map[self.drone_name]
-        self.base_ns = base_ns
-        # self.anafi_node_name = f"{base_ns}/anafi"
-
-        super().__init__(f"{self.drone_name}_pose_publisher")
+        self.namespace = namespace
 
         # ---------------- Publisher ----------------
-        self.cmd_topic = f"{self.base_ns}/drone/reference/pose"
+        self.cmd_topic = f"{self.namespace}/drone/reference/pose"
         self.publisher = self.create_publisher(PoseCommand, self.cmd_topic, 10)
         self.get_logger().info(f"Publishing PoseCommand → {self.cmd_topic}")
 
         # ---------------- Subscriber ----------------
-        self.pose_topic = f"{self.base_ns}/drone/pose"
         self.current_pose = None
+        self.pose_topic = f"{self.namespace}/drone/pose"
 
         self.create_subscription(
             PoseStamped,
@@ -69,16 +62,16 @@ class PosePublisher(Node):
         # ---------------- Keyboard publisher ----------------
         self.keyboard_pub = self.create_publisher(
             KeyboardCommand,
-            f"{self.base_ns}/keyboard/command",
+            f"{self.namespace}/keyboard/command",
             10
         )   
-        self.get_logger().info(f"Publishing keyboard commands → {self.base_ns}/keyboard/command")
+        self.get_logger().info(f"Publishing keyboard commands → {self.namespace}/keyboard/command")
 
         # ---------------- Arrival tolerances ----------------
         self.pos_tolerance = 0.1
         self.yaw_tolerance = 5.0
 
-        self.anafi_node_name = f"{self.base_ns}/anafi"
+        self.anafi_node_name = f"{self.namespace}/anafi"
         self.set_param_client = self.create_client(SetParameters, f"{self.anafi_node_name}/set_parameters")
 
         # Wait until available
@@ -198,7 +191,12 @@ class PosePublisher(Node):
 
     # ---------------- High-level task ----------------
 
-    def move_and_execute(self, goal, altitude, t, obj, skill, yaw_to_obj):
+    def move_and_execute(self, goal, altitude, t, obj, skill, yaw_to_obj) -> None:
+        """1. Goes to flight altitude.
+           2. Flies to object with correct yaw.
+           3. Decends/Ascends to object.
+           4. Waits until task execution time."""
+
         if self.current_pose is None:
             self.get_logger().warn("No current pose available yet.")
             return
@@ -276,13 +274,13 @@ if __name__ == "__main__":
     "Drone1": "anafi"
     }
     rclpy.init(args=None)
-    node = PosePublisher("Drone1", DRONE_TO_NODE)
+    node = PosePublisher(DRONE_TO_NODE["Drone1"])
 
-    node.get_logger().info("Waiting for first pose message...")
-    while node.get_pose() is None and rclpy.ok():
-        rclpy.spin_once(node, timeout_sec=0.1)
+    # node.get_logger().info("Waiting for first pose message...")
+    # while node.get_pose() is None and rclpy.ok():
+    #     rclpy.spin_once(node, timeout_sec=0.1)
 
-    node.get_logger().info("Got first pose from drone!")
+    # node.get_logger().info("Got first pose from drone!")
 
     while node.publisher.get_subscription_count() == 0 and rclpy.ok():
         node.get_logger().info("Waiting for drone subscriber...")
@@ -295,14 +293,14 @@ if __name__ == "__main__":
         time.sleep(1)
         node.takeoff()
         time.sleep(3)
-        node.offboard()
+        # node.offboard()
 
-        node.move_and_execute(goal=(1.0, 2.0, 1.0), altitude=1, t=3, obj="Tower1", skill="CaptureRGBImage")
-        node.move_and_execute(goal=(2.5, 2.0, 1.5), altitude=2, t=5, obj="RoofTop1", skill="InspectStructure")
+        # node.move_and_execute(goal=(1.0, 2.0, 1.0), altitude=1, t=3, obj="Tower1", skill="CaptureRGBImage")
+        # node.move_and_execute(goal=(2.5, 2.0, 1.5), altitude=2, t=5, obj="RoofTop1", skill="InspectStructure")
         
         node.get_logger().info("Mission complete.")
     finally:
-        node.land()
+        # node.land()
         node.destroy_node()
         rclpy.shutdown()
 
