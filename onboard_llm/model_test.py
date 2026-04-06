@@ -1,5 +1,5 @@
 import random
-from task_admission import drone_pipeline, parse_llm_response
+from onboard_inference import onboard_LLM
 
 def task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
     OPERATIONAL_STATES = {"LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"}
@@ -43,14 +43,9 @@ def generate_values():
 
     return max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur
 
-def get_respone(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
-    llm_response, inference_time = drone_pipeline(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
-    accept, reason, error = parse_llm_response(llm_response)
-    print(f"Inference time: {inference_time:.2f}")
-    return accept, reason, error, inference_time
 
 if __name__ == "__main__":
-    model = "qwen3:0.6b"
+    model = "qwen3:4b"
     inference_times = []
     TEST_NUM = 20
     random.seed(21)
@@ -81,8 +76,9 @@ if __name__ == "__main__":
                 """)
             print("DRONE STATE ERROR\n\n")
             results['drone_state_err']['total'] += 1
-            accept, reason, error, inference_time = get_respone(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
+            accept, reason, error, inference_time = onboard_LLM(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
             inference_times.append(inference_time)
+            print(f"Inference time: {inference_time:.2f}")
             print(f"{reason}\n\n")
             if not accept and not error:
                 results['drone_state_err']['correct'] += 1
@@ -101,8 +97,9 @@ if __name__ == "__main__":
                 """)
             print("LINK QUALITY ERRROR\n\n")
             results['link_qual_err']['total'] += 1
-            accept, reason, error, inference_time = get_respone(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
+            accept, reason, error, inference_time = onboard_LLM(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
             inference_times.append(inference_time)
+            print(f"Inference time: {inference_time:.2f}")
             print(f"{reason}\n\n")
             if not accept and not error:
                 results['link_qual_err']['correct'] += 1
@@ -121,8 +118,9 @@ if __name__ == "__main__":
                 """)
             print("FLIGHT TIME ERROR\n\n")
             results['flight_time_err']['total'] += 1
-            accept, reason, error, inference_time = get_respone(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
+            accept, reason, error, inference_time = onboard_LLM(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
             inference_times.append(inference_time)
+            print(f"Inference time: {inference_time:.2f}")
             print(f"{reason}\n\n")
             if not accept and not error:
                 results['flight_time_err']['correct'] += 1
@@ -141,8 +139,9 @@ if __name__ == "__main__":
                 """)
             print("EXECUTABLE MISSION\n\n")
             results['accept']['total'] += 1
-            accept, reason, error, inference_time = get_respone(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
+            accept, reason, error, inference_time = onboard_LLM(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
             inference_times.append(inference_time)
+            print(f"Inference time: {inference_time:.2f}")
             print(f"{reason}\n\n")
             if accept and not error:
                 results['accept']['correct'] += 1

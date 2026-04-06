@@ -4,3 +4,17 @@ saved_gifs/
 misc/
 __pycache__/
 notes.txt
+
+# LaTeX build files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.pdf

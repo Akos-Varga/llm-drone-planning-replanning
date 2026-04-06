@@ -1,61 +1,118 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
-# Data (model: correct out of 50)
 data = {
-    "qwen3:0.6b": 50,
-    "gemma3:1b": 22,
-    "qwen3:1.7b": 50,
-    "qwen2.5:3b": 29,
-    "llama3.2:3b": 31,
-    "phi4-mini:3.8b": 32,
-    "gemma3:4b": 32,
-    "qwen3:4b": 50,
-    "mistral:7b": 29,
-    "qwen2.5:7b": 30,
-    "mathstral:7b": 31,
-    "llama3.1:8b": 30
+    "qwen3:0.6b": [16, 11, 9, 19],
+    "gemma3:1b": [20, 14, 0, 0],
+    "qwen3:1.7b": [18, 20, 20, 20],
+    "qwen2.5:3b": [9, 20, 19, 8],
+    "llama3.2:3b": [9, 20, 20, 12],
+    "phi4-mini:3.8b": [3, 20, 20, 16],
+    "gemma3:4b": [20, 20, 20, 0],
 }
 
-# Extract data
+# Slightly cleaner x-axis labels for publication
+label_map = {
+    "qwen3:0.6b": "Qwen3\n0.6B",
+    "gemma3:1b": "Gemma3\n1B",
+    "qwen3:1.7b": "Qwen3\n1.7B",
+    "qwen2.5:3b": "Qwen2.5\n3B",
+    "llama3.2:3b": "Llama3.2\n3B",
+    "phi4-mini:3.8b": "Phi4-mini\n3.8B",
+    "gemma3:4b": "Gemma3\n4B",
+}
+
 models = list(data.keys())
-percentages = [(v / 50) * 100 for v in data.values()]
-sizes = [m.split(":")[1] for m in models]
+display_labels = [label_map[m] for m in models]
+values = np.array(list(data.values()))
 
-# Unique sizes and assign colors automatically
-unique_sizes = sorted(set(sizes), key=lambda x: float(x.replace("b", "")))
-color_map = {size: i for i, size in enumerate(unique_sizes)}
-
-# Assign colors based on size (no manual color specification)
-colors = [color_map[size] for size in sizes]
-
-# Plot
-plt.figure(figsize=(12, 6))
-bars = plt.bar(models, percentages)
-
-# Apply colors using default colormap
-for bar, color_idx in zip(bars, colors):
-    bar.set_color(plt.cm.tab10(color_idx))
-
-# Labels and title
-plt.xlabel("LLM Models")
-plt.ylabel("Correctly Solved Tasks (%)")
-plt.title("LLM Task Performance (Grouped by Model Size)")
-plt.xticks(rotation=45, ha="right")
-
-# Value labels
-for i, v in enumerate(percentages):
-    plt.text(i, v + 1, f"{v:.0f}%", ha='center')
-
-# Legend
-handles = [
-    plt.Rectangle((0, 0), 1, 1, color=plt.cm.tab10(color_map[size]))
-    for size in unique_sizes
+categories = [
+    "Accept",
+    "Drone state",
+    "Link quality",
+    "Flight time"
 ]
-plt.legend(handles, unique_sizes, title="Model Size")
+
+x = np.arange(len(models))
+width = 0.72
+bottom = np.zeros(len(models))
+
+# IEEE-like sizing and typography
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.size": 8,
+    "axes.labelsize": 8,
+    "axes.titlesize": 8,
+    "legend.fontsize": 7,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+})
+
+fig, ax = plt.subplots(figsize=(7.1, 3.2))
+
+for i in range(values.shape[1]):
+    bars = ax.bar(
+        x,
+        values[:, i],
+        width=width,
+        bottom=bottom,
+        label=categories[i],
+        edgecolor="black",
+        linewidth=0.5
+    )
+
+    for j, bar in enumerate(bars):
+        val = values[j, i]
+        if val >= 4:
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bottom[j] + val / 2,
+                f"{int(val)}",
+                ha="center",
+                va="center",
+                fontsize=7
+            )
+
+    bottom += values[:, i]
+
+# Totals on top
+totals = values.sum(axis=1)
+for i, total in enumerate(totals):
+    ax.text(
+        x[i],
+        total + 1.0,
+        f"{int(total)}",
+        ha="center",
+        va="bottom",
+        fontsize=7,
+        fontweight="bold"
+    )
+
+ax.set_xticks(x)
+ax.set_xticklabels(display_labels)
+ax.set_ylabel("Solved tasks")
+ax.set_xlabel("Model")
+
+ax.set_ylim(0, max(totals) + 8)
+ax.grid(axis="y", linestyle="--", linewidth=0.5, alpha=0.7)
+ax.set_axisbelow(True)
+
+# Compact legend above the plot
+ax.legend(
+    ncol=4,
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.18),
+    frameon=False,
+    columnspacing=1.0,
+    handletextpad=0.4
+)
+
+# Cleaner frame
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
 plt.tight_layout()
 
-# Save plot
-plt.savefig("onboard_llm/llm_performance.png", dpi=300)
+plt.savefig("onboard_llm/stacked_task_performance.png", dpi=600, bbox_inches="tight")
 
 plt.show()

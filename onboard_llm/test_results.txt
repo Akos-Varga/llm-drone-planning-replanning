@@ -1,35 +1,44 @@
-!gemma3:1b
-accept total: 20 correct: 19
+gemma3:1b
+accept total: 20 correct: 20
 drone_state_err total: 20 correct: 14
-link_qual_err total: 20 correct: 7
-flight_time_err total: 20 correct: 20
+link_qual_err total: 20 correct: 0
+flight_time_err total: 20 correct: 0
+Average inference: 2.63
+Max inference: 6.34
 
-!gemma3:4b
-accept total: 18 correct: 18
-drone_state_err total: 5 correct: 5
-link_qual_err total: 9 correct: 9
-flight_time_err total: 18 correct: 0
+gemma3:4b
+accept total: 20 correct: 20
+drone_state_err total: 20 correct: 20
+link_qual_err total: 20 correct: 20
+flight_time_err total: 20 correct: 0
+Average inference: 1.11
+Max inference: 7.35
 
-!phi4-mini:3.8b
-accept total: 18 correct: 2
-drone_state_err total: 5 correct: 5
-link_qual_err total: 9 correct: 9
-flight_time_err total: 18 correct: 16
+phi4-mini:3.8b
+accept total: 20 correct: 3
+drone_state_err total: 20 correct: 20
+link_qual_err total: 20 correct: 20
+flight_time_err total: 20 correct: 16
+Average inference: 1.83
+Max inference: 4.65
 
-!llama3.2:3b
-accept total: 18 correct: 4
-drone_state_err total: 5 correct: 5
-link_qual_err total: 9 correct: 9
-flight_time_err total: 18 correct: 13
+llama3.2:3b
+accept total: 20 correct: 9
+drone_state_err total: 20 correct: 20
+link_qual_err total: 20 correct: 20
+flight_time_err total: 20 correct: 12
+Average inference: 4.64
+Max inference: 17.10
 
-!qwen2.5:3b
-accept total: 18 correct: 7
-drone_state_err total: 5 correct: 5
-link_qual_err total: 9 correct: 9
-flight_time_err total: 18 correct: 8
+qwen2.5:3b
+accept total: 20 correct: 9
+drone_state_err total: 20 correct: 20
+link_qual_err total: 20 correct: 19
+flight_time_err total: 20 correct: 8
+Average inference: 3.68
+Max inference: 17.53
 
-
-!qwen3:4b
+qwen3:4b
 accept total: 18 correct: 18
 drone_state_err total: 5 correct: 5
 link_qual_err total: 9 correct: 9
