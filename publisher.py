@@ -293,14 +293,13 @@ if __name__ == "__main__":
         time.sleep(1)
         node.takeoff()
         time.sleep(3)
-        # node.offboard()
-
-        # node.move_and_execute(goal=(1.0, 2.0, 1.0), altitude=1, t=3, obj="Tower1", skill="CaptureRGBImage")
-        # node.move_and_execute(goal=(2.5, 2.0, 1.5), altitude=2, t=5, obj="RoofTop1", skill="InspectStructure")
+        node.offboard()
+        node.move_and_execute(goal=(1.0, 2.0, 1.0), altitude=1, t=3, obj="Tower1", skill="CaptureRGBImage")
+        node.move_and_execute(goal=(2.5, 2.0, 1.5), altitude=2, t=5, obj="RoofTop1", skill="InspectStructure")
         
         node.get_logger().info("Mission complete.")
     finally:
-        # node.land()
+        node.land()
         node.destroy_node()
         rclpy.shutdown()
 
