@@ -36,15 +36,17 @@ link_qual_err total: 9 correct: 9
 flight_time_err total: 18 correct: 18
 
 qwen3:1.7b
-accept total: 20 correct: 19
+accept total: 20 correct: 18
 drone_state_err total: 20 correct: 20
 link_qual_err total: 20 correct: 20
 flight_time_err total: 20 correct: 20
-Average inference: 3.63
+Average inference: 3.96
+Max inference: 9.54
 
 qwen3:0.6b
 accept total: 20 correct: 16
-drone_state_err total: 20 correct: 13
-link_qual_err total: 20 correct: 7
-flight_time_err total: 20 correct: 20
-Average inference: 2.37
+drone_state_err total: 20 correct: 11
+link_qual_err total: 20 correct: 9
+flight_time_err total: 20 correct: 19
+Average inference: 2.43
+Max inference: 5.69
