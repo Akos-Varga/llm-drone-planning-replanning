@@ -84,6 +84,7 @@ def drone_worker(
                     continue
 
                 decision, reason, error = admit_task_from_live_telemetry(
+                    model="qwen3:1.7b",
                     node=telemetry_node,
                     max_flight=max_flight_time,
                     flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),

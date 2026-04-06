@@ -96,7 +96,7 @@ def parse_llm_response(response_json):
     except Exception as e:
          return False, f"Unexpected error while parsing LLM response: {e}", True
 
-def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
+def drone_pipeline(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
     """Decides using LLM if the task should be accepted or rejected by the drone."""
     schema = {
         "type": "object",
@@ -143,7 +143,7 @@ def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, fli
     start = time.perf_counter()
 
     response = chat(
-        model="qwen3:1.7b",
+        model=model,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             # Real query
@@ -166,12 +166,10 @@ def drone_pipeline(max_flight, bat_perc, bat_health, link_qual, drone_state, fli
     end = time.perf_counter()
     resp = response.message.content
 
-    print(f"\nInference time: {end - start:.3f} seconds")
-
-    return resp
+    return resp, end - start
 
 
-def admit_task_from_live_telemetry(node: AnafiTelemetry, max_flight, flight_dur, task_dur, wait_timeout=3.0):
+def admit_task_from_live_telemetry(model, node: AnafiTelemetry, max_flight, flight_dur, task_dur, wait_timeout=3.0):
     """
     Reads the latest live telemetry from ROS topics, then calls drone_pipeline.
     """
@@ -184,7 +182,8 @@ def admit_task_from_live_telemetry(node: AnafiTelemetry, max_flight, flight_dur,
 
     telemetry = node.get_telemetry()
 
-    response = drone_pipeline(
+    response, inference_time = drone_pipeline(
+        model=model,
         max_flight=max_flight,
         bat_perc=telemetry["battery_percentage"],
         bat_health=telemetry["battery_health"],
@@ -193,7 +192,8 @@ def admit_task_from_live_telemetry(node: AnafiTelemetry, max_flight, flight_dur,
         flight_dur=flight_dur,
         task_dur=task_dur,
     )
-    return parse_llm_response(response)
+    decision, reason, error = parse_llm_response(response)
+    return decision, reason, error, inference_time
 
 if __name__ == "__main__":
     rclpy.init()
@@ -203,7 +203,8 @@ if __name__ == "__main__":
     try:
         max_flight_time_minutes = 25.0
 
-        decision, reason, error = admit_task_from_live_telemetry(
+        decision, reason, error, inference_time = admit_task_from_live_telemetry(
+            model="qwen3:1.7b",
             node=node,
             max_flight=max_flight_time_minutes,
             flight_dur=1.0,
@@ -214,6 +215,7 @@ if __name__ == "__main__":
             print(reason)
         else:
             print(f"ACCEPT | Reason: {reason}") if decision else print(f"REJECT | Reason: {reason}")
+            print(f"Inference time: {inference_time:.3f}")
 
 
     finally:
