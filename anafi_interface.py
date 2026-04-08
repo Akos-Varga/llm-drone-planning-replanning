@@ -1,0 +1,238 @@
+import math
+import time
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String, UInt8, Header
+from geometry_msgs.msg import PoseStamped
+from anafi_autonomy.msg import PoseCommand, KeyboardCommand
+from rcl_interfaces.msg import ParameterValue, Parameter as ParameterMsg
+from rcl_interfaces.srv import SetParameters
+
+class SimplePose:
+    def __init__(self, d):
+        self.x = d["x"]
+        self.y = d["y"]
+        self.z = d["z"]
+        self.qx = d["qx"]
+        self.qy = d["qy"]
+        self.qz = d["qz"]
+        self.qw = d["qw"]
+
+    @property
+    def yaw(self):
+        """Compute yaw from quaternion."""
+        # yaw = atan2(2(wz + xy), 1 - 2(y² + z²))
+        siny_cosp = 2.0 * (self.qw * self.qz + self.qx * self.qy)
+        cosy_cosp = 1.0 - 2.0 * (self.qy * self.qy + self.qz * self.qz)
+        return math.degrees(math.atan2(siny_cosp, cosy_cosp))
+
+
+class AnafiInterface(Node):
+    def __init__(self, namespace="anafi"):
+        super().__init__(f"{namespace}_interface")
+        self.namespace = namespace
+
+        # pose state
+        self.current_pose = None
+
+        # telemetry state
+        self.battery_percentage = None
+        self.battery_health = None
+        self.link_quality = None
+        self.drone_state = None
+
+        # publishers
+        self.pos_pub = self.create_publisher(PoseCommand, f"{self.namespace}/drone/reference/pose", 10)
+        self.get_logger().info(f"Publishing PoseCommand → {self.namespace}/drone/reference/pose")
+        self.keyboard_pub = self.create_publisher(KeyboardCommand, f"{self.namespace}/keyboard/command", 10)
+        self.get_logger().info(f"Publishing keyboard commands → {self.namespace}/keyboard/command")
+
+        # subscribers
+        self.create_subscription(PoseStamped, f"{self.namespace}/drone/pose", self._pose_cb, 10)
+        self.get_logger().info(f"Subscribed to PoseStamped → {self.namespace}/drone/pose")
+        self.create_subscription(UInt8, f"{self.namespace}/battery/percentage", self._battery_percentage_cb, 10)
+        self.create_subscription(UInt8, f"{self.namespace}/battery/health", self._battery_health_cb, 10)
+        self.create_subscription(UInt8, f"{self.namespace}/link/quality", self._link_quality_cb, 10)
+        self.create_subscription(String, f"{self.namespace}/drone/state", self._drone_state_cb, 10)
+
+        # service client
+        self.anafi_node_name = f"{self.namespace}/anafi"
+        self.set_param_client = self.create_client(SetParameters, f"{self.anafi_node_name}/set_parameters")
+        while not self.set_param_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info(f"Waiting for parameter service: {self.anafi_node_name}/set_parameters") 
+
+        self.get_logger().info(f"Parameter client connected to {self.anafi_node_name}")
+
+    def _battery_percentage_cb(self, msg):
+        self.battery_percentage = int(msg.data)
+
+    def _battery_health_cb(self, msg):
+        self.battery_health = int(msg.data)
+
+    def _link_quality_cb(self, msg):
+        self.link_quality = int(msg.data)
+
+    def _drone_state_cb(self, msg):
+        self.drone_state = msg.data
+
+    def _pose_cb(self, msg: PoseStamped):
+        self.current_pose = {
+            "x": msg.pose.position.x,
+            "y": msg.pose.position.y,
+            "z": msg.pose.position.z,
+            "qx": msg.pose.orientation.x,
+            "qy": msg.pose.orientation.y,
+            "qz": msg.pose.orientation.z,
+            "qw": msg.pose.orientation.w,
+        }
+
+    def telemetry_ready(self) -> bool:
+        return all(v is not None for v in [
+            self.battery_percentage,
+            self.battery_health,
+            self.link_quality,
+            self.drone_state,
+        ])
+
+    def get_telemetry(self) -> dict:
+        return {
+            "battery_percentage": self.battery_percentage,
+            "battery_health": self.battery_health,
+            "link_quality": self.link_quality,
+            "drone_state": self.drone_state,
+        }
+    
+    def admit_task_from_live_telemetry(
+        self,
+        model,
+        max_flight: float,
+        flight_dur: float,
+        task_dur: float,
+    ):
+        from onboard_llm.task_admission import onboard_LLM
+        if not self.telemetry_ready():
+            return False, "Telemetry not ready", True
+
+        telemetry = self.get_telemetry()
+
+        self.get_logger().info(
+            f"Admission check | "
+            f"state={telemetry['drone_state']} | "
+            f"battery={telemetry['battery_percentage']}% | "
+            f"health={telemetry['battery_health']}% | "
+            f"link={telemetry['link_quality']}"
+        )
+
+        return onboard_LLM(
+            model=model,
+            max_flight=max_flight,
+            bat_perc=telemetry["battery_percentage"],
+            bat_health=telemetry["battery_health"],
+            link_qual=telemetry["link_quality"],
+            drone_state=telemetry["drone_state"],
+            flight_dur=flight_dur,
+            task_dur=task_dur,
+        )
+    
+    def get_pose(self) -> SimplePose | None:
+        if self.current_pose is None:
+            return None
+        return SimplePose(self.current_pose)
+    
+    def send_pose(self, pos, yaw_deg, frame_id="map"):
+        msg = PoseCommand()
+        msg.header = Header()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = frame_id
+
+        msg.x = float(pos[0])
+        msg.y = float(pos[1])
+        msg.z = float(pos[2])
+        msg.yaw = float(yaw_deg)
+
+        self.pos_pub.publish(msg)
+
+        self.get_logger().info(
+            f"Sent PoseCommand: x={msg.x:.2f}, y={msg.y:.2f}, z={msg.z:.2f}, yaw={msg.yaw:.1f}°"
+        )
+    
+    
+    def _set_param(self, name: str, value: float, timeout: float = 3.0):
+        param_msg = ParameterMsg()
+        param_msg.name = name
+        param_msg.value = ParameterValue()
+        param_msg.value.type = 3  # DOUBLE
+        param_msg.value.double_value = float(value)
+
+        request = SetParameters.Request()
+        request.parameters = [param_msg]
+
+        future = self.set_param_client.call_async(request)
+
+        deadline = time.monotonic() + timeout
+        while rclpy.ok() and not future.done():
+            if time.monotonic() > deadline:
+                self.get_logger().error(f"Timed out setting parameter {name}")
+                return False
+            time.sleep(0.01)
+
+        if future.result() is None:
+            self.get_logger().error("Parameter service call failed")
+            return False
+
+        result = future.result().results[0]
+        if result.successful:
+            self.get_logger().info(f"Set {name} → {value}")
+            return True
+        else:
+            self.get_logger().warn(f"Failed to set {name}: {result.reason}")
+            return False
+                
+    def set_speed(self, speed: float):
+        self._set_param("drone/max_horizontal_speed", speed)
+        self._set_param("drone/max_vertical_speed", speed)
+
+    def set_max_altitude(self, altitude: float):
+        self._set_param("drone/max_altitude", altitude)
+
+    # ---------------- Arm, Takeoff, Land and Offboard ----------------
+
+    def arm(self):
+        msg = KeyboardCommand()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "body"
+        msg.drone_action = 1  # arm
+        self.keyboard_pub.publish(msg)
+        self.get_logger().info("Sent ARM command (drone_action=1)")
+
+    def disarm(self):
+        msg = KeyboardCommand()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "body"
+        msg.drone_action = 5  # disarm
+        self.keyboard_pub.publish(msg)
+        self.get_logger().info("Sent DISARM command (drone_action=5)")
+    
+    def takeoff(self):
+        msg = KeyboardCommand()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "body"
+        msg.drone_action = 2  # takeoff
+        self.keyboard_pub.publish(msg)
+        self.get_logger().info("Sent TAKEOFF command (drone_action=2)")
+
+    def land(self):
+        msg = KeyboardCommand()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "body"
+        msg.drone_action = 4  # land
+        self.keyboard_pub.publish(msg)
+        self.get_logger().info("Sent LAND command (drone_action=4)")
+
+    def offboard(self):
+        msg = KeyboardCommand()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "body"
+        msg.drone_action = 102  # offboard mode
+        self.keyboard_pub.publish(msg)
+        self.get_logger().info("Sent OFFBOARD command (drone_action=102)")
