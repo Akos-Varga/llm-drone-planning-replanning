@@ -2,7 +2,7 @@ import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, UInt8
-from onboard_llm.task_admission_llm import onboard_LLM
+from task_admission_llm import onboard_LLM
 
 
 class AnafiTelemetry(Node):
