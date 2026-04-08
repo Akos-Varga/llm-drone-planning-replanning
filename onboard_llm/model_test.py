@@ -1,5 +1,5 @@
 import random
-from onboard_inference import onboard_LLM
+from task_admission_llm import onboard_LLM
 
 def task_admission(max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
     OPERATIONAL_STATES = {"LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"}
