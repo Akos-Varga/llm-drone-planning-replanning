@@ -1,17 +1,72 @@
 \chapter{Introduction}
 
 \section{Problem Statement}
-State the engineering problem clearly. Explain why it matters in a Computer Engineering context.
+Autonomous drone systems are increasingly deployed in applications such as infrastructure inspection \cite{jacobsen2023drone},
+surveillance \cite{dinesh2018autonomous}, and environmental monitoring \cite{anderson2013uav}. While reliable low-level flight 
+control and sensing capabilities have been widely developed, expressing high-level mission objectives in a
+way that is both intuitive for human operators and executable by autonomous systems remains
+a challenge.
 
-\section{Research Questions}
-Example:
-\begin{enumerate}
-    \item How can system performance be improved under realistic hardware constraints?
-    \item Which methods offer the best trade-off between accuracy, latency, and energy consumption?
-\end{enumerate}
+Existing approaches rely on predefined workflows or formal planning models, which require expert knowledge and lacks flexibility
+when faced with dynamic, changing environments. As a result, translating human instructions into concrete mission plans
+remains a bottleneck.
 
-\section{Contributions}
-Summarise your main contributions in 3--5 bullet points.
+Recent advances in Large Language Models (LLMs) offer a promising approach for bridging
+this gap. LLMs can interpret natural language instructions and infer task structure, enabling
+them to transform human mission descriptions into structured plans that autonomous systems
+can execute. This capability makes them well suited for high-level reasoning tasks such as task
+decomposition, allocation, and scheduling in multi-agent systems.
+This project proposes the use of LLMs to generate executable plans for multi-drone missions.
+Given a natural language mission description, the system decomposes the task into atomic
+subtasks, allocates them to drones according to their capabilities, and generates a structured
+execution schedule.
+
+To address the challenges of real-world deployment, the system adopts a hierarchical architecture
+in which cloud-based LLMs perform high-level mission planning,while smaller locally deployed models
+monitor system state and enable adaptive replanning in response to failures, delays, or environmental changes.
+The goal is to develop a flexible and robust framework capable of translating human intent into coordinated 
+multi-drone behavior under realistic constraints.
+
+\section{Research goals}
+
+The primary goal of this thesis is to investigate the feasibility and effectiveness of using
+Large Language Models for high-level planning and adaptive replanning in multi-drone systems.
+While LLMs have demonstrated strong capabilities in natural language understanding and reasoning,
+their applicability to real-time, safety-critical autonomous systems remains an open question.
+
+This thesis aims to explore the following research goals:
+
+\begin{itemize}
+    \item To evaluate how effectively LLMs can translate natural language mission descriptions into structured,
+    executable task plans for multi-drone systems.
+    
+    \item To investigate the ability of LLMs to perform task decomposition, allocation, and scheduling in environments
+    with heterogeneous agents and constrained resources.
+    
+    \item To assess the robustness of LLM-based planning when operating in dynamic environments that require
+    replanning due to failures, delays, or environmental changes.
+    
+    \item To analyze the trade-offs between cloud-based and locally deployed models in terms of latency, reliability,
+    and responsiveness during mission execution.
+    
+    \item To identify the limitations of LLM-based planning approaches and determine under which conditions they
+    outperform or fall short of traditional planning methods.
+\end{itemize}
 
 \section{Thesis Structure}
-Briefly describe what each chapter contains.
+
+This thesis is organized as follows:
+
+Chapter 2 reviews the technical background of the project and explores related work on autonomous multi agent
+systems using Large Language Models for reasoning and decision-making.
+
+Chapter 3 presents the overall system architecture, including the design of the LLM-based
+planning pipeline and the hierarchical replanning mechanism as well as integration with drone control interfaces.
+
+Chapter 4 presents the experimental setup and evaluation methodology, including simulation
+and real-world test scenarios, as well as performance metrics.
+
+Chapter 5 discusses the results, analyzing the effectiveness, robustness, and limitations
+of the proposed approach.
+
+Chapter 6 concludes the thesis and outlines directions for future work.
