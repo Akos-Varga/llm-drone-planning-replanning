@@ -1,22 +1,197 @@
-\documentclass[12pt]{article}
+\documentclass[11pt,a4paper,oneside]{report}
 
-\usepackage{amsmath}
-
-\usepackage{graphicx}
-
-\usepackage{hyperref}
-
+% -------------------------------------------------
+% Packages
+% -------------------------------------------------
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage[a4paper,margin=2.8cm]{geometry}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+\usepackage{csquotes}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{appendix}
+\usepackage{fancyhdr}
+\usepackage{titling}
 
-\title{My LaTeX Title}
+% -------------------------------------------------
+% Thesis metadata (edit these)
+% -------------------------------------------------
+\newcommand{\thesistitle}{Your Thesis Title}
+\newcommand{\thesissubtitle}{Optional Subtitle}
+\newcommand{\authorname}{Your Name}
+\newcommand{\degreeprogram}{Master's Thesis in Computer Engineering}
+\newcommand{\departmentname}{Department of Electrical and Computer Engineering}
+\newcommand{\universityname}{Aarhus University}
+\newcommand{\supervisorname}{Supervisor: Name}
+\newcommand{\cosupervisorname}{Co-supervisor: Name}
+\newcommand{\submissiondate}{Month Year}
+\newcommand{\projectperiod}{Spring 2026}
 
-\author{Ákos Varga}
+% -------------------------------------------------
+% Styling
+% -------------------------------------------------
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\captionsetup{font=small,labelfont=bf}
+\setlist[itemize]{topsep=2pt,itemsep=2pt}
+\setlist[enumerate]{topsep=2pt,itemsep=2pt}
 
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{220,220,220}
+\definecolor{codekw}{RGB}{0,92,175}
+\definecolor{codecomment}{RGB}{90,120,90}
+\definecolor{codestring}{RGB}{150,70,0}
+
+\lstdefinestyle{thesiscode}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  frame=single,
+  rulecolor=\color{codeframe},
+  breaklines=true,
+  showstringspaces=false,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestring},
+  tabsize=2,
+  numbers=left,
+  numberstyle=\tiny,
+  xleftmargin=1em,
+  framexleftmargin=0.8em
+}
+\lstset{style=thesiscode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\hypersetup{
+  pdftitle={\thesistitle},
+  pdfauthor={\authorname},
+  pdfsubject={Master's Thesis},
+  pdfcreator={LaTeX}
+}
+
+% -------------------------------------------------
+% Theorem environments
+% -------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}{Proposition}[chapter]
+
+% -------------------------------------------------
+% Front page
+% -------------------------------------------------
 \begin{document}
 
-\maketitle
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
 
-\section{Introduction}
+    {\Huge\bfseries \thesistitle\par}
+    \vspace{0.4cm}
+    {\Large \thesissubtitle\par}
 
+    \vspace{2cm}
+    {\Large \authorname\par}
+    \vspace{1cm}
+    {\large \degreeprogram\par}
+    {\large \departmentname\par}
+    {\large \universityname\par}
+
+    \vfill
+
+    \begin{tabular}{rl}
+        Project period: & \projectperiod \\
+        Submission date: & \submissiondate \\
+        & \\
+        \supervisorname & \\
+        \cosupervisorname &
+    \end{tabular}
+
+    \vfill
+
+    {\small
+    This is an unofficial thesis template. Verify current formatting and submission requirements with Aarhus University and your department before final submission.\par}
+\end{titlepage}
+
+\pagenumbering{roman}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Write a concise summary of the problem, method, main results, and conclusions.
+
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+Optional acknowledgements, funding statement, or collaboration note.
+
+\tableofcontents
+\clearpage
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\clearpage
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+\clearpage
+
+\chapter*{Abbreviations}
+\addcontentsline{toc}{chapter}{Abbreviations}
+\begin{tabular}{ll}
+CPU & Central Processing Unit \\
+GPU & Graphics Processing Unit \\
+LLM & Large Language Model
+\end{tabular}
+
+\clearpage
+\pagenumbering{arabic}
+
+% -------------------------------------------------
+% Main matter
+% -------------------------------------------------
+\include{chapters/01_introduction}
+\include{chapters/02_background}
+\include{chapters/03_method}
+\include{chapters/04_results}
+\include{chapters/05_discussion}
+\include{chapters/06_conclusion}
+
+% -------------------------------------------------
+% Bibliography
+% -------------------------------------------------
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+% -------------------------------------------------
+% Appendices
+% -------------------------------------------------
+\begin{appendices}
+\include{chapters/appendix_a}
+\end{appendices}
 
 \end{document}
