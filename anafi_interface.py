@@ -109,7 +109,7 @@ class AnafiInterface(Node):
         flight_dur: float,
         task_dur: float,
     ):
-        from onboard_llm.task_admission_llm import onboard_LLM
+        from onboard_llm.task_admission_llm import onboard_task_admission
         if not self.telemetry_ready():
             return False, "Telemetry not ready", True, None
 
@@ -123,7 +123,7 @@ class AnafiInterface(Node):
             f"link={telemetry['link_quality']}"
         )
 
-        return onboard_LLM(
+        return onboard_task_admission(
             model=model,
             max_flight=max_flight,
             bat_perc=telemetry["battery_percentage"],
