@@ -109,9 +109,9 @@ class AnafiInterface(Node):
         flight_dur: float,
         task_dur: float,
     ):
-        from onboard_llm.task_admission import onboard_LLM
+        from onboard_llm.task_admission_llm import onboard_LLM
         if not self.telemetry_ready():
-            return False, "Telemetry not ready", True
+            return False, "Telemetry not ready", True, None
 
         telemetry = self.get_telemetry()
 
@@ -236,3 +236,44 @@ class AnafiInterface(Node):
         msg.drone_action = 102  # offboard mode
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent OFFBOARD command (drone_action=102)")
+
+def task_acceptance_test():
+    rclpy.init()
+    node = AnafiInterface()
+
+    try:
+        # Wait for telemetry BEFORE calling admission
+        timeout = 3.0
+        deadline = time.monotonic() + timeout
+
+        while rclpy.ok() and not node.telemetry_ready():
+            if time.monotonic() > deadline:
+                print("Telemetry not ready within timeout")
+                break
+
+            rclpy.spin_once(node, timeout_sec=0.1)
+
+        if not node.telemetry_ready():
+            print("Cannot proceed without telemetry")
+        else:
+            decision, reason, error, inference_time = node.admit_task_from_live_telemetry(
+                model="qwen3:1.7b",
+                max_flight=25,
+                flight_dur=5.0,
+                task_dur=5.0,
+            )
+
+            if error:
+                print(reason)
+            else:
+                print(f"ACCEPT | Reason: {reason}" if decision else f"REJECT | Reason: {reason}")
+                if inference_time is not None:
+                    print(f"Inference time: {inference_time:.3f}")
+
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    task_acceptance_test()
