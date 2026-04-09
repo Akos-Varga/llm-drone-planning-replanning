@@ -4,7 +4,7 @@ import time
 import rclpy
 
 from common import *
-from onboard_llm.task_admission import AnafiTelemetry, admit_task_from_live_telemetry
+from anafi_interface import AnafiInterface
 
 def drone_worker(
     drone_name,
@@ -32,7 +32,7 @@ def drone_worker(
     """
 
     rclpy.init()
-    telemetry_node = AnafiTelemetry(namespace)
+    node = AnafiInterface(namespace)
 
     try:
 
@@ -82,10 +82,9 @@ def drone_worker(
                         "time": time.monotonic(),
                     })
                     continue
-
-                decision, reason, error = admit_task_from_live_telemetry(
+                # Missing spinning: see example in anafi interface
+                decision, reason, error = node.admit_task_from_live_telemetry(
                     model="qwen3:1.7b",
-                    node=telemetry_node,
                     max_flight=max_flight_time,
                     flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),
                     task_dur=float(task["finish_time"]) - float(task["arrival_time"]),
@@ -273,5 +272,5 @@ def drone_worker(
                     "time": time.monotonic(),
                 })
     finally:
-        telemetry_node.destroy_node()
+        node.destroy_node()
         rclpy.shutdown()
