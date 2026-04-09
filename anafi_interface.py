@@ -109,11 +109,20 @@ class AnafiInterface(Node):
         flight_dur: float,
         task_dur: float,
     ):
-        from onboard_llm.task_admission_llm import onboard_task_admission
+        from onboard_llm.task_admission_llm import onboard_task_admission, Telemetry
         if not self.telemetry_ready():
-            return False, "Telemetry not ready", True, None
+            return None, "Telemetry not ready", None
 
         telemetry = self.get_telemetry()
+        t = Telemetry(
+            max_flight=max_flight,
+            bat_perc=telemetry["battery_percentage"],
+            bat_health=telemetry["battery_health"],
+            link_qual=telemetry["link_quality"],
+            drone_state=telemetry["drone_state"],
+            flight_dur=flight_dur,
+            task_dur=task_dur,
+        )
 
         self.get_logger().info(
             f"Admission check | "
@@ -123,16 +132,7 @@ class AnafiInterface(Node):
             f"link={telemetry['link_quality']}"
         )
 
-        return onboard_task_admission(
-            model=model,
-            max_flight=max_flight,
-            bat_perc=telemetry["battery_percentage"],
-            bat_health=telemetry["battery_health"],
-            link_qual=telemetry["link_quality"],
-            drone_state=telemetry["drone_state"],
-            flight_dur=flight_dur,
-            task_dur=task_dur,
-        )
+        return onboard_task_admission(model=model, t=t)
     
     def get_pose(self) -> SimplePose | None:
         if self.current_pose is None:
@@ -256,14 +256,14 @@ def task_acceptance_test():
         if not node.telemetry_ready():
             print("Cannot proceed without telemetry")
         else:
-            decision, reason, error, inference_time = node.admit_task_from_live_telemetry(
+            decision, reason, inference_time = node.admit_task_from_live_telemetry(
                 model="qwen3:1.7b",
                 max_flight=25,
                 flight_dur=5.0,
                 task_dur=5.0,
             )
 
-            if error:
+            if not decision:
                 print(reason)
             else:
                 print(f"ACCEPT | Reason: {reason}" if decision else f"REJECT | Reason: {reason}")
