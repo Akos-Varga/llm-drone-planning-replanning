@@ -85,7 +85,7 @@ def get_resp(model, max_flight, bat_perc, bat_health, link_qual, drone_state, fl
 
     return resp, end - start
 
-def onboard_LLM(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
+def onboard_task_admission(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur):
     response, inference_time = get_resp(model, max_flight, bat_perc, bat_health, link_qual, drone_state, flight_dur, task_dur)
     decision, reason, error = parse_llm_response(response)
     return decision, reason, error, inference_time
