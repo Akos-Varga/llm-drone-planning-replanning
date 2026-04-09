@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 data = {
-    "qwen3:0.6b": [16, 11, 9, 19],
-    "gemma3:1b": [20, 14, 0, 0],
-    "qwen3:1.7b": [18, 20, 20, 20],
-    "qwen2.5:3b": [9, 20, 19, 8],
-    "llama3.2:3b": [9, 20, 20, 12],
-    "phi4-mini:3.8b": [3, 20, 20, 16],
-    "gemma3:4b": [20, 20, 20, 0],
+    "qwen3:0.6b": [],
+    "gemma3:1b": [],
+    "qwen3:1.7b": [20, 20, 20, 20], # Avg: 3.60, max: 7.45
+    "qwen2.5:3b": [],
+    "llama3.2:3b": [],
+    "phi4-mini:3.8b": [],
+    "gemma3:4b": [],
 }
 
 # Slightly cleaner x-axis labels for publication

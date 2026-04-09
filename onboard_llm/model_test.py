@@ -64,23 +64,26 @@ def test_helper(model: str, t: Telemetry, results, error_type, inference_times):
         """)
     print(f"TEST CASE: {error_type}\n")
     results[error_type]['total'] += 1
-    accept, reason, error, inference_time = onboard_task_admission(model, t)
+    decision, reason, inference_time = onboard_task_admission(model, t)
     inference_times.append(inference_time)
     print(f"Inference time: {inference_time:.2f}")
-    print(f"ACCEPT | {reason}\n\n") if accept else print(f"REJECT | {reason}\n\n")
-    if error_type == "accept":
-        if accept and not error:
+    if not decision:
+        print(f"{reason}\n\n")
+        return
+    if (
+        (error_type == "accept" and decision == "ok") 
+        or (error_type == "drone_state_err" and decision == "drone_failure")
+        or (error_type == "link_qual_err" and decision == "drone_failure")
+        or (error_type == "flight_time_err" and decision == "task_failure")
+        ):
             results[error_type]['correct'] += 1
-            return
-    else:
-        if not accept and not error:
-            results[error_type]['correct'] += 1
-
+    print(f"{decision} | {reason}\n\n")
+    
 
 if __name__ == "__main__":
-    model = "qwen3:1.7b"
+    model = "qwen3:0.6b"
     inference_times = []
-    TEST_NUM = 10
+    TEST_NUM = 20
     random.seed(21)
     results = {
         "accept": {"correct": 0, "total": 0},
