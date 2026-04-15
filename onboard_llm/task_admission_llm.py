@@ -13,18 +13,6 @@ class Telemetry:
     flight_dur: int
     task_dur: int
 
-
-def old_parse_llm_response(response_json):
-    try:
-        if not response_json:
-            return False, "LLM response was empty.", True
-        data = json.loads(response_json)
-        return data["decision"] == "accept", data["reason"], False
-    except json.JSONDecodeError as e:
-        return False, f"Invalid JSON from LLM: {e}. Raw response: {response_json!r}", True
-    except Exception as e:
-         return False, f"Unexpected error while parsing LLM response: {e}", True
-    
 def parse_llm_response(response_json):
     try:
         if not response_json:
@@ -117,11 +105,6 @@ def get_resp(model, t : Telemetry):
     resp = response.message.content
 
     return resp, end - start
-
-def old_onboard_task_admission(model, t: Telemetry):
-    response, inference_time = get_resp(model, t)
-    decision, reason, error = parse_llm_response(response)
-    return decision, reason, error, inference_time
 
 def onboard_task_admission(model, t: Telemetry):
     response, inference_time = get_resp(model, t)
