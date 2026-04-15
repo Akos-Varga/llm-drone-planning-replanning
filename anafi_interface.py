@@ -41,6 +41,10 @@ class AnafiInterface(Node):
         self.link_quality = None
         self.drone_state = None
 
+        # arrival tolerances
+        self.pos_tolerance = 0.1 # m
+        self.yaw_tolerance = 5.0 # deg
+
         # publishers
         self.pos_pub = self.create_publisher(PoseCommand, f"{self.namespace}/drone/reference/pose", 10)
         self.get_logger().info(f"Publishing PoseCommand → {self.namespace}/drone/reference/pose")
@@ -139,11 +143,11 @@ class AnafiInterface(Node):
             return None
         return SimplePose(self.current_pose)
     
-    def send_pose(self, pos, yaw_deg, frame_id="map"):
+    def send_pose(self, pos, yaw_deg):
         msg = PoseCommand()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = frame_id
+        msg.header.frame_id = "map"
 
         msg.x = float(pos[0])
         msg.y = float(pos[1])
@@ -155,7 +159,28 @@ class AnafiInterface(Node):
         self.get_logger().info(
             f"Sent PoseCommand: x={msg.x:.2f}, y={msg.y:.2f}, z={msg.z:.2f}, yaw={msg.yaw:.1f}°"
         )
-    
+
+    def is_arrived(self, pos, yaw_deg):
+        current = self.get_pose()
+        if current is None:
+            return False
+        
+        dx = pos[0] - current.x
+        dy = pos[1] - current.y
+        dz = pos[2] - current.z
+        dist_err = math.sqrt(dx**2 + dy**2 + dz**2)
+
+        yaw_err = abs((yaw_deg - current.yaw + 180) % 360 - 180)
+
+        arrived = dist_err <= self.pos_tolerance and yaw_err <= self.yaw_tolerance
+
+        self.get_logger().debug(f"{self.namespace} dist_err={dist_err:.2f}, yaw_err={yaw_err:.1f}")
+
+        if arrived:
+            self.get_logger().info(f"{self.namespace} arrived [{pos[0]}, {pos[1]}, {pos[2]}]")
+
+        return arrived
+        
     
     def _set_param(self, name: str, value: float, timeout: float = 3.0):
         param_msg = ParameterMsg()
