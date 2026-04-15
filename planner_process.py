@@ -269,6 +269,7 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
         drone_status[drone]["subtask"] = failed_task
         drone_status[drone]["available_time"] = current_time
         drone_status[drone]["proposal_id"] = None
+        drone_status[drone]["waiting_ack"] = False
         reinsert_failed_task(subtasks_with_drones, task_catalog, failed_task)
         for subtask in subtasks_with_drones:
             if subtask["name"] == failed_task:
@@ -409,8 +410,49 @@ def wait_for_all_acks(
                 rejected_any = True
                 continue
 
-            if event_type in (ACK, REJECTED):
-                # Stale or mismatched ACK/REJECT from another round; ignore it.
+            if (
+                event_type == TASK_FAILED_EVENT
+                and event_proposal_id == expected_proposal_id
+                and event_subtask == expected_task["name"]
+            ):
+                print(f"[PLANNER] PROPOSAL TASK FAILURE from {drone} for {expected_task['name']} | Reason: {event_message}")
+
+                # Mark this proposal as resolved before runtime handling
+                pending.remove(drone)
+
+                replan_from_event = handle_runtime_event(
+                    event,
+                    drone_status,
+                    subtasks_with_drones,
+                    task_catalog,
+                    planner_now(start_time),
+                )
+                needs_replan = needs_replan or replan_from_event
+                rejected_any = True
+                continue
+
+            if (
+                event_type == DRONE_FAILED_EVENT
+                and event_proposal_id == expected_proposal_id
+                and event_subtask == expected_task["name"]
+            ):
+                print(f"[PLANNER] PROPOSAL DRONE FAILURE from {drone} for {expected_task['name']} | Reason: {event_message}")
+
+                # Mark this proposal as resolved before runtime handling
+                pending.remove(drone)
+
+                replan_from_event = handle_runtime_event(
+                    event,
+                    drone_status,
+                    subtasks_with_drones,
+                    task_catalog,
+                    planner_now(start_time),
+                )
+                needs_replan = needs_replan or replan_from_event
+                rejected_any = True
+                continue
+
+            if event_type in (ACK, REJECTED, TASK_FAILED_EVENT, DRONE_FAILED_EVENT):
                 print(
                     f"[PLANNER] Ignoring stale {event_type} from {drone}: "
                     f"event proposal_id={event_proposal_id}, "

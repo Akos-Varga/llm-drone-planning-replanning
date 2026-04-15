@@ -82,37 +82,84 @@ def drone_worker(
                         "time": time.monotonic(),
                     })
                     continue
-                # Missing spinning: see example in anafi interface
-                decision, reason, error = node.admit_task_from_live_telemetry(
-                    model="qwen3:1.7b",
-                    max_flight=max_flight_time,
-                    flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),
-                    task_dur=float(task["finish_time"]) - float(task["arrival_time"]),
-                    wait_timeout=3.0
-                )
 
-                if error or not decision:
+                timeout = 3.0
+                deadline = time.monotonic() + timeout
+
+                while rclpy.ok() and not node.telemetry_ready():
+                    if time.monotonic() > deadline:
+                        break
+                    rclpy.spin_once(node, timeout_sec=0.1)
+
+                if not node.telemetry_ready():
                     event_queue.put({
                         "type": REJECTED,
                         "drone": drone_name,
                         "state": state,
                         "subtask": task["name"],
                         "proposal_id": proposal_id,
-                        "message": f"Admission rejected: {reason}",
+                        "message": "Admission rejected: telemetry not ready",
+                        "time": time.monotonic(),
+                    })
+                    continue        
+                
+                decision, reason, _ = node.admit_task_from_live_telemetry(
+                    model="qwen3:1.7b",
+                    max_flight=max_flight_time,
+                    flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),
+                    task_dur=float(task["finish_time"]) - float(task["arrival_time"])
+                )
+
+                # decision is now one of: "ok", "task_failure", "drone_failure", or None on error
+
+                if decision == "ok":
+                    proposed_task = task
+                    proposed_task_id = proposal_id
+
+                    event_queue.put({
+                        "type": ACK,
+                        "drone": drone_name,
+                        "state": state,
+                        "subtask": task["name"],
+                        "proposal_id": proposal_id,
+                        "message": f"ACK for {task['name']} | Reason: {reason}",
                         "time": time.monotonic(),
                     })
                     continue
 
-                proposed_task = task
-                proposed_task_id = proposal_id
+                if decision == "task_failure":
+                    event_queue.put({
+                        "type": TASK_FAILED_EVENT,
+                        "drone": drone_name,
+                        "state": TASK_FAILED,
+                        "subtask": task["name"],
+                        "proposal_id": proposal_id,
+                        "message": f"Admission task failure: {reason}",
+                        "time": time.monotonic(),
+                    })
+                    continue
 
+                if decision == "drone_failure":
+                    state = DRONE_FAILED
+                    event_queue.put({
+                        "type": DRONE_FAILED_EVENT,
+                        "drone": drone_name,
+                        "state": state,
+                        "subtask": task["name"],
+                        "proposal_id": proposal_id,
+                        "message": f"Admission drone failure: {reason}",
+                        "time": time.monotonic(),
+                    })
+                    continue
+
+                # None / error / unknown decision
                 event_queue.put({
-                    "type": ACK,
+                    "type": REJECTED,
                     "drone": drone_name,
                     "state": state,
                     "subtask": task["name"],
                     "proposal_id": proposal_id,
-                    "message": f"ACK for {task['name']} | Reason: {reason}",
+                    "message": f"Admission rejected due to error/unknown decision: {reason}",
                     "time": time.monotonic(),
                 })
                 continue
