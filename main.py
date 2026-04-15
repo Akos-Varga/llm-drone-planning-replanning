@@ -1,5 +1,9 @@
+# ---------------------------------------------------------------------
+# Test if max flight time parameter is working on Ubuntu
+# ---------------------------------------------------------------------
+
 import multiprocessing as mp
-from drone_process import drone_worker
+from drone_process_droneless import drone_worker
 from planner_process import planner_loop
 
 if __name__ == "__main__":
@@ -14,13 +18,14 @@ if __name__ == "__main__":
     event_queue = mp.Queue()
 
     drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
-    drone_namespaces = {
-        "Drone1": "anafi",
-        "Drone2": "anafi",
-        "Drone3": "anafi",
-        "Drone4": "anafi",
-        "Drone5": "anafi",
-        "Drone6": "anafi",
+
+    drone_configs = {
+        "Drone1": {"namespace": "anafi", "max_flight_time": 25.0},
+        "Drone2": {"namespace": "anafi", "max_flight_time": 22.0},
+        "Drone3": {"namespace": "anafi", "max_flight_time": 18.0},
+        "Drone4": {"namespace": "anafi", "max_flight_time": 30.0},
+        "Drone5": {"namespace": "anafi", "max_flight_time": 20.0},
+        "Drone6": {"namespace": "anafi", "max_flight_time": 27.0},
     }
 
     command_queues = {name: mp.Queue() for name in drone_names}
@@ -28,17 +33,16 @@ if __name__ == "__main__":
     processes = []
     try:
         for name in drone_names:
+            cfg = drone_configs[name]
             p = mp.Process(
                 target=drone_worker,
                 args=(
                     name,
-                    drone_namespaces[name],
+                    cfg["namespace"],
                     event_queue,
                     command_queues[name],
-                ),
-                kwargs={
-                    "max_flight_time": 25.0,
-                }
+                    cfg["max_flight_time"]
+                )
             )
             p.start()
             processes.append(p)
