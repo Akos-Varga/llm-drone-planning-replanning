@@ -179,8 +179,7 @@ class AnafiInterface(Node):
         if arrived:
             self.get_logger().info(f"{self.namespace} arrived [{pos[0]}, {pos[1]}, {pos[2]}]")
 
-        return arrived
-        
+        return arrived        
     
     def _set_param(self, name: str, value: float, timeout: float = 3.0):
         param_msg = ParameterMsg()
