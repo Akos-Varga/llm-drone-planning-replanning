@@ -201,7 +201,7 @@ class AnafiInterface(Node):
         msg = KeyboardCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "body"
-        msg.drone_action = 1  # arm
+        msg.drone_action = 1
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent ARM command (drone_action=1)")
 
@@ -209,7 +209,7 @@ class AnafiInterface(Node):
         msg = KeyboardCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "body"
-        msg.drone_action = 5  # disarm
+        msg.drone_action = 5
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent DISARM command (drone_action=5)")
     
@@ -217,7 +217,7 @@ class AnafiInterface(Node):
         msg = KeyboardCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "body"
-        msg.drone_action = 2  # takeoff
+        msg.drone_action = 2
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent TAKEOFF command (drone_action=2)")
 
@@ -225,7 +225,7 @@ class AnafiInterface(Node):
         msg = KeyboardCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "body"
-        msg.drone_action = 4  # land
+        msg.drone_action = 4
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent LAND command (drone_action=4)")
 
@@ -233,7 +233,7 @@ class AnafiInterface(Node):
         msg = KeyboardCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "body"
-        msg.drone_action = 102  # offboard mode
+        msg.drone_action = 102
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent OFFBOARD command (drone_action=102)")
 
