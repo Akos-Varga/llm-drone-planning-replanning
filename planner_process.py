@@ -7,7 +7,7 @@ import itertools
 from pprint import pprint
 
 # --- Imports ---
-from worlds.test_world import skills, objects, drones
+from worlds.test_world import skills, objects, drones # CHANGE TO TEST WORLD IN LAB
 from pipeline.decomposer import messages as decomposer_prompt
 from pipeline.allocator import messages as allocator_prompt
 from pipeline.scheduler import messages as scheduler_prompt
