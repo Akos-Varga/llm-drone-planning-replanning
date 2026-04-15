@@ -266,15 +266,18 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
     elif event_type == TASK_FAILED_EVENT:
         failed_task = event.get("subtask")
         drone_status[drone]["state"] = TASK_FAILED
-        drone_status[drone]["subtask"] = failed_task
+        drone_status[drone]["subtask"] = None
         drone_status[drone]["available_time"] = current_time
         drone_status[drone]["proposal_id"] = None
         drone_status[drone]["waiting_ack"] = False
+
         reinsert_failed_task(subtasks_with_drones, task_catalog, failed_task)
+
         for subtask in subtasks_with_drones:
             if subtask["name"] == failed_task:
                 remove_drone_from_subtask(subtasks_with_drones, subtask, drone)
                 break
+            
         needs_replan = True
 
     elif event_type == DRONE_FAILED_EVENT:
