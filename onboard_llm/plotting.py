@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 data = {
-    "qwen3:0.6b": [],
-    "gemma3:1b": [],
+    "qwen3:0.6b": [17, 8, 4, 20], # error
+    "gemma3:1b": [20, 15, 0, 0], # Avg: 0.76, max: 2.83
     "qwen3:1.7b": [20, 20, 20, 20], # Avg: 3.60, max: 7.45
-    "qwen2.5:3b": [],
+    "qwen2.5:3b": [7, 20, 20, 9],# Avg: 1.02, max: 6.44
     "llama3.2:3b": [],
     "phi4-mini:3.8b": [],
     "gemma3:4b": [],
