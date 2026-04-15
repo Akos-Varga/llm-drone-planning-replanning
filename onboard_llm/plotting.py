@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 data = {
-    "qwen3:0.6b": [17, 8, 4, 20], # error
+    "qwen3:0.6b": [18, 8, 6, 16], # Avg: 7.99, max: 239.60
     "gemma3:1b": [20, 15, 0, 0], # Avg: 0.76, max: 2.83
     "qwen3:1.7b": [20, 20, 20, 20], # Avg: 3.60, max: 7.45
-    "qwen2.5:3b": [7, 20, 20, 9],# Avg: 1.02, max: 6.44
-    "llama3.2:3b": [],
-    "phi4-mini:3.8b": [],
-    "gemma3:4b": [],
+    "qwen2.5:3b": [7, 20, 20, 9], # Avg: 1.02, max: 6.44
+    "llama3.2:3b": [13, 20, 18, 0], # Avg: 1.25, max: 14.24
+    "phi4-mini:3.8b": [20, 20, 20, 1], # Avg: 1.52, max: 7.72
+    "gemma3:4b": [14, 20, 9, 0], # Avg: 1.20, max: 9.12
 }
 
 # Slightly cleaner x-axis labels for publication
@@ -113,6 +113,6 @@ ax.spines["right"].set_visible(False)
 
 plt.tight_layout()
 
-plt.savefig("onboard_llm/stacked_task_performance.png", dpi=600, bbox_inches="tight")
+plt.savefig("onboard_llm/stacked_task_performance_3_output.png", dpi=600, bbox_inches="tight")
 
 plt.show()
