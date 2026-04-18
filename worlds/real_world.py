@@ -15,7 +15,6 @@ objects = {
     "WindTurbine2": (-3.3, -3.5, 1.4),
     "Tower1": (-1.0, 4.1, 1.6),
     "Tower2": (-1.9, 1.0, 1.6)
-
 }
 
 drones = {
