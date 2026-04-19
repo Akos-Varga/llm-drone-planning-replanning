@@ -229,9 +229,10 @@ def drone_worker(
             if state == BUSY and current_task is not None:
                 target_pos = objects[current_task["object"]]
                 target_yaw = OBJECT_TO_YAW[current_task["object"]]
+                exuction_time = current_task["finish_time"] - current_task["arrival_time"] 
 
                 if not pose_sent:
-                    node.send_pose(target_pos, target_yaw)
+                    node.send_pose(target_pos, target_yaw, exuction_time)
                     pose_sent = True
 
                 now = time.monotonic()
@@ -302,7 +303,7 @@ def drone_worker(
                         current_proposal_id = None
                         continue
                 
-                if node.is_arrived(target_pos, target_yaw):
+                if node.is_arrived():
                     finished_subtask = current_task["name"]
                     state = COMPLETED
                     event_queue.put({

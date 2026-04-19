@@ -46,6 +46,15 @@ class AnafiInterface(Node):
         self.pos_tolerance = 0.1 # m
         self.yaw_tolerance = 5.0 # deg
 
+        # current goal
+        self.goal_x = None
+        self.goal_y = None
+        self.goal_z = None
+        self.goal_yaw = None
+        self.execution_time = None
+        self.arrived_since = None
+        self.goal_active = False
+
         # publishers
         self.pos_pub = self.create_publisher(PoseCommand, f"{self.namespace}/drone/reference/pose", 10)
         self.get_logger().info(f"Publishing PoseCommand → {self.namespace}/drone/reference/pose")
@@ -143,16 +152,23 @@ class AnafiInterface(Node):
             return None
         return SimplePose(self.current_pose)
     
-    def send_pose(self, pos, yaw_deg):
+    def send_pose(self, pos, yaw_deg, execution_time):
+        (self.goal_x, self.goal_y, self.goal_z) = pos
+        self.goal_yaw = yaw_deg
+        self.execution_time = execution_time
+
+        self.arrived_since = None
+        self.goal_active = True
+
         msg = PoseCommand()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "map"
 
-        msg.x = float(pos[0])
-        msg.y = float(pos[1])
-        msg.z = float(pos[2])
-        msg.yaw = float(yaw_deg)
+        msg.x = self.goal_x
+        msg.y = self.goal_y
+        msg.z = self.goal_z
+        msg.yaw = self.goal_yaw
 
         self.pos_pub.publish(msg)
 
@@ -160,26 +176,48 @@ class AnafiInterface(Node):
             f"Sent PoseCommand: x={msg.x:.2f}, y={msg.y:.2f}, z={msg.z:.2f}, yaw={msg.yaw:.1f}°"
         )
 
-    def is_arrived(self, pos, yaw_deg):
+    def is_arrived(self):
+        if not self.goal_active:
+            return False
+
         current = self.get_pose()
         if current is None:
+            self.arrived_since = None
             return False
-        
-        dx = pos[0] - current.x
-        dy = pos[1] - current.y
-        dz = pos[2] - current.z
+
+        dx = self.goal_x - current.x
+        dy = self.goal_y - current.y
+        dz = self.goal_z - current.z
         dist_err = math.sqrt(dx**2 + dy**2 + dz**2)
 
-        yaw_err = abs((yaw_deg - current.yaw + 180) % 360 - 180)
+        yaw_err = abs((self.goal_yaw - current.yaw + 180) % 360 - 180)
 
-        arrived = dist_err <= self.pos_tolerance and yaw_err <= self.yaw_tolerance
+        within_tolerance = (
+            dist_err <= self.pos_tolerance and
+            yaw_err <= self.yaw_tolerance
+        )
 
-        self.get_logger().debug(f"{self.namespace} dist_err={dist_err:.2f}, yaw_err={yaw_err:.1f}")
+        now = time.monotonic()
 
-        if arrived:
-            self.get_logger().info(f"{self.namespace} arrived [{pos[0]}, {pos[1]}, {pos[2]}]")
+        self.get_logger().debug(
+            f"{self.namespace} dist_err={dist_err:.2f}, yaw_err={yaw_err:.1f}"
+        )
 
-        return arrived        
+        if within_tolerance:
+            if self.arrived_since is None:
+                self.arrived_since = now
+
+            if (now - self.arrived_since) >= self.execution_time:
+                self.goal_active = False
+                self.get_logger().info(
+                    f"{self.namespace} arrived "
+                    f"[{self.goal_x}, {self.goal_y}, {self.goal_z}]"
+                )
+                return True
+        else:
+            self.arrived_since = None
+
+        return False     
     
     def _set_param(self, name: str, value: float, timeout: float = 3.0):
         param_msg = ParameterMsg()
