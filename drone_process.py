@@ -17,7 +17,7 @@ def drone_worker(
 ):
 
     rclpy.init()
-    node = AnafiInterface(namespace)
+    node = AnafiInterface(namespace, max_flight_time)
 
     state = IDLE
     proposed_task = None
@@ -38,7 +38,6 @@ def drone_worker(
     def run_admission_check(task):
         return node.admit_task_from_live_telemetry(
             model="qwen3:1.7b",
-            max_flight=max_flight_time,
             flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),
             task_dur=float(task["finish_time"]) - float(task["arrival_time"]),
         )

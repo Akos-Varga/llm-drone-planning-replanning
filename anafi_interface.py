@@ -28,9 +28,10 @@ class SimplePose:
 
 
 class AnafiInterface(Node):
-    def __init__(self, namespace="anafi"):
+    def __init__(self, namespace="anafi", max_flight_time = 25):
         super().__init__(f"{namespace}_interface")
         self.namespace = namespace
+        self.max_flight_time = max_flight_time
 
         # pose state
         self.current_pose = None
@@ -109,7 +110,6 @@ class AnafiInterface(Node):
     def admit_task_from_live_telemetry(
         self,
         model,
-        max_flight: float,
         flight_dur: float,
         task_dur: float,
     ):
@@ -119,7 +119,7 @@ class AnafiInterface(Node):
 
         telemetry = self.get_telemetry()
         t = Telemetry(
-            max_flight=max_flight,
+            max_flight=self.max_flight_time,
             bat_perc=telemetry["battery_percentage"],
             bat_health=telemetry["battery_health"],
             link_qual=telemetry["link_quality"],
@@ -261,9 +261,10 @@ class AnafiInterface(Node):
         self.keyboard_pub.publish(msg)
         self.get_logger().info("Sent OFFBOARD command (drone_action=102)")
 
+
 def task_acceptance_test():
     rclpy.init()
-    node = AnafiInterface()
+    node = AnafiInterface("anafi", 25)
 
     try:
         # Wait for telemetry BEFORE calling admission
@@ -282,7 +283,6 @@ def task_acceptance_test():
         else:
             decision, reason, inference_time = node.admit_task_from_live_telemetry(
                 model="qwen3:1.7b",
-                max_flight=25,
                 flight_dur=5.0,
                 task_dur=5.0,
             )
