@@ -265,7 +265,7 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
 
     elif event_type == TASK_FAILED_EVENT:
         failed_task = event.get("subtask")
-        drone_status[drone]["state"] = TASK_FAILED
+        drone_status[drone]["state"] = IDLE
         drone_status[drone]["subtask"] = None
         drone_status[drone]["available_time"] = current_time
         drone_status[drone]["proposal_id"] = None
