@@ -1,19 +1,19 @@
-import math
 import time
 
+from onboard_llm.task_admission_llm import onboard_task_admission, Telemetry
+
 class SimDroneInterface:
-    def __init__(self, name, max_flight_time=25.0, max_speed=1.0, yaw_speed=45.0):
-        self.name = name
+    def __init__(self, namespace, max_flight_time):
+        self.name = namespace
         self.max_flight_time = float(max_flight_time)
 
         self.position = [0.0, 0.0, 0.0]
         self.yaw = 0.0
 
-        self.target_position = self.position[:]
-        self.target_yaw = self.yaw
-
-        self.max_speed = float(max_speed)
-        self.yaw_speed = float(yaw_speed)
+        self.goal_x = None
+        self.goal_y = None
+        self.goal_z = None
+        self.goal_yaw = None
 
         self._telemetry_ready = True
         self.battery_percentage = 100.0
@@ -21,8 +21,9 @@ class SimDroneInterface:
         self.link_quality = 5
         self.drone_state = "LANDED"
 
-        self._service_time = 0.0
-        self._arrival_hold_start = None
+        self.execution_time = None
+        self.goal_active = False
+        self.departure_time = None
 
     def telemetry_ready(self):
         return self._telemetry_ready
@@ -32,50 +33,53 @@ class SimDroneInterface:
             "battery_percentage": self.battery_percentage,
             "battery_health": self.battery_health,
             "link_quality": self.link_quality,
-            "state": self.drone_state,
+            "drone_state": self.drone_state,
         }
+    
+    def admit_task_from_live_telemetry(
+        self,
+        model,
+        flight_dur: float,
+        task_dur: float,
+    ):
+        if not self.telemetry_ready():
+            return None, "Telemetry not ready", None
 
-    def send_pose(self, target_pos, target_yaw, execution_time=0.0):
-        self.target_position = list(target_pos)
-        self.target_yaw = float(target_yaw)
-        self._service_time = max(0.0, float(execution_time))
-        self._arrival_hold_start = None
-        self.drone_state = "FLYING"
+        telemetry = self.get_telemetry()
+        t = Telemetry(
+            max_flight=self.max_flight_time,
+            bat_perc=telemetry["battery_percentage"],
+            bat_health=telemetry["battery_health"],
+            link_qual=telemetry["link_quality"],
+            drone_state=telemetry["drone_state"],
+            flight_dur=flight_dur,
+            task_dur=task_dur,
+        )
 
-    def step(self, dt):
-        dx = self.target_position[0] - self.position[0]
-        dy = self.target_position[1] - self.position[1]
-        dz = self.target_position[2] - self.position[2]
-        dist = math.sqrt(dx * dx + dy * dy + dz * dz)
+        print(
+            f"Admission check | "
+            f"state={telemetry['drone_state']} | "
+            f"battery={telemetry['battery_percentage']}% | "
+            f"health={telemetry['battery_health']}% | "
+            f"link={telemetry['link_quality']}"
+        )
 
-        if dist > 1e-6:
-            step_dist = min(self.max_speed * dt, dist)
-            self.position[0] += step_dist * dx / dist
-            self.position[1] += step_dist * dy / dist
-            self.position[2] += step_dist * dz / dist
-            self.drone_state = "FLYING"
-            self._arrival_hold_start = None
-        else:
-            if self._arrival_hold_start is None:
-                self._arrival_hold_start = time.monotonic()
-            self.drone_state = "HOVERING"
+        return onboard_task_admission(model=model, t=t)
 
-        yaw_diff = self.target_yaw - self.yaw
-        if abs(yaw_diff) > 1e-6:
-            yaw_step = min(self.yaw_speed * dt, abs(yaw_diff))
-            self.yaw += yaw_step if yaw_diff > 0 else -yaw_step
+    def send_pose(self, pos, yaw_deg, execution_time):
+        (self.goal_x, self.goal_y, self.goal_z) = pos
+        self.goal_yaw = yaw_deg
+        self.execution_time = execution_time
+        self.departure_time = time.monotonic()
+        self.goal_active = True
 
-    def is_arrived(self, pos_tol=0.2, yaw_tol=5.0):
-        pos_err = math.dist(self.position, self.target_position)
-        yaw_err = abs(self.yaw - self.target_yaw)
-
-        if pos_err > pos_tol or yaw_err > yaw_tol:
+    def is_arrived(self):
+        if not self.goal_active:
             return False
-
-        if self._arrival_hold_start is None:
-            return False
-
-        return (time.monotonic() - self._arrival_hold_start) >= self._service_time
+        if time.monotonic() >= self.departure_time + self.execution_time:
+            self.goal_active = False
+            return True
+        return False
 
     def destroy_node(self):
         pass

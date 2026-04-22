@@ -3,7 +3,7 @@ import time
 
 from common import *
 from simulated_drone_interface import SimDroneInterface
-from worlds.real_world import objects, OBJECT_TO_YAW
+from worlds.test_world import objects, OBJECT_TO_YAW
 
 LLM_RECHECK_PERIOD = 10.0
 
@@ -12,9 +12,9 @@ def drone_worker_sim(
     namespace,
     event_queue,
     command_queue,
-    max_flight_time=25.0
+    max_flight_time,
 ):
-    node = SimDroneInterface(drone_name, max_flight_time)
+    node = SimDroneInterface(namespace, max_flight_time)
 
     state = IDLE
     proposed_task = None
@@ -31,34 +31,13 @@ def drone_worker_sim(
                 return False
             time.sleep(0.05)
         return True
-
+    
     def run_admission_check(task):
-        flight_dur = float(task["arrival_time"]) - float(task["departure_time"])
-        task_dur = float(task["finish_time"]) - float(task["arrival_time"])
-        required_time = flight_dur + task_dur
-
-        telemetry = node.get_telemetry()
-
-        battery = telemetry.get("battery_percentage", 100.0)
-        health = telemetry.get("battery_health", 100.0)
-        link = telemetry.get("link_quality", 5)
-        drone_state = telemetry.get("state", "LANDED")
-
-        available_time = max_flight_time * (battery / 100.0) * (health / 100.0)
-
-        print(f"[{drone_name}] RULE CHECK | state={drone_state} | battery={battery} | health={health} | link={link}", flush=True)
-
-        # --- Hard policy ---
-        if drone_state in ["CONNECTING", "EMERGENCY", "DISCONNECTED"]:
-            return "drone_failure", "Invalid drone state", None
-
-        if link <= 3:
-            return "task_failure", "Poor link quality", None
-
-        if available_time < required_time:
-            return "task_failure", f"Not enough flight time ({available_time:.1f} < {required_time:.1f})", None
-
-        return "ok", "Rule-based acceptance", None
+        return node.admit_task_from_live_telemetry(
+            model="qwen3:1.7b",
+            flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),
+            task_dur=float(task["finish_time"]) - float(task["arrival_time"]),
+        )
 
     try:
         while True:
@@ -264,7 +243,7 @@ def drone_worker_sim(
                         current_task = None
                         current_proposal_id = None
                         continue
-
+                    print("LLM recheck")
                     decision, reason, _ = run_admission_check(current_task)
                     last_llm_check_time = now
 
@@ -314,8 +293,6 @@ def drone_worker_sim(
                         current_task = None
                         current_proposal_id = None
                         continue
-
-                node.step(0.05)
 
                 if node.is_arrived():
                     finished_subtask = current_task["name"]

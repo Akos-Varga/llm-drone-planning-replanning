@@ -18,6 +18,18 @@ objects = {
     'Tower': (53, 91, 57)
 }
 
+OBJECT_TO_YAW = {
+    'Base': 0,
+    'House1': 90,
+    'House2': 180, 
+    'House3': 90,
+    'RoofTop1': 90, 
+    'RoofTop2': 0, 
+    'SolarPanel1': 180,
+    'SolarPanel2': 90,
+    'Tower': 0,
+}
+
 drones = {
     'Drone1': {'pos': (34, 89, 13), 'skills': ['CaptureThermalImage'], 'speed': 19},
     'Drone2': {'pos': (89, 17, 9), 'skills': ['MeasureWind', 'CaptureRGBImage'], 'speed': 19},
