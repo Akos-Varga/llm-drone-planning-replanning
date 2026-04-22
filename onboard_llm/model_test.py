@@ -81,7 +81,7 @@ def test_helper(model: str, t: Telemetry, results, error_type, inference_times):
     
 
 if __name__ == "__main__":
-    model = "qwen3:0.6b"
+    model = "qwen3:1.7b"
     inference_times = []
     TEST_NUM = 20
     random.seed(21)
