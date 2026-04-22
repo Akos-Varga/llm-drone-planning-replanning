@@ -14,7 +14,9 @@ objects = {
     "WindTurbine1": (-3.4, -1.4, 1.4),
     "WindTurbine2": (-3.3, -3.5, 1.4),
     "Tower1": (-1.0, 4.1, 1.6),
-    "Tower2": (-1.9, 1.0, 1.6)
+    "Tower2": (-1.9, 1.0, 1.6),
+    "RoofTop2":(2.0, 2.0, 2.0),
+    "RoofTop1":(5.0, 5.0, 2.0),
 }
 
 drones = {
@@ -50,7 +52,9 @@ OBJECT_TO_YAW = {
     "WindTurbine1": 180,
     "WindTurbine2": 180,
     "Tower1": 90,
-    "Tower2": 180
+    "Tower2": 180,
+    "RoofTop2": 0,
+    "RoofTop1": 0,
 }
 
 MAX_ALTITUDE = 4.0
