@@ -114,7 +114,7 @@ def drone_worker_sim(
 
                     if decision == "task_failure":
                         event_queue.put({
-                            "type": TASK_FAILED_EVENT,
+                            "type": REJECTED,
                             "drone": drone_name,
                             "state": state,
                             "subtask": task["name"],
@@ -227,6 +227,7 @@ def drone_worker_sim(
                 if not pose_sent:
                     node.send_pose(target_pos, target_yaw, flight_time, execution_time)
                     pose_sent = True
+                    arrived_sent = False
 
                 now = time.monotonic()
 
@@ -254,14 +255,14 @@ def drone_worker_sim(
 
                     elif decision == "task_failure":
                         failed_subtask = current_task["name"]
-                        state = TASK_FAILED
+        
                         event_queue.put({
-                            "type": TASK_FAILED_EVENT,
+                            "type": REJECTED,
                             "drone": drone_name,
-                            "state": state,
+                            "state": state,   # likely BUSY at the instant of failure
                             "subtask": failed_subtask,
                             "proposal_id": current_proposal_id,
-                            "message": f"Runtime task failure: {reason}",
+                            "message": f"Runtime task aborted: {reason}",
                             "time": time.monotonic(),
                         })
 
@@ -296,9 +297,27 @@ def drone_worker_sim(
                         current_proposal_id = None
                         continue
 
-                if node.is_arrived():
+                # --- ARRIVAL ---
+                if not arrived_sent and node.has_arrived():
+                    arrived_sent = True
+
+                    event_queue.put({
+                        "type": ARRIVED_EVENT,
+                        "drone": drone_name,
+                        "state": state,
+                        "subtask": current_task["name"],
+                        "skill": current_task["skill"],
+                        "proposal_id": current_proposal_id,
+                        "message": f"Arrived at {current_task['object']}",
+                        "time": time.monotonic(),
+                    })
+
+
+                # --- COMPLETION ---
+                if arrived_sent and node.is_completed():
                     finished_subtask = current_task["name"]
                     state = COMPLETED
+
                     event_queue.put({
                         "type": COMPLETED_EVENT,
                         "drone": drone_name,
@@ -312,6 +331,7 @@ def drone_worker_sim(
                     current_task = None
                     current_proposal_id = None
                     state = IDLE
+
                     event_queue.put({
                         "type": STATE_CHANGED,
                         "drone": drone_name,

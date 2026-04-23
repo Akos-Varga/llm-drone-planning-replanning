@@ -1,4 +1,5 @@
-import ast
+import json
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -8,35 +9,7 @@ from worlds.test_world import drones, objects
 
 
 # ------------------------------------------------------------
-# 1. Paste your terminal log here
-# ------------------------------------------------------------
-log_text = r"""
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone3', 'state': 'BUSY', 'subtask': 'SubTask1', 'object': 'RoofTop1', 'proposal_id': '1:Drone3:SubTask1', 'message': 'Started SubTask1', 'time': 9329.761328529}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone2', 'state': 'BUSY', 'subtask': 'SubTask7', 'object': 'SolarPanel2', 'proposal_id': '1:Drone2:SubTask7', 'message': 'Started SubTask7', 'time': 9329.764375185}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone4', 'state': 'BUSY', 'subtask': 'SubTask3', 'object': 'RoofTop2', 'proposal_id': '1:Drone4:SubTask3', 'message': 'Started SubTask3', 'time': 9329.799210952}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone5', 'state': 'BUSY', 'subtask': 'SubTask4', 'object': 'RoofTop2', 'proposal_id': '1:Drone5:SubTask4', 'message': 'Started SubTask4', 'time': 9329.806306629}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone6', 'state': 'BUSY', 'subtask': 'SubTask5', 'object': 'Tower', 'proposal_id': '1:Drone6:SubTask5', 'message': 'Started SubTask5', 'time': 9329.810553441}
-[EVENT] {'type': 'COMPLETED', 'drone': 'Drone6', 'state': 'COMPLETED', 'subtask': 'SubTask5', 'proposal_id': '1:Drone6:SubTask5', 'message': 'Completed SubTask5', 'time': 9333.524793571}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone6', 'state': 'IDLE', 'subtask': None, 'proposal_id': None, 'message': 'Ready for next task', 'time': 9333.524813374}
-[EVENT] {'type': 'COMPLETED', 'drone': 'Drone5', 'state': 'COMPLETED', 'subtask': 'SubTask4', 'proposal_id': '1:Drone5:SubTask4', 'message': 'Completed SubTask4', 'time': 9335.131478474}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone5', 'state': 'IDLE', 'subtask': None, 'proposal_id': None, 'message': 'Ready for next task', 'time': 9335.131495334}
-[EVENT] {'type': 'COMPLETED', 'drone': 'Drone3', 'state': 'COMPLETED', 'subtask': 'SubTask1', 'proposal_id': '1:Drone3:SubTask1', 'message': 'Completed SubTask1', 'time': 9335.883609184}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone3', 'state': 'IDLE', 'subtask': None, 'proposal_id': None, 'message': 'Ready for next task', 'time': 9335.883626489}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone6', 'state': 'BUSY', 'subtask': 'SubTask6', 'object': 'SolarPanel1', 'proposal_id': '14:Drone6:SubTask6', 'message': 'Started SubTask6', 'time': 9338.139209323}
-[EVENT] {'type': 'COMPLETED', 'drone': 'Drone6', 'state': 'COMPLETED', 'subtask': 'SubTask6', 'proposal_id': '14:Drone6:SubTask6', 'message': 'Completed SubTask6', 'time': 9346.265439603}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone6', 'state': 'IDLE', 'subtask': None, 'proposal_id': None, 'message': 'Ready for next task', 'time': 9346.265462268}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone3', 'state': 'BUSY', 'subtask': 'SubTask2', 'object': 'RoofTop1', 'proposal_id': '15:Drone3:SubTask2', 'message': 'Started SubTask2', 'time': 9347.931303774}
-[EVENT] {'type': 'DRONE_FAILED', 'drone': 'Drone2', 'state': 'DRONE_FAILED', 'subtask': 'SubTask7', 'proposal_id': '1:Drone2:SubTask7', 'message': 'Runtime drone failure: drone is in emergency state', 'time': 9348.206285909}
-[EVENT] {'type': 'COMPLETED', 'drone': 'Drone4', 'state': 'COMPLETED', 'subtask': 'SubTask3', 'proposal_id': '1:Drone4:SubTask3', 'message': 'Completed SubTask3', 'time': 9348.921276836}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone4', 'state': 'IDLE', 'subtask': None, 'proposal_id': None, 'message': 'Ready for next task', 'time': 9348.921291576}
-[EVENT] {'type': 'COMPLETED', 'drone': 'Drone3', 'state': 'COMPLETED', 'subtask': 'SubTask2', 'proposal_id': '15:Drone3:SubTask2', 'message': 'Completed SubTask2', 'time': 9350.339689924}
-[EVENT] {'type': 'STATE_CHANGED', 'drone': 'Drone3', 'state': 'IDLE', 'subtask': None, 'proposal_id': None, 'message': 'Ready for next task', 'time': 9350.339710585}
-[EVENT] {'type': 'DRONE_FAILED', 'drone': 'Drone6', 'state': 'DRONE_FAILED', 'subtask': 'SubTask7', 'proposal_id': '17:Drone6:SubTask7', 'message': 'Admission drone failure: drone_state is EMERGENCY', 'time': 9350.680348874}
-"""
-
-
-# ------------------------------------------------------------
-# 2. Convert world coordinates to 2D
+# 2. World -> 2D positions
 # ------------------------------------------------------------
 object_positions = {name: (pos[0], pos[1]) for name, pos in objects.items()}
 drone_start_positions = {name: (info["pos"][0], info["pos"][1]) for name, info in drones.items()}
@@ -44,11 +17,12 @@ all_drones = sorted(drone_start_positions.keys())
 
 
 # ------------------------------------------------------------
-# 3. Color mapping
+# 3. Colors
 # ------------------------------------------------------------
 state_colors = {
     "IDLE": "green",
-    "BUSY": "blue",
+    "FLYING": "blue",
+    "EXECUTING": "purple",
     "DRONE_FAILED": "red",
     "TASK_FAILED": "orange",
 }
@@ -56,35 +30,46 @@ default_color = "gray"
 
 
 # ------------------------------------------------------------
-# 4. Parse EVENT lines
+# 4. Parse events
 # ------------------------------------------------------------
 events = []
-for line in log_text.splitlines():
-    line = line.strip()
-    if line.startswith("[EVENT]"):
-        payload = line[len("[EVENT]"):].strip()
-        events.append(ast.literal_eval(payload))
+with open("logs/events.jsonl", "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        events.append(json.loads(line))
 
 events.sort(key=lambda e: e["time"])
-
 if not events:
-    raise ValueError("No [EVENT] lines found in log_text.")
+    raise ValueError("No [EVENT] lines found.")
 
 
 # ------------------------------------------------------------
-# 5. Build motion segments from events
+# 5. Helper to extract object from "Arrived at X"
 # ------------------------------------------------------------
-# Each active task stores:
-#   start time
-#   start position
-#   target object
-# Then:
-#   COMPLETED -> segment ends at target
-#   DRONE_FAILED/TASK_FAILED -> segment ends at failure point
+def extract_arrival_object(message: str):
+    m = re.search(r"Arrived at (.+)$", message)
+    return m.group(1).strip() if m else None
+
+
 # ------------------------------------------------------------
-active_tasks = {}
+# 6. Build segments and task metadata
+# ------------------------------------------------------------
 segments = []
 last_position = dict(drone_start_positions)
+
+# Current active task per drone
+active_tasks = {}
+# active_tasks[drone] = {
+#   "subtask": ...,
+#   "object": ...,
+#   "skill": None or str,
+#   "start_time": ...,
+#   "start_pos": ...,
+#   "target_pos": ...,
+#   "arrived_time": None or float,
+# }
 
 for ev in events:
     drone = ev["drone"]
@@ -92,101 +77,142 @@ for ev in events:
     t = ev["time"]
     subtask = ev.get("subtask")
 
-    # Task start
     if ev_type == "STATE_CHANGED" and ev.get("state") == "BUSY" and subtask is not None:
         obj_name = ev.get("object")
-        if obj_name is None:
+        if obj_name is None or obj_name not in object_positions:
             continue
 
         active_tasks[drone] = {
             "subtask": subtask,
             "object": obj_name,
-            "t0": t,
-            "start": last_position[drone],
-            "target": object_positions[obj_name],
+            "skill": None,
+            "start_time": t,
+            "start_pos": last_position[drone],
+            "target_pos": object_positions[obj_name],
+            "arrived_time": None,
         }
 
-    # Task completed
+    elif ev_type == "ARRIVED" and drone in active_tasks:
+        task = active_tasks[drone]
+
+        task["arrived_time"] = t
+        if ev.get("skill") is not None:
+            task["skill"] = ev["skill"]
+
+        # fallback if object was not in ARRIVED structured fields
+        arrival_obj = extract_arrival_object(ev.get("message", ""))
+        if arrival_obj is not None and task["object"] is None:
+            task["object"] = arrival_obj
+
+        segments.append({
+            "drone": drone,
+            "phase": "FLYING",
+            "subtask": task["subtask"],
+            "object": task["object"],
+            "skill": task["skill"],
+            "t0": task["start_time"],
+            "t1": t,
+            "start": task["start_pos"],
+            "end": task["target_pos"],
+        })
+
+        last_position[drone] = task["target_pos"]
+
     elif ev_type == "COMPLETED" and drone in active_tasks:
         task = active_tasks.pop(drone)
 
-        seg = {
-            "drone": drone,
-            "subtask": task["subtask"],
-            "object": task["object"],
-            "t0": task["t0"],
-            "t1": t,
-            "start": task["start"],
-            "end": task["target"],
-            "end_reason": "COMPLETED",
-        }
-        segments.append(seg)
-        last_position[drone] = task["target"]
+        if task["arrived_time"] is not None:
+            segments.append({
+                "drone": drone,
+                "phase": "EXECUTING",
+                "subtask": task["subtask"],
+                "object": task["object"],
+                "skill": task["skill"],
+                "t0": task["arrived_time"],
+                "t1": t,
+                "start": task["target_pos"],
+                "end": task["target_pos"],
+            })
+            last_position[drone] = task["target_pos"]
+        else:
+            # fallback if ARRIVED is missing
+            segments.append({
+                "drone": drone,
+                "phase": "FLYING",
+                "subtask": task["subtask"],
+                "object": task["object"],
+                "skill": task["skill"],
+                "t0": task["start_time"],
+                "t1": t,
+                "start": task["start_pos"],
+                "end": task["target_pos"],
+            })
+            last_position[drone] = task["target_pos"]
 
-    # Task or drone failure while moving/executing
-    elif ev_type in ("DRONE_FAILED", "TASK_FAILED") and drone in active_tasks:
-        task = active_tasks.pop(drone)
+    elif ev_type in ("DRONE_FAILED", "TASK_FAILED"):
+        if drone in active_tasks:
+            task = active_tasks.pop(drone)
 
-        total_dt = max(t - task["t0"], 1e-9)
-        # At failure time, freeze the drone at interpolated position.
-        # Since EVENT-only logs do not separate arrival and service,
-        # we approximate with uniform motion from start to target.
-        alpha = min(max((t - task["t0"]) / total_dt, 0.0), 1.0)
+            if task["arrived_time"] is not None:
+                fail_pos = task["target_pos"]
+                fail_start = task["target_pos"]
+            else:
+                # conservative approximation for pre-arrival failure
+                sx, sy = task["start_pos"]
+                ex, ey = task["target_pos"]
+                fail_pos = ((sx + ex) / 2.0, (sy + ey) / 2.0)
+                fail_start = task["start_pos"]
 
-        sx, sy = task["start"]
-        tx, ty = task["target"]
-        fail_pos = (
-            sx + alpha * (tx - sx),
-            sy + alpha * (ty - sy),
-        )
-
-        seg = {
-            "drone": drone,
-            "subtask": task["subtask"],
-            "object": task["object"],
-            "t0": task["t0"],
-            "t1": t,
-            "start": task["start"],
-            "end": fail_pos,
-            "end_reason": ev_type,
-        }
-        segments.append(seg)
-        last_position[drone] = fail_pos
+            segments.append({
+                "drone": drone,
+                "phase": ev_type,
+                "subtask": task["subtask"],
+                "object": task["object"],
+                "skill": task["skill"],
+                "t0": task["start_time"],
+                "t1": t,
+                "start": fail_start,
+                "end": fail_pos,
+            })
+            last_position[drone] = fail_pos
 
 
 # ------------------------------------------------------------
-# 6. Build state timeline per drone
+# 7. Visual state timeline
 # ------------------------------------------------------------
 drone_state_events = {drone: [] for drone in all_drones}
+initial_t = events[0]["time"] - 1e-6
 
-# default initial state
-t0_global = events[0]["time"] - 1e-6
 for drone in all_drones:
-    drone_state_events[drone].append((t0_global, "IDLE"))
+    drone_state_events[drone].append((initial_t, "IDLE"))
 
 for ev in events:
     drone = ev["drone"]
+    t = ev["time"]
     ev_type = ev["type"]
-    state = ev.get("state")
 
     if ev_type == "STATE_CHANGED":
+        state = ev.get("state")
         if state == "BUSY":
-            drone_state_events[drone].append((ev["time"], "BUSY"))
+            drone_state_events[drone].append((t, "FLYING"))
         elif state == "IDLE":
-            drone_state_events[drone].append((ev["time"], "IDLE"))
+            drone_state_events[drone].append((t, "IDLE"))
+
+    elif ev_type == "ARRIVED":
+        drone_state_events[drone].append((t, "EXECUTING"))
 
     elif ev_type == "DRONE_FAILED":
-        drone_state_events[drone].append((ev["time"], "DRONE_FAILED"))
+        drone_state_events[drone].append((t, "DRONE_FAILED"))
 
     elif ev_type == "TASK_FAILED":
-        drone_state_events[drone].append((ev["time"], "TASK_FAILED"))
+        drone_state_events[drone].append((t, "TASK_FAILED"))
 
 for drone in all_drones:
     drone_state_events[drone].sort(key=lambda x: x[0])
 
 
 # ------------------------------------------------------------
-# 7. Position/state helpers
+# 8. Helpers
 # ------------------------------------------------------------
 def drone_state_at(drone, t):
     current = "IDLE"
@@ -208,9 +234,12 @@ def drone_position_at(drone, t):
             return pos
 
         if seg["t0"] <= t <= seg["t1"]:
-            alpha = (t - seg["t0"]) / max(seg["t1"] - seg["t0"], 1e-9)
+            if seg["phase"] == "EXECUTING":
+                return seg["start"]
+
             sx, sy = seg["start"]
             ex, ey = seg["end"]
+            alpha = (t - seg["t0"]) / max(seg["t1"] - seg["t0"], 1e-9)
             return (
                 sx + alpha * (ex - sx),
                 sy + alpha * (ey - sy),
@@ -221,69 +250,87 @@ def drone_position_at(drone, t):
     return pos
 
 
-# ------------------------------------------------------------
-# 8. Timeline
-# ------------------------------------------------------------
-t_min = min(e["time"] for e in events)
-t_max = max(e["time"] for e in events)
+def drone_activity_label_at(drone, t):
+    state = drone_state_at(drone, t)
+    drone_segments = [s for s in segments if s["drone"] == drone]
+    drone_segments.sort(key=lambda s: s["t0"])
 
+    active_seg = None
+    for seg in drone_segments:
+        if seg["t0"] <= t <= seg["t1"]:
+            active_seg = seg
+            break
+
+    if state == "FLYING" and active_seg is not None:
+        goal = active_seg.get("object")
+        return f"{drone} → {goal}" if goal else drone
+
+    if state == "EXECUTING" and active_seg is not None:
+        skill = active_seg.get("skill")
+        return f"{drone} | {skill}" if skill else drone
+
+    if state == "DRONE_FAILED":
+        return f"{drone} | FAILED"
+
+    if state == "TASK_FAILED":
+        return f"{drone} | TASK FAIL"
+
+    return drone
+
+
+# ------------------------------------------------------------
+# 9. Timeline
+# ------------------------------------------------------------
+t_min = min(ev["time"] for ev in events)
+t_max = max(ev["time"] for ev in events)
 fps = 20
 timeline = np.linspace(t_min, t_max, int((t_max - t_min) * fps) + 1)
 
 
 # ------------------------------------------------------------
-# 9. Plot setup
+# 10. Plot
 # ------------------------------------------------------------
-fig, ax = plt.subplots(figsize=(9, 8))
+fig, ax = plt.subplots(figsize=(11, 8))
 
-# Objects as black dots
 obj_x = [xy[0] for xy in object_positions.values()]
 obj_y = [xy[1] for xy in object_positions.values()]
-ax.scatter(obj_x, obj_y, s=140, c="black", zorder=2)
+ax.scatter(obj_x, obj_y, s=120, c="black", zorder=2)
 
 for name, (x, y) in object_positions.items():
-    ax.text(x + 1.2, y + 1.2, name, fontsize=9)
+    ax.text(
+        x, y + 5.0, name,
+        fontsize=8,
+        bbox=dict(facecolor="white", alpha=0.8, edgecolor="none", pad=1.5)
+    )
 
-# Drone scatter
-drone_scatter = ax.scatter([], [], s=140, zorder=3)
+drone_scatter = ax.scatter([], [], s=150, zorder=3)
+drone_labels = {drone: ax.text(0, 0, "", fontsize=8) for drone in all_drones}
+time_text = ax.text(0.02, 0.98, "", transform=ax.transAxes, va="top", fontsize=11)
 
-# Labels
-drone_labels = {
-    drone: ax.text(0, 0, drone, fontsize=9)
-    for drone in all_drones
-}
-
-time_text = ax.text(
-    0.02, 0.98, "",
-    transform=ax.transAxes,
-    va="top",
-    fontsize=11
-)
-
-# Axes limits
 all_x = obj_x + [xy[0] for xy in drone_start_positions.values()]
 all_y = obj_y + [xy[1] for xy in drone_start_positions.values()]
-
 margin = 8
+
 ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
 ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
-ax.set_title("2D Drone Execution from EVENT Logs")
+ax.set_title("2D Drone Execution Visualization")
 ax.grid(True)
 
 legend_elements = [
-    Line2D([0], [0], marker='o', color='w', label='Object', markerfacecolor='black', markersize=10),
-    Line2D([0], [0], marker='o', color='w', label='Idle', markerfacecolor='green', markersize=10),
-    Line2D([0], [0], marker='o', color='w', label='Busy', markerfacecolor='blue', markersize=10),
-    Line2D([0], [0], marker='o', color='w', label='Drone failure', markerfacecolor='red', markersize=10),
-    Line2D([0], [0], marker='o', color='w', label='Task failure', markerfacecolor='orange', markersize=10),
+    Line2D([0], [0], marker='o', color='w', label='Object', markerfacecolor='black', markersize=9),
+    Line2D([0], [0], marker='o', color='w', label='Idle', markerfacecolor='green', markersize=9),
+    Line2D([0], [0], marker='o', color='w', label='Flying', markerfacecolor='blue', markersize=9),
+    Line2D([0], [0], marker='o', color='w', label='Executing', markerfacecolor='purple', markersize=9),
+    Line2D([0], [0], marker='o', color='w', label='Drone failure', markerfacecolor='red', markersize=9),
+    Line2D([0], [0], marker='o', color='w', label='Task failure', markerfacecolor='orange', markersize=9),
 ]
 ax.legend(handles=legend_elements, loc="upper right")
 
 
 # ------------------------------------------------------------
-# 10. Animation update
+# 11. Animation update
 # ------------------------------------------------------------
 def update(frame_idx):
     t = timeline[frame_idx]
@@ -292,19 +339,49 @@ def update(frame_idx):
     colors = []
 
     for drone in all_drones:
-        pos = drone_position_at(drone, t)
-        st = drone_state_at(drone, t)
-
-        positions.append(pos)
-        colors.append(state_colors.get(st, default_color))
+        positions.append(drone_position_at(drone, t))
+        state = drone_state_at(drone, t)
+        colors.append(state_colors.get(state, default_color))
 
     positions = np.array(positions)
     drone_scatter.set_offsets(positions)
     drone_scatter.set_color(colors)
 
-    for i, drone in enumerate(all_drones):
-        x, y = positions[i]
-        drone_labels[drone].set_position((x + 0.8, y + 0.8))
+    # Group drones that are at the same / very close position
+    groups = []
+    tolerance = 0.5  # adjust if needed
+
+    for i, (x, y) in enumerate(positions):
+        placed = False
+        for group in groups:
+            gx, gy = group["center"]
+            if abs(x - gx) <= tolerance and abs(y - gy) <= tolerance:
+                group["members"].append(i)
+                placed = True
+                break
+        if not placed:
+            groups.append({
+                "center": (x, y),
+                "members": [i]
+            })
+
+    # Assign label positions with offsets inside each group
+    for group in groups:
+        members = group["members"]
+        n = len(members)
+
+        for k, i in enumerate(members):
+            drone = all_drones[i]
+            x, y = positions[i]
+            label = drone_activity_label_at(drone, t)
+
+            # stack labels vertically around the point
+            dx = 0.8
+            dy = 0.8 + (k - (n - 1) / 2) * 3.0
+
+            drone_labels[drone].set_position((x + dx, y + dy))
+            drone_labels[drone].set_text(label)
+            drone_labels[drone].set_bbox(dict(facecolor="white", alpha=0.7, edgecolor="none", pad=1.5))
 
     time_text.set_text(f"Time: {t - t_min:.2f} s")
     return [drone_scatter, time_text, *drone_labels.values()]
@@ -320,6 +397,6 @@ anim = FuncAnimation(
 
 plt.show()
 
-# Optional save:
-# anim.save("drone_events_2d.mp4", fps=fps, dpi=150)
-# anim.save("drone_events_2d.gif", fps=fps, dpi=120)
+# Optional save
+# anim.save("drone_execution_with_labels.mp4", fps=fps, dpi=150)
+# anim.save("drone_execution_with_labels.gif", fps=fps, dpi=120)
