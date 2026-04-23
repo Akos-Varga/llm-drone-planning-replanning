@@ -221,9 +221,10 @@ def drone_worker_sim(
                 target_pos = objects[current_task["object"]]
                 target_yaw = OBJECT_TO_YAW[current_task["object"]]
                 execution_time = float(current_task["finish_time"]) - float(current_task["arrival_time"])
+                flight_time = float(current_task["arrival_time"] - current_task["departure_time"])
 
                 if not pose_sent:
-                    node.send_pose(target_pos, target_yaw, execution_time)
+                    node.send_pose(target_pos, target_yaw, flight_time, execution_time)
                     pose_sent = True
 
                 now = time.monotonic()
@@ -243,7 +244,7 @@ def drone_worker_sim(
                         current_task = None
                         current_proposal_id = None
                         continue
-                    print("LLM recheck")
+                    print("Inflight check")
                     decision, reason, _ = run_admission_check(current_task)
                     last_llm_check_time = now
 

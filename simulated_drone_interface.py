@@ -21,6 +21,7 @@ class SimDroneInterface:
         self.link_quality = 5
         self.drone_state = "LANDED"
 
+        self.flight_time = None
         self.execution_time = None
         self.goal_active = False
         self.departure_time = None
@@ -66,17 +67,18 @@ class SimDroneInterface:
 
         return onboard_task_admission(model=model, t=t)
 
-    def send_pose(self, pos, yaw_deg, execution_time): # Missing flight time!!
+    def send_pose(self, pos, yaw_deg, flight_time, execution_time):
         (self.goal_x, self.goal_y, self.goal_z) = pos
         self.goal_yaw = yaw_deg
-        self.execution_time = execution_time 
+        self.execution_time = execution_time
+        self.flight_time = flight_time 
         self.departure_time = time.monotonic()
         self.goal_active = True
 
     def is_arrived(self):
         if not self.goal_active:
             return False
-        if time.monotonic() >= self.departure_time + self.execution_time:
+        if time.monotonic() >= self.departure_time + self.flight_time + self.execution_time:
             self.goal_active = False
             return True
         return False
