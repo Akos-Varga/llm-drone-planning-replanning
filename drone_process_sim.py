@@ -209,6 +209,7 @@ def drone_worker_sim(
                         "drone": drone_name,
                         "state": state,
                         "subtask": current_task["name"],
+                        "object": current_task["object"],
                         "proposal_id": current_proposal_id,
                         "message": f"Started {current_task['name']}",
                         "time": time.monotonic(),
@@ -257,7 +258,7 @@ def drone_worker_sim(
                         event_queue.put({
                             "type": TASK_FAILED_EVENT,
                             "drone": drone_name,
-                            "state": TASK_FAILED,
+                            "state": state,
                             "subtask": failed_subtask,
                             "proposal_id": current_proposal_id,
                             "message": f"Runtime task failure: {reason}",
