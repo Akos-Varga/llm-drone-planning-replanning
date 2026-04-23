@@ -66,10 +66,10 @@ class SimDroneInterface:
 
         return onboard_task_admission(model=model, t=t)
 
-    def send_pose(self, pos, yaw_deg, execution_time):
+    def send_pose(self, pos, yaw_deg, execution_time): # Missing flight time!!
         (self.goal_x, self.goal_y, self.goal_z) = pos
         self.goal_yaw = yaw_deg
-        self.execution_time = execution_time
+        self.execution_time = execution_time 
         self.departure_time = time.monotonic()
         self.goal_active = True
 

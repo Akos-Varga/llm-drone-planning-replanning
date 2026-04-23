@@ -31,10 +31,10 @@ OBJECT_TO_YAW = {
 }
 
 drones = {
-    'Drone1': {'pos': (34, 89, 13), 'skills': ['CaptureThermalImage'], 'speed': 19},
-    'Drone2': {'pos': (89, 17, 9), 'skills': ['MeasureWind', 'CaptureRGBImage'], 'speed': 19},
-    'Drone3': {'pos': (42, 72, 57), 'skills': ['CaptureRGBImage', 'CaptureThermalImage'], 'speed': 15},
-    'Drone4': {'pos': (49, 87, 76), 'skills': ['CaptureRGBImage', 'RecordVideo'], 'speed': 13},
-    'Drone5': {'pos': (64, 37, 95), 'skills': ['CaptureThermalImage', 'InspectStructure'], 'speed': 19},
-    'Drone6': {'pos': (73, 98, 58), 'skills': ['MeasureWind', 'InspectStructure', 'RecordVideo'], 'speed': 11}
+    'Drone1': {'pos': (34, 89, 13), 'skills': ['CaptureThermalImage'], 'speed': 5},
+    'Drone2': {'pos': (89, 17, 9), 'skills': ['MeasureWind', 'CaptureRGBImage'], 'speed': 7},
+    'Drone3': {'pos': (42, 72, 57), 'skills': ['CaptureRGBImage', 'CaptureThermalImage'], 'speed': 10},
+    'Drone4': {'pos': (49, 87, 76), 'skills': ['CaptureRGBImage', 'RecordVideo'], 'speed': 4},
+    'Drone5': {'pos': (64, 37, 95), 'skills': ['CaptureThermalImage', 'InspectStructure'], 'speed': 9},
+    'Drone6': {'pos': (73, 98, 58), 'skills': ['MeasureWind', 'InspectStructure', 'RecordVideo'], 'speed': 8}
 }
