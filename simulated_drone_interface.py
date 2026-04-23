@@ -29,7 +29,7 @@ class SimDroneInterface:
 
         self._last_update_time = time.monotonic()
         self._battery_drain_per_sec = 0.005
-        self._failure_probability = 0.005
+        self._failure_probability = 0.001
         self._link_drop_probability = 0.005
 
     def _update_simulation(self):
@@ -100,7 +100,13 @@ class SimDroneInterface:
         self.departure_time = time.monotonic()
         self.goal_active = True
 
-    def is_arrived(self):
+    def has_arrived(self):
+        self._update_simulation()
+        if not self.goal_active:
+            return False
+        return time.monotonic() >= self.departure_time + self.flight_time
+
+    def is_completed(self):
         self._update_simulation()
         if not self.goal_active:
             return False
