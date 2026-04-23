@@ -7,7 +7,7 @@ if __name__ == "__main__":
     mp.set_start_method("spawn", force=True)
 
     model = "gpt-5-mini"
-    task = "For all houses, collect both RGB and thermal imagery."
+    task = "Survey all houses for both RGB and thermal data, and conduct a structural inspection on Rooftop1."
 
     event_queue = mp.Queue()
 
