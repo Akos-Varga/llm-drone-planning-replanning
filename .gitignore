@@ -4,6 +4,7 @@ saved_gifs/
 misc/
 __pycache__/
 notes.txt
+logs/
 
 # LaTeX build files
 *.aux
