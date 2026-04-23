@@ -13,8 +13,8 @@ from pipeline.decomposer import messages as decomposer_prompt
 from pipeline.allocator import messages as allocator_prompt
 from pipeline.scheduler import messages as scheduler_prompt
 
-from pipeline.utils.vrp_scheduler import solve_vrp
 from pipeline.utils.rule_based_allocator import compute_allocation
+from pipeline.utils.rule_based_scheduler import get_schedule
 from pipeline.utils.travel_time_calculator import compute_travel_times
 from pipeline.utils.schedule_validator import validate_schedule
 from pipeline.utils.inference import LM
@@ -104,10 +104,10 @@ def pipeline_allocator(model, drones, decomposed_task, rule_based=False):
     return subtasks_with_drones
 
 
-def pipeline_scheduler(model, subtasks_with_drones, travel_times, vrp=False):
+def pipeline_scheduler(model, subtasks_with_drones, travel_times, rule_based=False):
     """Returns scheduled task."""
-    if vrp:
-        schedule, _, _ = solve_vrp(objects, drones, subtasks_with_drones)
+    if rule_based:
+        schedule, _, _ = get_schedule(subtasks_with_drones, travel_times)
     else:
         scheduler_message = build_message(
             scheduler_prompt,
@@ -662,7 +662,7 @@ def planner_loop(event_queue, command_queues, model, task):
                 model=model,
                 subtasks_with_drones=subtasks_with_drones,
                 travel_times=travel_times,
-                vrp=False
+                rule_based=True
             )
 
             if not schedule:
