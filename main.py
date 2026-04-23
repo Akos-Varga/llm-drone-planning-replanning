@@ -2,7 +2,6 @@ import multiprocessing as mp
 from drone_process_sim import drone_worker_sim
 # from drone_process_droneless import drone_worker
 from planner_process import planner_loop
-from worlds.test_world import drones
 
 if __name__ == "__main__":
     mp.set_start_method("spawn", force=True)
