@@ -14,7 +14,7 @@ def drone_worker_sim(
     command_queue,
     max_flight_time,
 ):
-    node = SimDroneInterface(namespace, max_flight_time)
+    node = SimDroneInterface(drone_name, namespace, max_flight_time)
 
     state = IDLE
     proposed_task = None
@@ -23,6 +23,7 @@ def drone_worker_sim(
     current_proposal_id = None
     last_llm_check_time = None
     pose_sent = False
+    arrived_sent = False
 
     def wait_for_telemetry(timeout=3.0):
         deadline = time.monotonic() + timeout
@@ -203,6 +204,7 @@ def drone_worker_sim(
                     state = BUSY
                     last_llm_check_time = time.monotonic()
                     pose_sent = False
+                    arrived_sent = False
 
                     event_queue.put({
                         "type": STATE_CHANGED,
@@ -222,7 +224,7 @@ def drone_worker_sim(
                 target_pos = objects[current_task["object"]]
                 target_yaw = OBJECT_TO_YAW[current_task["object"]]
                 execution_time = float(current_task["finish_time"]) - float(current_task["arrival_time"])
-                flight_time = float(current_task["arrival_time"] - current_task["departure_time"])
+                flight_time = float(current_task["arrival_time"]) - float(current_task["departure_time"])
 
                 if not pose_sent:
                     node.send_pose(target_pos, target_yaw, flight_time, execution_time)
@@ -251,7 +253,15 @@ def drone_worker_sim(
                     last_llm_check_time = now
 
                     if decision == "ok":
-                        pass
+                        event_queue.put({
+                            "type": RUNTIME_CHECK_OK,
+                            "drone": drone_name,
+                            "state": state,
+                            "subtask": current_task["name"],
+                            "proposal_id": current_proposal_id,
+                            "message": f"Runtime check OK for {current_task['name']} | Reason: {reason}",
+                            "time": time.monotonic(),
+                        })
 
                     elif decision == "task_failure":
                         failed_subtask = current_task["name"]
@@ -259,7 +269,7 @@ def drone_worker_sim(
                         event_queue.put({
                             "type": REJECTED,
                             "drone": drone_name,
-                            "state": state,   # likely BUSY at the instant of failure
+                            "state": state,
                             "subtask": failed_subtask,
                             "proposal_id": current_proposal_id,
                             "message": f"Runtime task aborted: {reason}",
