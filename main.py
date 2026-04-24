@@ -3,25 +3,24 @@ from drone_process_sim import drone_worker_sim
 # from drone_process_droneless import drone_worker
 from planner_process import planner_loop
 
+model = "gpt-5-mini"
+task = "Document the condition of all houses with video and inspect each rooftop,\n while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower"
+
+drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
+
+drone_configs = {
+    "Drone1": {"namespace": "anafi", "max_flight_time": 25.0},
+    "Drone2": {"namespace": "anafi", "max_flight_time": 22.0},
+    "Drone3": {"namespace": "anafi", "max_flight_time": 18.0},
+    "Drone4": {"namespace": "anafi", "max_flight_time": 30.0},
+    "Drone5": {"namespace": "anafi", "max_flight_time": 20.0},
+    "Drone6": {"namespace": "anafi", "max_flight_time": 27.0},
+}
+
 if __name__ == "__main__":
     mp.set_start_method("spawn", force=True)
 
-    model = "gpt-5-mini"
-    task = "Survey all houses for both RGB and thermal data, and conduct a structural inspection on Rooftop1."
-
     event_queue = mp.Queue()
-
-    drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
-
-    drone_configs = {
-        "Drone1": {"namespace": "anafi", "max_flight_time": 25.0},
-        "Drone2": {"namespace": "anafi", "max_flight_time": 22.0},
-        "Drone3": {"namespace": "anafi", "max_flight_time": 18.0},
-        "Drone4": {"namespace": "anafi", "max_flight_time": 30.0},
-        "Drone5": {"namespace": "anafi", "max_flight_time": 20.0},
-        "Drone6": {"namespace": "anafi", "max_flight_time": 27.0},
-    }
-
     command_queues = {name: mp.Queue() for name in drone_names}
 
     processes = []
@@ -36,7 +35,7 @@ if __name__ == "__main__":
                     cfg["namespace"],
                     event_queue,
                     command_queues[name],
-                    cfg["max_flight_time"],                )
+                    cfg["max_flight_time"],)
             )
             p.start()
             processes.append(p)
