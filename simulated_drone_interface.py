@@ -4,7 +4,8 @@ import random
 from onboard_llm.task_admission_llm import onboard_task_admission, Telemetry
 
 class SimDroneInterface:
-    def __init__(self, namespace, max_flight_time):
+    def __init__(self, drone_name, namespace, max_flight_time):
+        self.drone_name = drone_name
         self.name = namespace
         self.max_flight_time = float(max_flight_time)
 
@@ -82,7 +83,7 @@ class SimDroneInterface:
         )
 
         print(
-            f"Admission check | "
+            f"[{self.drone_name}] Admission check | "
             f"state={telemetry['drone_state']} | "
             f"battery={telemetry['battery_percentage']}% | "
             f"health={telemetry['battery_health']}% | "
