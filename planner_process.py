@@ -38,10 +38,15 @@ def build_message(prompt, content):
 # =============================================================================
 # Helpers
 # =============================================================================
-def init_event_log(path):
+def init_event_log(path, subtasks):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        pass  # clear file
+        header = {
+            "type": "TASK_DECOMPOSITION",
+            "subtasks": subtasks,
+            "time": time.monotonic()
+        }
+        f.write(json.dumps(header) + "\n")
 
 
 def append_event_log(path, event):
@@ -400,8 +405,6 @@ def wait_for_all_acks(
         except queue.Empty:
             continue
 
-        print(f"[EVENT] {event}")
-        append_event_log("logs/events.jsonl", event)
         event_type = event["type"]
         drone = event.get("drone")
         event_subtask = event.get("subtask")
@@ -417,7 +420,9 @@ def wait_for_all_acks(
                 and event_proposal_id == expected_proposal_id
                 and event_subtask == expected_task["name"]
             ):
-                # print(f"[PLANNER] ACK from {drone} for {event_subtask} | Reason: {event_message}")
+                print(f"[EVENT] {event}")
+                append_event_log("logs/events.jsonl", event)
+
                 acked[drone] = proposals[drone]
                 pending.remove(drone)
                 drone_status[drone]["waiting_ack"] = False
@@ -428,7 +433,9 @@ def wait_for_all_acks(
                 and event_proposal_id == expected_proposal_id
                 and event_subtask == expected_task["name"]
             ):
-                # print(f"[PLANNER] REJECT from {drone} for {expected_task['name']} | Reason: {event_message}")
+                print(f"[EVENT] {event}")
+                append_event_log("logs/events.jsonl", event)
+
                 remove_drone_from_subtask(subtasks_with_drones, expected_task, drone)
                 clear_drone_to_idle(drone_status, drone, planner_now(start_time))
                 pending.remove(drone)
@@ -440,7 +447,6 @@ def wait_for_all_acks(
                 and event_proposal_id == expected_proposal_id
                 and event_subtask == expected_task["name"]
             ):
-                # print(f"[PLANNER] PROPOSAL DRONE FAILURE from {drone} for {expected_task['name']} | Reason: {event_message}")
 
                 # Mark this proposal as resolved before runtime handling
                 pending.remove(drone)
@@ -620,7 +626,7 @@ def drain_ready_events(event_queue, drone_status, subtasks_with_drones, task_cat
 # =============================================================================
 def planner_loop(event_queue, command_queues, model, task):
     start_time = time.monotonic()
-    init_event_log("logs/events.jsonl")
+    
 
     current_time = 0.0
     round_counter = itertools.count(1)
@@ -640,6 +646,8 @@ def planner_loop(event_queue, command_queues, model, task):
         for q in command_queues.values():
             q.put({"type": STOP})
         return
+    
+    init_event_log("logs/events.jsonl", decomposed_task)
 
     # --- Allocator ---
     subtasks_with_drones = pipeline_allocator(

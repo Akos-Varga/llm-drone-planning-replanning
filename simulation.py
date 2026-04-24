@@ -44,6 +44,7 @@ default_color = "gray"
 # 4. Parse events
 # ------------------------------------------------------------
 events = []
+task_decomposition_events = []
 seen = set()
 
 with open(EVENT_LOG_PATH, "r", encoding="utf-8") as f:
@@ -54,18 +55,26 @@ with open(EVENT_LOG_PATH, "r", encoding="utf-8") as f:
 
         ev = json.loads(line)
 
+        # Handle accidentally double-encoded JSON strings
+        if isinstance(ev, str):
+            ev = json.loads(ev)
+
         # Remove exact duplicate events
         key = json.dumps(ev, sort_keys=True)
         if key in seen:
             continue
 
         seen.add(key)
-        events.append(ev)
+
+        if ev.get("type") == "TASK_DECOMPOSITION":
+            task_decomposition_events.append(ev)
+        else:
+            events.append(ev)
 
 events.sort(key=lambda e: e["time"])
 
 if not events:
-    raise ValueError("No events found.")
+    raise ValueError("No non-decomposition events found.")
 
 
 # ------------------------------------------------------------
@@ -88,13 +97,13 @@ def admission_status_label(ev):
     if ev_type == "ACK":
         return f"✓ {drone} ACK"
 
-    if ev_type in ("REJECT", "NACK"):
+    if ev_type in ("REJECT", "REJECTED", "NACK"):
         return f"✗ {drone} REJECT"
 
     if ev_type == "RUNTIME_CHECK_OK":
         return f"✓ {drone} IN-FLIGHT OK"
 
-    if ev_type == "RUNTIME_CHECK_REJECT":
+    if ev_type in ("RUNTIME_CHECK_REJECT", "RUNTIME_CHECK_FAILED"):
         return f"✗ {drone} IN-FLIGHT REJECT"
 
     if ev_type == "DRONE_FAILED":
@@ -132,12 +141,33 @@ def failed_drones_at(t):
 # ------------------------------------------------------------
 subtask_info = {}
 
+# First use TASK_DECOMPOSITION as the authoritative initial mapping
+for decomp_ev in task_decomposition_events:
+    for item in decomp_ev.get("subtasks", []):
+        subtask = item.get("name")
+        if not subtask:
+            continue
+
+        subtask_info[subtask] = {
+            "object": item.get("object"),
+            "skill": item.get("skill"),
+            "service_time": item.get("service_time"),
+        }
+
+# Then enrich/fill missing information from later events
 for ev in events:
     subtask = ev.get("subtask")
     if not subtask:
         continue
 
-    subtask_info.setdefault(subtask, {"object": None, "skill": None})
+    subtask_info.setdefault(
+        subtask,
+        {
+            "object": None,
+            "skill": None,
+            "service_time": None,
+        },
+    )
 
     if ev.get("object") is not None:
         subtask_info[subtask]["object"] = ev["object"]
@@ -398,7 +428,6 @@ def subtask_statuses_at(t):
 
         statuses.setdefault(subtask, [])
 
-        # Avoid exact repeated labels caused by duplicate-ish log events
         if not statuses[subtask] or statuses[subtask][-1] != label:
             statuses[subtask].append(label)
 
@@ -433,6 +462,9 @@ def visible_pending_subtasks_at(t):
 # ------------------------------------------------------------
 # 10. Timeline
 # ------------------------------------------------------------
+# Important:
+# TASK_DECOMPOSITION timestamp is ignored.
+# Simulation starts from the first real event, exactly like before.
 t_min = min(ev["time"] for ev in events)
 t_max = max(ev["time"] for ev in events)
 
@@ -562,7 +594,6 @@ def update(frame_idx):
     drone_scatter.set_offsets(positions)
     drone_scatter.set_color(colors)
 
-    # Group drones at nearly same position so labels do not overlap
     groups = []
     tolerance = 0.5
 
@@ -603,7 +634,6 @@ def update(frame_idx):
 
     time_text.set_text(f"Time: {t - t_min:.2f} s")
 
-    # Pending subtasks with ACK/REJECT/failure status beside each subtask
     pending = visible_pending_subtasks_at(t)
 
     task_lines = ["PENDING SUBTASKS", "-" * 30]
@@ -615,7 +645,6 @@ def update(frame_idx):
 
     task_list_text.set_text("\n".join(task_lines))
 
-    # Failed drone list remains on the side
     failed = failed_drones_at(t)
     failed_lines = ["FAILED DRONES", "-" * 30]
 
