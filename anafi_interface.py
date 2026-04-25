@@ -54,6 +54,7 @@ class AnafiInterface(Node):
         self.execution_time = None
         self.arrived_since = None
         self.goal_active = False
+        self.arrival_reported = False
 
         # publishers
         self.pos_pub = self.create_publisher(PoseCommand, f"{self.namespace}/drone/reference/pose", 10)
@@ -159,6 +160,7 @@ class AnafiInterface(Node):
 
         self.arrived_since = None
         self.goal_active = True
+        self.arrival_reported = False
 
         msg = PoseCommand()
         msg.header = Header()
@@ -176,13 +178,12 @@ class AnafiInterface(Node):
             f"Sent PoseCommand: x={msg.x:.2f}, y={msg.y:.2f}, z={msg.z:.2f}, yaw={msg.yaw:.1f}°"
         )
 
-    def is_arrived(self):
+    def has_arrived(self):
         if not self.goal_active:
             return False
 
         current = self.get_pose()
         if current is None:
-            self.arrived_since = None
             return False
 
         dx = self.goal_x - current.x
@@ -197,28 +198,44 @@ class AnafiInterface(Node):
             yaw_err <= self.yaw_tolerance
         )
 
-        now = time.monotonic()
-
         self.get_logger().debug(
             f"{self.namespace} dist_err={dist_err:.2f}, yaw_err={yaw_err:.1f}"
         )
 
         if within_tolerance:
             if self.arrived_since is None:
-                self.arrived_since = now
+                self.arrived_since = time.monotonic()
 
-            if (now - self.arrived_since) >= self.execution_time:
-                self.goal_active = False
+            if not self.arrival_reported:
+                self.arrival_reported = True
                 self.get_logger().info(
-                    f"{self.namespace} arrived "
+                    f"{self.namespace} arrived at "
                     f"[{self.goal_x}, {self.goal_y}, {self.goal_z}]"
                 )
                 return True
         else:
             self.arrived_since = None
+            self.arrival_reported = False
 
-        return False     
-    
+        return False
+
+    def is_completed(self):
+        if not self.goal_active:
+            return False
+
+        if self.arrived_since is None:
+            return False
+
+        if (time.monotonic() - self.arrived_since) >= self.execution_time:
+            self.goal_active = False
+            self.get_logger().info(
+                f"{self.namespace} completed task at "
+                f"[{self.goal_x}, {self.goal_y}, {self.goal_z}]"
+            )
+            return True
+
+        return False
+
     def _set_param(self, name: str, value: float, timeout: float = 3.0):
         param_msg = ParameterMsg()
         param_msg.name = name

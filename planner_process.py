@@ -3,6 +3,7 @@ import csv
 import os
 import queue
 import time
+import json
 import itertools
 from pprint import pprint
 
@@ -12,8 +13,8 @@ from pipeline.decomposer import messages as decomposer_prompt
 from pipeline.allocator import messages as allocator_prompt
 from pipeline.scheduler import messages as scheduler_prompt
 
-from pipeline.utils.vrp_scheduler import solve_vrp
 from pipeline.utils.rule_based_allocator import compute_allocation
+from pipeline.utils.rule_based_scheduler import get_schedule
 from pipeline.utils.travel_time_calculator import compute_travel_times
 from pipeline.utils.schedule_validator import validate_schedule
 from pipeline.utils.inference import LM
@@ -23,7 +24,7 @@ from common import *
 # =============================================================================
 # Parameters
 # =============================================================================
-ACK_TIMEOUT_SECONDS = 30.0
+ACK_TIMEOUT_SECONDS = 60.0
 EVENT_WAIT_SECONDS = 0.5
 
 
@@ -37,6 +38,21 @@ def build_message(prompt, content):
 # =============================================================================
 # Helpers
 # =============================================================================
+def init_event_log(path, subtasks):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        header = {
+            "type": "TASK_DECOMPOSITION",
+            "subtasks": subtasks,
+            "time": time.monotonic()
+        }
+        f.write(json.dumps(header) + "\n")
+
+
+def append_event_log(path, event):
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(event) + "\n")
+
 def planner_now(start_time):
     return time.monotonic() - start_time
 
@@ -93,10 +109,10 @@ def pipeline_allocator(model, drones, decomposed_task, rule_based=False):
     return subtasks_with_drones
 
 
-def pipeline_scheduler(model, subtasks_with_drones, travel_times, vrp=False):
+def pipeline_scheduler(model, subtasks_with_drones, travel_times, rule_based=False):
     """Returns scheduled task."""
-    if vrp:
-        schedule, _, _ = solve_vrp(objects, drones, subtasks_with_drones)
+    if rule_based:
+        schedule, _, _ = get_schedule(subtasks_with_drones, travel_times)
     else:
         scheduler_message = build_message(
             scheduler_prompt,
@@ -210,7 +226,14 @@ def reinsert_failed_task(subtasks_with_drones, task_catalog, task_name):
     exists = any(t["name"] == task_name for t in subtasks_with_drones)
     if not exists:
         subtasks_with_drones.append(task_catalog[task_name].copy())
-        print(f"[PLANNER] Reinserted failed task {task_name}")
+        planner_event = {
+            "type": "REINSERT_FAILED_TASK",
+            "message": "Reinserted failed task",
+            "subtask": task_name,
+            "time": time.monotonic(),
+        }
+        print(f"[PLANNER] {json.dumps(planner_event)}")
+        append_event_log("logs/events.jsonl", planner_event)
 
 
 def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog, current_time):
@@ -225,6 +248,7 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
     drone = event["drone"]
 
     print(f"[EVENT] {event}")
+    append_event_log("logs/events.jsonl", event)
 
     if event_type == STATE_CHANGED:
         new_state = event["state"]
@@ -251,34 +275,22 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
                 drone_status[drone]["available_time"] = current_time
                 needs_replan = False
             else:
-                print(
-                    f"[PLANNER] Ignoring stale IDLE/STATE_CHANGED from {drone}: "
-                    f"event proposal_id={event_proposal_id}, "
-                    f"expected={current_proposal_id}"
-                )
+                planner_event = {
+                    "type": "PLANNER_WARNING",
+                    "message": "Ignoring stale IDLE/STATE_CHANGED event",
+                    "drone": drone,
+                    "event_proposal_id": event_proposal_id,
+                    "expected_proposal_id": current_proposal_id,
+                    "time": time.monotonic(),
+                }
+                print(f"[PLANNER] {json.dumps(planner_event)}")
+                # append_event_log("logs/events.jsonl", planner_event)
 
     elif event_type == COMPLETED_EVENT:
         # Usually followed by STATE_CHANGED->IDLE.
         # We record state but do not force immediate replan here.
         drone_status[drone]["state"] = COMPLETED
         drone_status[drone]["subtask"] = event.get("subtask")
-
-    elif event_type == TASK_FAILED_EVENT:
-        failed_task = event.get("subtask")
-        drone_status[drone]["state"] = IDLE
-        drone_status[drone]["subtask"] = None
-        drone_status[drone]["available_time"] = current_time
-        drone_status[drone]["proposal_id"] = None
-        drone_status[drone]["waiting_ack"] = False
-
-        reinsert_failed_task(subtasks_with_drones, task_catalog, failed_task)
-
-        for subtask in subtasks_with_drones:
-            if subtask["name"] == failed_task:
-                remove_drone_from_subtask(subtasks_with_drones, subtask, drone)
-                break
-            
-        needs_replan = True
 
     elif event_type == DRONE_FAILED_EVENT:
         failed_task = event.get("subtask")
@@ -294,19 +306,32 @@ def handle_runtime_event(event, drone_status, subtasks_with_drones, task_catalog
             reinsert_failed_task(subtasks_with_drones, task_catalog, failed_task)
             remove_drone_from_all_subtasks(subtasks_with_drones, drone)
 
-        print(f"[PLANNER] {drone} removed from future allocation.")
+        planner_event = {
+            "type": "DRONE_REMOVED",
+            "message": "Drone removed from future allocation",
+            "drone": drone,
+            "time": time.monotonic(),
+        }
+        print(f"[PLANNER] {json.dumps(planner_event)}")
+        # append_event_log("logs/events.jsonl", planner_event)
         needs_replan = True
 
     elif event_type == REJECTED:
-        # Fallback runtime reject handler.
         task_name = event.get("subtask")
+
         if task_name is not None:
+            reinsert_failed_task(subtasks_with_drones, task_catalog, task_name)
+
             for subtask in subtasks_with_drones:
                 if subtask["name"] == task_name:
                     remove_drone_from_subtask(subtasks_with_drones, subtask, drone)
                     break
+
         clear_drone_to_idle(drone_status, drone, current_time)
         needs_replan = True
+
+    elif event_type == RUNTIME_CHECK_OK:
+        pass
 
     return needs_replan
 
@@ -395,7 +420,9 @@ def wait_for_all_acks(
                 and event_proposal_id == expected_proposal_id
                 and event_subtask == expected_task["name"]
             ):
-                print(f"[PLANNER] ACK from {drone} for {event_subtask} | Reason: {event_message}")
+                print(f"[EVENT] {event}")
+                append_event_log("logs/events.jsonl", event)
+
                 acked[drone] = proposals[drone]
                 pending.remove(drone)
                 drone_status[drone]["waiting_ack"] = False
@@ -406,31 +433,12 @@ def wait_for_all_acks(
                 and event_proposal_id == expected_proposal_id
                 and event_subtask == expected_task["name"]
             ):
-                print(f"[PLANNER] REJECT from {drone} for {expected_task['name']} | Reason: {event_message}")
+                print(f"[EVENT] {event}")
+                append_event_log("logs/events.jsonl", event)
+
                 remove_drone_from_subtask(subtasks_with_drones, expected_task, drone)
                 clear_drone_to_idle(drone_status, drone, planner_now(start_time))
                 pending.remove(drone)
-                rejected_any = True
-                continue
-
-            if (
-                event_type == TASK_FAILED_EVENT
-                and event_proposal_id == expected_proposal_id
-                and event_subtask == expected_task["name"]
-            ):
-                print(f"[PLANNER] PROPOSAL TASK FAILURE from {drone} for {expected_task['name']} | Reason: {event_message}")
-
-                # Mark this proposal as resolved before runtime handling
-                pending.remove(drone)
-
-                replan_from_event = handle_runtime_event(
-                    event,
-                    drone_status,
-                    subtasks_with_drones,
-                    task_catalog,
-                    planner_now(start_time),
-                )
-                needs_replan = needs_replan or replan_from_event
                 rejected_any = True
                 continue
 
@@ -439,7 +447,6 @@ def wait_for_all_acks(
                 and event_proposal_id == expected_proposal_id
                 and event_subtask == expected_task["name"]
             ):
-                print(f"[PLANNER] PROPOSAL DRONE FAILURE from {drone} for {expected_task['name']} | Reason: {event_message}")
 
                 # Mark this proposal as resolved before runtime handling
                 pending.remove(drone)
@@ -455,12 +462,19 @@ def wait_for_all_acks(
                 rejected_any = True
                 continue
 
-            if event_type in (ACK, REJECTED, TASK_FAILED_EVENT, DRONE_FAILED_EVENT):
-                print(
-                    f"[PLANNER] Ignoring stale {event_type} from {drone}: "
-                    f"event proposal_id={event_proposal_id}, "
-                    f"expected={expected_proposal_id}, subtask={event_subtask}"
-                )
+            if event_type in (ACK, REJECTED, DRONE_FAILED_EVENT):
+                planner_event =  {
+                    "type": "PLANNER_WARNING",
+                    "message": "Ignoring stale event",
+                    "event_type": event_type,
+                    "drone": drone,
+                    "event_proposal_id": event_proposal_id,
+                    "expected_proposal_id": expected_proposal_id,
+                    "subtask": event_subtask,
+                    "time": time.monotonic(),
+                }
+                print(f"[PLANNER] {json.dumps(planner_event)}")
+                # append_event_log("logs/events.jsonl", planner_event)
                 continue
 
         # Any other runtime event should still be processed while waiting.
@@ -476,7 +490,16 @@ def wait_for_all_acks(
     if pending:
         for drone in list(pending):
             task = proposals[drone]
-            print(f"[PLANNER] ACK timeout from {drone} for {task['name']}")
+            planner_event = {
+                "type": "PLANNER_TIMEOUT",
+                "message": "ACK timeout",
+                "drone": drone,
+                "subtask": task["name"],
+                "time": time.monotonic(),
+            }
+            print(f"[PLANNER] {json.dumps(planner_event)}")
+            # append_event_log("logs/events.jsonl", planner_event)
+            
             remove_drone_from_subtask(subtasks_with_drones, task, drone)
             clear_drone_to_idle(drone_status, drone, planner_now(start_time))
         rejected_any = True
@@ -603,6 +626,8 @@ def drain_ready_events(event_queue, drone_status, subtasks_with_drones, task_cat
 # =============================================================================
 def planner_loop(event_queue, command_queues, model, task):
     start_time = time.monotonic()
+    
+
     current_time = 0.0
     round_counter = itertools.count(1)
 
@@ -621,6 +646,8 @@ def planner_loop(event_queue, command_queues, model, task):
         for q in command_queues.values():
             q.put({"type": STOP})
         return
+    
+    init_event_log("logs/events.jsonl", decomposed_task)
 
     # --- Allocator ---
     subtasks_with_drones = pipeline_allocator(
@@ -683,7 +710,7 @@ def planner_loop(event_queue, command_queues, model, task):
                 model=model,
                 subtasks_with_drones=subtasks_with_drones,
                 travel_times=travel_times,
-                vrp=True
+                rule_based=True
             )
 
             if not schedule:

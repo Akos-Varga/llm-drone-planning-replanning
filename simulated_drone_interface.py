@@ -1,9 +1,11 @@
 import time
+import random
 
 from onboard_llm.task_admission_llm import onboard_task_admission, Telemetry
 
 class SimDroneInterface:
-    def __init__(self, namespace, max_flight_time):
+    def __init__(self, drone_name, namespace, max_flight_time):
+        self.drone_name = drone_name
         self.name = namespace
         self.max_flight_time = float(max_flight_time)
 
@@ -16,14 +18,38 @@ class SimDroneInterface:
         self.goal_yaw = None
 
         self._telemetry_ready = True
-        self.battery_percentage = 100.0
-        self.battery_health = 100.0
-        self.link_quality = 5
+        self.battery_percentage = round(random.uniform(60.0, 100.0), 2)
+        self.battery_health = round(random.uniform(60.0, 100.0), 2)
+        self.link_quality = random.randint(4, 5)
         self.drone_state = "LANDED"
 
+        self.flight_time = None
         self.execution_time = None
         self.goal_active = False
         self.departure_time = None
+
+        self._last_update_time = time.monotonic()
+        self._battery_drain_per_sec = 0.005
+        self._failure_probability = 0.001
+        self._link_drop_probability = 0.005
+
+    def _update_simulation(self):
+        now = time.monotonic()
+        dt = now - self._last_update_time
+        self._last_update_time = now
+
+        if dt <= 0:
+            return
+        
+        self.battery_percentage = round(max(0, self.battery_percentage - self._battery_drain_per_sec * dt), 2)
+
+        if random.random() < self._link_drop_probability:
+            self.link_quality += random.choice([-1, 1])
+            self.link_quality = max(0, min(self.link_quality, 5))
+
+        if random.random() < self._failure_probability:
+            self.drone_state = "EMERGENCY"
+        
 
     def telemetry_ready(self):
         return self._telemetry_ready
@@ -57,7 +83,7 @@ class SimDroneInterface:
         )
 
         print(
-            f"Admission check | "
+            f"[{self.drone_name}] Admission check | "
             f"state={telemetry['drone_state']} | "
             f"battery={telemetry['battery_percentage']}% | "
             f"health={telemetry['battery_health']}% | "
@@ -66,17 +92,26 @@ class SimDroneInterface:
 
         return onboard_task_admission(model=model, t=t)
 
-    def send_pose(self, pos, yaw_deg, execution_time): # Missing flight time!!
+    def send_pose(self, pos, yaw_deg, flight_time, execution_time):
+        self._update_simulation()
         (self.goal_x, self.goal_y, self.goal_z) = pos
         self.goal_yaw = yaw_deg
-        self.execution_time = execution_time 
+        self.execution_time = execution_time
+        self.flight_time = flight_time 
         self.departure_time = time.monotonic()
         self.goal_active = True
 
-    def is_arrived(self):
+    def has_arrived(self):
+        self._update_simulation()
         if not self.goal_active:
             return False
-        if time.monotonic() >= self.departure_time + self.execution_time:
+        return time.monotonic() >= self.departure_time + self.flight_time
+
+    def is_completed(self):
+        self._update_simulation()
+        if not self.goal_active:
+            return False
+        if time.monotonic() >= self.departure_time + self.flight_time + self.execution_time:
             self.goal_active = False
             return True
         return False
