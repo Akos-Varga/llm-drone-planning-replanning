@@ -2,26 +2,81 @@
 
 \section{Autonomous Drone Systems}
 
-Types of drones, payloads, sensors, onboard processing
+Autonomous drone systems are becoming increasingly prominent in applications that are otherwise time-consuming or dangerous using traditional methods.
+Such applications include infrastructure inspection, for example monitoring bridge structures \cite{ellenberg2016bridge}, environmental monitoring such
+as wildlife surveys \cite{anderson2013uav}, and search and rescue (SAR) missions, where drones can assist in locating people after disasters \cite{erdelj2016uav}.
+Unmanned Aerial Vehicles (UAVs) are also widely used in surveillance and security applications, including border monitoring and crowd observation \cite{zhou2023uav}.
+In addition, drones have been successfully deployed for logistics and delivery tasks, such as Amazon Prime Air \cite{amazon_prime_air}, as well as real-world medical
+ transport solutions, including long-range delivery of blood samples in Denmark \cite{investindk2022health_drone}.
+Large-scale industrial and energy infrastructures can likewise be efficiently monitored using UAVs \cite{nooralishahi2021drone}.
+
+These diverse applications highlight the potential of UAVs; however, understanding the characteristics and capabilities of different drone platforms is essential.
+
+Multirotor drones are widely used due to their ability to hover, perform vertical takeoff and landing (VTOL), and navigate precisely in constrained environments.
+These capabilities make them particularly suitable for urban operations such as inspection and delivery.
+In contrast, fixed-wing drones are designed for long-endurance missions and can cover large areas efficiently, making them well suited for large-scale mapping and
+environmental monitoring tasks. However, they lack hovering capability and require more space for takeoff and landing, limiting their use in high-precision or urban scenarios.
+
+The suitability of a drone for a given mission depends heavily on the payload it carries.
+RGB cameras provide visual data for inspection, surveillance, and mapping tasks, and can also be used for motion estimation through visual odometry \cite{rostum2023visual}.
+Thermal cameras mounted on UAVs have been successfully applied in infrastructure inspection, for example to detect subsurface delamination in bridge decks using infrared 
+thermography \cite{ellenberg2016bridge}.
+LiDAR-equipped UAVs enable accurate three-dimensional mapping of environments, for instance in forestry applications where canopy structure can be estimated from aerial point 
+clouds \cite{wallace2016assessment}.
+In addition, onboard sensors such as Inertial Measurement Units (IMUs), GPS, and barometers are used for state estimation, including position, velocity, and altitude.
+
+In multi-drone systems, payload diversity introduces functional heterogeneity, meaning that not all drones are capable of performing all tasks. 
+This has direct implications for task allocation, as tasks must be matched with drones that possess the required sensing and operational capabilities.
+
+Many modern UAV applications rely on artificial intelligence (AI) for tasks such as perception, navigation, and decision-making. 
+However, developers often face strict hardware constraints in drone systems. While cloud-based AI can provide significant computational resources, it introduces latency and 
+dependence on network availability.
+The emergence of edge AI enables real-time decision-making by allowing drones to process sensor data locally and operate independently of external infrastructure
+\cite{mcenroe2022edgeaiuav}. These platforms often support hardware acceleration through GPUs, DSPs, or NPUs, enabling efficient execution of machine learning models.
+This is particularly relevant for deploying compact and quantized large language models (LLMs) directly onboard drones.
 
 \section{Multi-Agent Systems}
 
-\subsection{Task Allocation in Multi-Agent Systems}
-centralized, auction-based ...
-challenge: heterogeneous agents
+Multi-agent systems (MAS) consist of multiple autonomous agents that interact in a shared environment to achieve a collective goal. 
+In the context of autonomous drone systems each drone can be modelled as an autonomous agent with it's own sensing and decision making capabilities.
+Deploying heterogeneous UAV agents increases the number of available data modalities, the area that the drone swarm can inspect and provides backup options in case of
+drone failures, thereby increasing mission success rate in constrast to a single agent solution \cite{pantelimon2019survey}.
+The key challenges in multi-agent systems are the efficient coordination between agents and the creation of a mission plan for heterogeneous agents,
+particularly under constraints such as limited communication, energy, and computation.
 
-\subsection{Coordination and Communication}
-why do we need coordination
+\section{Multi-Agent Systems}
 
-\subsection{Centralized vs Distributed Architectures}
+Multi-agent systems (MAS) consist of multiple autonomous agents that interact within a shared environment to achieve individual or collective goals. 
+In the context of autonomous drone systems, each drone can be modeled as an autonomous agent with its own sensing, computation, communication, and decision-making capabilities. 
+Deploying heterogeneous UAV agents can increase the number of available sensing modalities, expand the area that can be inspected, and provide redundancy in case of drone failures, 
+thereby improving mission robustness compared to a single-agent solution \cite{pantelimon2019survey}. 
+However, multi-agent systems also introduce challenges related to coordination, task allocation, and mission planning, 
+particularly under constraints such as limited communication bandwidth, finite battery capacity, and restricted onboard computation.
 
-\section{Task Planning and Scheduling}
+\subsection{Coordination in Multi-Agent Systems}
 
-\subsection{Classical Planning Approaches}
-rule-based approaches
+Two common architectural approaches for coordination in multi-agent systems are centralized and decentralized coordination. 
+In a centralized architecture, a base station or ground control station is responsible for critical mission decisions and coordinates the behavior of the agents. 
+Since the central unit is often equipped with greater computational resources than the individual agents, centralized approaches can support more complex planning and optimization. 
+However, this architecture introduces a single point of failure: if the base station fails or communication with it is lost, the mission may be compromised.
 
-\subsection{Scheduling and Resource Constraints}
-constraints, optimization goals
+In a decentralized architecture, each agent is capable of local decision-making and may communicate directly with other agents. 
+This can improve robustness, since the system can remain operational even if individual agents fail. 
+Decentralized systems may also scale better as new agents are added, since control is not concentrated in a single central unit. 
+However, coordination becomes more challenging because agents must reach decisions using local information and distributed communication mechanisms.
+
+Several mechanisms can support decentralized coordination. 
+Leader election methods dynamically select a coordinating agent responsible for organizing group decisions. 
+Auction-based methods allocate tasks by allowing agents to bid based on local cost, capability, or availability, with tasks assigned according to the most suitable bid. 
+Voting mechanisms allow agents to collectively choose between alternatives, 
+while bargaining and negotiation approaches enable agents to iteratively exchange proposals until an agreement is reached.
+
+Hybrid approaches combine elements of both centralized and decentralized coordination. 
+For example, a ground station may perform high-level mission planning, 
+while individual UAVs retain autonomy to make local decisions based on their current state and surrounding environment. 
+Such architectures can exploit the computational resources of centralized systems while preserving some of the robustness and adaptability of decentralized systems.
+
+\subsection{Planning in Multi-Agent Systems}
 
 \section{Large Language Models}
 
