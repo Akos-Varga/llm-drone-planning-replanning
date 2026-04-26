@@ -134,7 +134,6 @@ Modern LLMs are implemented using the Transformer architecture introduced in Att
 The core component of the Transformer is the self-attention mechanism, 
 which enables the model to weigh the importance of different tokens relative to each other when generating representations. 
 Given an input sequence, attention computes interactions between all token pairs, allowing the model to capture long-range dependencies efficiently. 
-Multi-head attention extends this idea by learning multiple representations in parallel, improving the model’s ability to capture different types of relationships.
 
 Large Language Models vary signficantly in size ranging from millions to hundreds of billions of parameters.
 While larger models generally achieve higher performance due to increased representational capacity, they also require substantial computational resources, 
@@ -144,11 +143,29 @@ A common approach to address this limitations is quantization,
 where model weights are represented with reduced numerical precision (e.g., 8-bit or 4-bit instead of 32-bit floating point). 
 Quantized LLMs significantly reduce memory usage and computational requirements, enabling deployment on edge devices, while maintaining acceptable performance.
 
-\subsection{Prompting and Instruction Following}
-prompting techniques, instruction following models, roles (human/assistant)
-\subsection{LLMs for Planning and Reasoning}
-chain of thought, structured outputs (JSON)
-limitations: hallucinations, inconsistency
+\subsection{LLMs in Multi-Agent Systems}
+Large Language Models (LLMs) have been successfully applied in various domains, including multi-agent systems, due to their strong reasoning abilities, contextual awareness,
+and generalization capabilities.
+In this context, their applications can be broadly categorized into communication, perception, planning, and control, following \cite{kim2024llmrobots}.
+
+LLMs are particularly effective at handling the ambiguity of natural language and can be used for both \textit{interpretation} and \textit{grounding}. 
+Interpretation refers to converting natural language into structured representations, such as code or formal planning languages (e.g., PDDL). 
+Grounding involves mapping human instructions to objects, actions, or processes that can be recognized and executed by agents.
+
+Perception enables agents to operate in real-world environments.
+Language models have been extended to multimodal settings by integrating visual and auditory inputs. 
+These models, such as Vision-Language Models (VLMs) and Audio Language Models (ALMs), process non-textual data alongside language, 
+allowing agents to detect objects and interpret signals from their surroundings.
+
+In planning, traditional approaches rely on predefined algorithms that must be adapted whenever the environment or objectives change. 
+In contrast, LLM-based planning through prompting allows for flexible task specification and the incorporation of environmental feedback. 
+However, due to the risk of hallucinations, LLM-generated plans should be validated against system constraints or combined with external planning methods.
+
+For control, LLMs can be used in two main ways. 
+In the direct approach, the model maps natural language instructions directly to control commands or actions. 
+In the indirect approach, the model generates higher-level outputs such as subgoals or plans, which are then executed by separate control systems. 
+The indirect approach is generally more flexible and better suited for complex and multi-agent scenarios, 
+although it still requires reliable grounding of language into physical actions.
 
 
 \section{Related Work}
