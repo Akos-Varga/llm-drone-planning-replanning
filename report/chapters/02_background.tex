@@ -37,7 +37,7 @@ This is particularly relevant for deploying compact and quantized large language
 
 \section{Multi-Agent Systems}
 
-Multi-agent systems (MAS) consist of multiple autonomous agents that interact in a shared environment to achieve a collective goal. 
+Multi-agent systems (MAS) consist of multiple autonomous agents that interact in a shared environment to achieve a collective goal \cite{wooldridge2002multiagent}. 
 In the context of autonomous drone systems each drone can be modelled as an autonomous agent with it's own sensing and decision making capabilities.
 Deploying heterogeneous UAV agents increases the number of available data modalities, the area that the drone swarm can inspect and provides backup options in case of
 drone failures, thereby increasing mission success rate in constrast to a single agent solution \cite{pantelimon2019survey}.
@@ -78,22 +78,77 @@ Such architectures can exploit the computational resources of centralized system
 
 \subsection{Planning in Multi-Agent Systems}
 
-\section{Large Language Models}
+In multi-agent systems with heterogeneous agents, the task allocation problem consists of assigning tasks to agents under given constraints, such as energy, capability,
+and communication limitations, while optimizing a global objective, for example minimizing mission time or maximizing coverage.
+Several approaches to multi-agent planning have been identified in the literature \cite{durfee1999dpsp}.
 
-\subsection{Transformer Architecture}
-attention mechanism, quantized LLMs
+One approach is centralized planning for distributed execution, where a central planner constructs a global plan for all agents. 
+This plan specifies both the allocation of tasks and the ordering of actions, and is subsequently distributed to individual agents for execution. 
+While this approach simplifies coordination by leveraging a global view of the system, it relies on a central entity and is therefore susceptible to single points of failure.
+
+An alternative approach is distributed planning with centralized plan generation, where multiple agents collaborate to construct a single global plan. 
+In this case, agents may contribute specialized knowledge or capabilities during the planning phase, but the resulting plan is still shared among agents for execution. 
+This approach can improve flexibility in plan generation, although it still assumes the existence of a coherent global plan.
+
+The most decentralized approach is distributed planning for distributed execution, 
+where each agent independently generates its own plan while coordinating with others during execution. 
+In such systems, agents may only possess partial knowledge of the overall mission and must dynamically resolve conflicts and dependencies. 
+Coordination in this setting often relies on negotiation, communication, or local decision-making mechanisms. 
+As a result, a fully global plan may never exist, and system behavior emerges from the interaction of individual agent plans.
+
+In general, centralized planning approaches are simpler to design and can produce globally consistent plans due to their access to complete system information. 
+However, decentralized approaches offer greater robustness and scalability, as they avoid reliance on a single coordinating entity. 
+The choice between these approaches depends on the requirements of the system, including the need for global optimality, robustness to failures, 
+and adaptability to dynamic environments.
+
+Many multi-agent planning problems can be formulated as optimization problems. 
+A common abstraction is the multi-traveling salesman problem (mTSP), where multiple agents must visit a set of locations while minimizing a cost function. 
+In this formulation, tasks correspond to nodes, agents correspond to salesmen, and decision variables determine the assignment and ordering of tasks for each agent.
+While the multi-traveling salesman problem (mTSP) provides a useful abstraction, more realistic formulations are given by the Vehicle Routing Problem (VRP). 
+In the VRP, the objective is to determine optimal routes for multiple vehicles that must visit a set of locations. 
+In the special case of a single vehicle, the problem reduces to the classical Traveling Salesperson Problem (TSP).
+The notion of optimality in VRP depends on the application context. 
+A common objective is to minimize the total distance traveled by all vehicles; however, this may lead to unbalanced solutions where a single agent performs most tasks. 
+An alternative objective is to minimize the length of the longest route, 
+which promotes balanced workload distribution and reduces overall mission completion time. 
+Furthermore, VRP formulations can incorporate additional constraints, 
+such as capacity limits and time windows, which allow modeling of practical considerations like energy constraints and task deadlines in multi-drone systems.
+
+Different solution approaches exist for such problems. 
+Exact methods, such as Mixed Integer Linear Programming (MILP), can provide optimal solutions but often suffer from high computational complexity and limited scalability. 
+In contrast, heuristic and metaheuristic methods, such as genetic algorithms, can provide faster solutions and are more suitable for large-scale problems, 
+albeit without guarantees of optimality \cite{bektas2006mtsp}.
+
+Finally, real-world multi-agent systems must handle dynamic changes, such as agent failures. 
+In such cases, replanning is required, which can be performed either centrally by a global planner or locally by individual agents. 
+Hybrid approaches may combine both strategies, allowing systems to balance global optimality with robustness and adaptability.
+
+\section{Large Language Models}
+Large Language Models (LLMs) are computational systems designed to generate and understand natural language by modeling the statistical structure of text.
+At their core LLMs estimate the probability distribution of the next token given a sequence of preceeding tokens.
+Formally, given a context of $\omega_1, \omega_2, \dots, \omega_{t-1}$, the model predicts the next token $w_t$, thereby enabling both language understanding and generation.
+The key idea that enables modern LLMs is preptraining, 
+where models learn linguistic structure and world knowledge by repeatedly predicting the next token over very large text corpora.
+
+Modern LLMs are implemented using the Transformer architecture introduced in Attention is All You Need \cite{vaswani2017attention}.
+The core component of the Transformer is the self-attention mechanism, 
+which enables the model to weigh the importance of different tokens relative to each other when generating representations. 
+Given an input sequence, attention computes interactions between all token pairs, allowing the model to capture long-range dependencies efficiently. 
+Multi-head attention extends this idea by learning multiple representations in parallel, improving the model’s ability to capture different types of relationships.
+
+Large Language Models vary signficantly in size ranging from millions to hundreds of billions of parameters.
+While larger models generally achieve higher performance due to increased representational capacity, they also require substantial computational resources, 
+including high memory bandwidth and specialized hardware such as GPUs. 
+This poses a challenge for deployment in resource-constrained environments, such as embedded systems, mobile devices, or robotic platforms.
+A common approach to address this limitations is quantization, 
+where model weights are represented with reduced numerical precision (e.g., 8-bit or 4-bit instead of 32-bit floating point). 
+Quantized LLMs significantly reduce memory usage and computational requirements, enabling deployment on edge devices, while maintaining acceptable performance.
+
 \subsection{Prompting and Instruction Following}
 prompting techniques, instruction following models, roles (human/assistant)
 \subsection{LLMs for Planning and Reasoning}
 chain of thought, structured outputs (JSON)
 limitations: hallucinations, inconsistency
-
-\section{System Constraints in Autonomous Drone Systems}
-Latency and Computation Constraints
-
-Edge vs Cloud Processing
-
-Robustness and Failure Handling
 
 
 \section{Related Work}
