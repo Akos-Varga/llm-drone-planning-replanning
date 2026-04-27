@@ -170,7 +170,19 @@ although it still requires reliable grounding of language into physical actions.
 
 \section{Related Work}
 
-\subsection{LLMs in Robotics and Autonomous Systems}
+\subsection{LLMs in Autonomous Systems}
+Among early LLM-based planners for robotics, SayCan \cite{ahn2022doasican} introduces a framework that grounds language model reasoning in real-world robot capabilities.
+In this approach, an LLM generates candidate low-level skills from a high-level natural language instruction.
+Each skill is evaluated using two complementary scores: (i) a language model score, which measures how relevant the skill is for completing the task, and (ii) an affordance score, which estimates the feasibility of executing the skill given the robot's current state and environment.
+These scores are combined to select the most appropriate action, and the process is iteratively repeated until the task is completed.
+This work demonstrates that LLMs can be effectively applied to robotics when their outputs are constrained by physical feasibility.
+
+While SayCan focuses on a single robot, RoCo \cite{mandi2023roco} extends this paradigm to multi-robot systems through collaborative reasoning.
+In RoCo, each robot is associated with an LLM-based agent that has access to its own capabilities, local observations, and partial knowledge of the environment.
+These agents communicate through a structured dialogue process, iteratively proposing, refining, and critiquing task plans.
+Through this interaction, the system converges to a shared global plan, which is then decomposed and distributed among the robots for execution.
+Additionally, RoCo leverages LLMs during execution by generating intermediate representations such as 3D waypoints, enabling more flexible and adaptive behavior.
+
 Include research gap in each subsection.
 \subsection{Multi-Agent Task Allocation and Coordination}
 \subsection{Replanning and Adaptive Systems}
