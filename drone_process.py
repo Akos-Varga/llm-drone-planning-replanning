@@ -13,7 +13,8 @@ def drone_worker(
     namespace,
     event_queue,
     command_queue,
-    max_flight_time
+    max_flight_time,
+    flight_altitude
 ):
 
     rclpy.init()
@@ -28,6 +29,7 @@ def drone_worker(
     pose_sent = False
     arrived_sent = False
     flight_started = False
+    execution_phase = None
 
     def wait_for_telemetry(timeout=3.0):
         deadline = time.monotonic() + timeout
@@ -222,7 +224,8 @@ def drone_worker(
                     last_llm_check_time = time.monotonic()
                     pose_sent = False
                     arrived_sent = False
-
+                    execution_phase = None
+            
                     event_queue.put({
                         "type": STATE_CHANGED,
                         "drone": drone_name,
@@ -241,6 +244,24 @@ def drone_worker(
                 target_yaw = OBJECT_TO_YAW[current_task["object"]]
                 execution_time = current_task["finish_time"] - current_task["arrival_time"] 
 
+                current_pose = node.get_pose()
+                if current_pose is None:
+                    continue
+
+                ascend_pos = (
+                    current_pose.x,
+                    current_pose.y,
+                    flight_altitude,
+                )
+
+                cruise_pos = (
+                    target_pos[0],
+                    target_pos[1],
+                    flight_altitude,
+                )
+
+                work_pos = target_pos
+
                 if not pose_sent:
                     if not flight_started:
                         node.arm()
@@ -254,10 +275,34 @@ def drone_worker(
 
                         flight_started  = True
 
-                    node.send_pose(target_pos, target_yaw, execution_time)
+                    node.send_pose(ascend_pos, target_yaw, 0.0)
                     pose_sent = True
-                    arrived_sent = False
+                    execution_phase = "ASCEND"
 
+                if execution_phase == "ASCEND" and node.has_arrived():
+                    node.send_pose(cruise_pos, target_yaw, 0.0)
+                    execution_phase = "CRUISE"
+
+                if execution_phase == "CRUISE" and node.has_arrived():
+                    node.send_pose(work_pos, target_yaw, execution_time)
+                    execution_phase = "WORK"
+
+                # --- ARRIVAL ---
+                if execution_phase == "WORK" and not arrived_sent and node.has_arrived():
+                    arrived_sent = True
+
+                    event_queue.put({
+                        "type": ARRIVED_EVENT,
+                        "drone": drone_name,
+                        "state": state,
+                        "subtask": current_task["name"],
+                        "skill": current_task["skill"],
+                        "proposal_id": current_proposal_id,
+                        "message": f"Arrived at {current_task['object']}",
+                        "time": time.monotonic(),
+                    })
+
+                # --- INFLIGHT CHECK ---
                 now = time.monotonic()
 
                 if now - last_llm_check_time >= LLM_RECHECK_PERIOD:
@@ -343,23 +388,8 @@ def drone_worker(
                         # current_proposal_id = None
                         break
 
-                # --- ARRIVAL ---
-                if not arrived_sent and node.has_arrived():
-                    arrived_sent = True
-
-                    event_queue.put({
-                        "type": ARRIVED_EVENT,
-                        "drone": drone_name,
-                        "state": state,
-                        "subtask": current_task["name"],
-                        "skill": current_task["skill"],
-                        "proposal_id": current_proposal_id,
-                        "message": f"Arrived at {current_task['object']}",
-                        "time": time.monotonic(),
-                    })
-
                 # --- COMPLETION ---
-                if arrived_sent and node.is_completed():
+                if execution_phase == "WORK" and arrived_sent and node.is_completed():
                     finished_subtask = current_task["name"]
                     state = COMPLETED
 

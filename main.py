@@ -9,12 +9,12 @@ task = "Document the condition of all houses with video and inspect each rooftop
 drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
 
 drone_configs = {
-    "Drone1": {"namespace": "anafi", "max_flight_time": 25.0},
-    "Drone2": {"namespace": "anafi", "max_flight_time": 22.0},
-    "Drone3": {"namespace": "anafi", "max_flight_time": 18.0},
-    "Drone4": {"namespace": "anafi", "max_flight_time": 30.0},
-    "Drone5": {"namespace": "anafi", "max_flight_time": 20.0},
-    "Drone6": {"namespace": "anafi", "max_flight_time": 27.0},
+    "Drone1": {"namespace": "anafi", "max_flight_time": 25.0, "flight_altitude": 1.5},
+    "Drone2": {"namespace": "anafi", "max_flight_time": 22.0, "flight_altitude": 2.0},
+    "Drone3": {"namespace": "anafi", "max_flight_time": 18.0, "flight_altitude": 2.5},
+    "Drone4": {"namespace": "anafi", "max_flight_time": 30.0, "flight_altitude": 3.5},
+    "Drone5": {"namespace": "anafi", "max_flight_time": 20.0, "flight_altitude": 4.0},
+    "Drone6": {"namespace": "anafi", "max_flight_time": 27.0, "flight_altitude": 4.5},
 }
 
 if __name__ == "__main__":
@@ -28,14 +28,15 @@ if __name__ == "__main__":
         for name in drone_names:
             cfg = drone_configs[name]
             p = mp.Process(
-                target=drone_worker_sim,
+                target=drone_worker_sim, 
                 # target=drone_worker,
                 args=(
                     name,
                     cfg["namespace"],
                     event_queue,
                     command_queues[name],
-                    cfg["max_flight_time"],)
+                    cfg["max_flight_time"],
+                    cfg["flight_altitude"])
             )
             p.start()
             processes.append(p)
