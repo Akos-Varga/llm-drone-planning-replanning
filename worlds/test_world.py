@@ -30,6 +30,8 @@ OBJECT_TO_YAW = {
     'Tower': 0,
 }
 
+drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
+
 drones = {
     'Drone1': {'pos': (34, 89, 13), 'skills': ['CaptureThermalImage'], 'speed': 6},
     'Drone2': {'pos': (89, 17, 9), 'skills': ['MeasureWind', 'CaptureRGBImage'], 'speed': 8},
@@ -37,4 +39,13 @@ drones = {
     'Drone4': {'pos': (49, 87, 76), 'skills': ['CaptureRGBImage', 'RecordVideo'], 'speed': 7},
     'Drone5': {'pos': (64, 37, 95), 'skills': ['CaptureThermalImage', 'InspectStructure'], 'speed': 7},
     'Drone6': {'pos': (73, 98, 58), 'skills': ['MeasureWind', 'InspectStructure', 'RecordVideo'], 'speed': 9}
+}
+
+drone_configs = {
+    "Drone1": {"namespace": "anafi", "max_flight_time": 25.0, "flight_altitude": 1.5},
+    "Drone2": {"namespace": "anafi", "max_flight_time": 22.0, "flight_altitude": 2.0},
+    "Drone3": {"namespace": "anafi", "max_flight_time": 18.0, "flight_altitude": 2.5},
+    "Drone4": {"namespace": "anafi", "max_flight_time": 30.0, "flight_altitude": 3.5},
+    "Drone5": {"namespace": "anafi", "max_flight_time": 20.0, "flight_altitude": 4.0},
+    "Drone6": {"namespace": "anafi", "max_flight_time": 27.0, "flight_altitude": 4.5},
 }

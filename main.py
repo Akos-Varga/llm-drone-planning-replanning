@@ -1,21 +1,11 @@
 import multiprocessing as mp
 from drone_process_sim import drone_worker_sim
-# from drone_process_droneless import drone_worker
+# from drone_process import drone_worker
 from planner_process import planner_loop
+from worlds.test_world import skills, objects, drones, drone_names, drone_configs # CHANGE TO TEST WORLD IN LAB
 
 model = "gpt-5-mini"
 task = "Document the condition of all houses with video and inspect each rooftop,\n while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower"
-
-drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
-
-drone_configs = {
-    "Drone1": {"namespace": "anafi", "max_flight_time": 25.0, "flight_altitude": 1.5},
-    "Drone2": {"namespace": "anafi", "max_flight_time": 22.0, "flight_altitude": 2.0},
-    "Drone3": {"namespace": "anafi", "max_flight_time": 18.0, "flight_altitude": 2.5},
-    "Drone4": {"namespace": "anafi", "max_flight_time": 30.0, "flight_altitude": 3.5},
-    "Drone5": {"namespace": "anafi", "max_flight_time": 20.0, "flight_altitude": 4.0},
-    "Drone6": {"namespace": "anafi", "max_flight_time": 27.0, "flight_altitude": 4.5},
-}
 
 if __name__ == "__main__":
     mp.set_start_method("spawn", force=True)
@@ -41,7 +31,7 @@ if __name__ == "__main__":
             p.start()
             processes.append(p)
 
-        planner_loop(event_queue, command_queues, model, task)
+        planner_loop(event_queue, command_queues, model, task, skills, objects, drones)
 
     finally:
         for name in drone_names:

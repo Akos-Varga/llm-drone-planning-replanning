@@ -8,7 +8,6 @@ import itertools
 from pprint import pprint
 
 # --- Imports ---
-from worlds.test_world import skills, objects, drones # CHANGE TO TEST WORLD IN LAB
 from pipeline.decomposer import messages as decomposer_prompt
 from pipeline.allocator import messages as allocator_prompt
 from pipeline.scheduler import messages as scheduler_prompt
@@ -624,7 +623,7 @@ def drain_ready_events(event_queue, drone_status, subtasks_with_drones, task_cat
 # =============================================================================
 # Planner loop
 # =============================================================================
-def planner_loop(event_queue, command_queues, model, task):
+def planner_loop(event_queue, command_queues, model, task, skills, objects, drones):
     start_time = time.monotonic()
     
 

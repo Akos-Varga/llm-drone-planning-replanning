@@ -13,6 +13,7 @@ def drone_worker_sim(
     event_queue,
     command_queue,
     max_flight_time,
+    flight_altitude,
 ):
     node = SimDroneInterface(drone_name, namespace, max_flight_time)
 
