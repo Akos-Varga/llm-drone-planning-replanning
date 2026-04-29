@@ -265,7 +265,6 @@ def drone_worker_sim(
 
                     elif decision == "task_failure":
                         failed_subtask = current_task["name"]
-        
                         event_queue.put({
                             "type": REJECTED,
                             "drone": drone_name,
