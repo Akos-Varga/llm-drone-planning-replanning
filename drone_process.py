@@ -13,7 +13,7 @@ def drone_worker(
     namespace,
     event_queue,
     command_queue,
-    max_flight_time=25.0
+    max_flight_time
 ):
 
     rclpy.init()
@@ -26,6 +26,7 @@ def drone_worker(
     current_proposal_id = None
     last_llm_check_time = None
     pose_sent = False
+    arrived_sent = False
 
     def wait_for_telemetry(timeout=3.0):
         deadline = time.monotonic() + timeout
@@ -102,8 +103,6 @@ def drone_worker(
                         continue        
                     
                     decision, reason, _ = run_admission_check(task)
-
-                    # decision is now one of: "ok", "task_failure", "drone_failure", or None on error
 
                     if decision == "ok":
                         proposed_task = task
@@ -212,6 +211,7 @@ def drone_worker(
                     state = BUSY
                     last_llm_check_time = time.monotonic()
                     pose_sent = False
+                    arrived_sent = False
 
                     event_queue.put({
                         "type": STATE_CHANGED,
@@ -229,11 +229,12 @@ def drone_worker(
             if state == BUSY and current_task is not None:
                 target_pos = objects[current_task["object"]]
                 target_yaw = OBJECT_TO_YAW[current_task["object"]]
-                exuction_time = current_task["finish_time"] - current_task["arrival_time"] 
+                execution_time = current_task["finish_time"] - current_task["arrival_time"] 
 
                 if not pose_sent:
-                    node.send_pose(target_pos, target_yaw, exuction_time)
+                    node.send_pose(target_pos, target_yaw, execution_time)
                     pose_sent = True
+                    arrived_sent = False
 
                 now = time.monotonic()
 
@@ -252,20 +253,28 @@ def drone_worker(
                         current_task = None
                         current_proposal_id = None
                         continue
-
+                    
+                    print("Inflight check")
                     decision, reason, _ = run_admission_check(current_task)
                     last_llm_check_time = now
 
                     if decision == "ok":
-                        pass
+                        event_queue.put({
+                            "type": RUNTIME_CHECK_OK,
+                            "drone": drone_name,
+                            "state": state,
+                            "subtask": current_task["name"],
+                            "proposal_id": current_proposal_id,
+                            "message": f"Runtime check OK for {current_task['name']} | Reason: {reason}",
+                            "time": time.monotonic(),
+                        })
 
                     elif decision == "task_failure":
                         failed_subtask = current_task["name"]
-                        state = TASK_FAILED
                         event_queue.put({
-                            "type": TASK_FAILED_EVENT,
+                            "type": REJECTED,
                             "drone": drone_name,
-                            "state": TASK_FAILED,
+                            "state": state,
                             "subtask": failed_subtask,
                             "proposal_id": current_proposal_id,
                             "message": f"Runtime task failure: {reason}",
@@ -302,10 +311,27 @@ def drone_worker(
                         current_task = None
                         current_proposal_id = None
                         continue
-                
-                if node.is_arrived():
+
+                # --- ARRIVAL ---
+                if not arrived_sent and node.has_arrived():
+                    arrived_sent = True
+
+                    event_queue.put({
+                        "type": ARRIVED_EVENT,
+                        "drone": drone_name,
+                        "state": state,
+                        "subtask": current_task["name"],
+                        "skill": current_task["skill"],
+                        "proposal_id": current_proposal_id,
+                        "message": f"Arrived at {current_task['object']}",
+                        "time": time.monotonic(),
+                    })
+
+                # --- COMPLETION ---
+                if arrived_sent and node.is_completed():
                     finished_subtask = current_task["name"]
                     state = COMPLETED
+
                     event_queue.put({
                         "type": COMPLETED_EVENT,
                         "drone": drone_name,
@@ -319,6 +345,7 @@ def drone_worker(
                     current_task = None
                     current_proposal_id = None
                     state = IDLE
+
                     event_queue.put({
                         "type": STATE_CHANGED,
                         "drone": drone_name,
