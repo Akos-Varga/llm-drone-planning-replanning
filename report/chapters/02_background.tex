@@ -124,24 +124,29 @@ In such cases, replanning is required, which can be performed either centrally b
 Hybrid approaches may combine both strategies, allowing systems to balance global optimality with robustness and adaptability.
 
 \section{Large Language Models}
+
+\subsection{Fundamentals of Large Language Models}
 Large Language Models (LLMs) are computational systems designed to generate and understand natural language by modeling the statistical structure of text.
-At their core LLMs estimate the probability distribution of the next token given a sequence of preceeding tokens.
+At their core, LLMs estimate the probability distribution of the next token given a sequence of preceding tokens.
 Formally, given a context of $\omega_1, \omega_2, \dots, \omega_{t-1}$, the model predicts the next token $w_t$, thereby enabling both language understanding and generation.
-The key idea that enables modern LLMs is preptraining, 
+The key idea that enables modern LLMs is pretraining, 
 where models learn linguistic structure and world knowledge by repeatedly predicting the next token over very large text corpora.
 
+\subsection{Transformer Architecture}
 Modern LLMs are implemented using the Transformer architecture introduced in Attention is All You Need \cite{vaswani2017attention}.
 The core component of the Transformer is the self-attention mechanism, 
 which enables the model to weigh the importance of different tokens relative to each other when generating representations. 
-Given an input sequence, attention computes interactions between all token pairs, allowing the model to capture long-range dependencies efficiently. 
+Given an input sequence, attention computes interactions between all token pairs, allowing the model to capture long-range dependencies efficiently.
 
-Large Language Models vary signficantly in size ranging from millions to hundreds of billions of parameters.
+\subsection{Model Scaling and Deployment Considerations}
+Large Language Models vary significantly in size, ranging from millions to hundreds of billions of parameters.
 While larger models generally achieve higher performance due to increased representational capacity, they also require substantial computational resources, 
 including high memory bandwidth and specialized hardware such as GPUs. 
 This poses a challenge for deployment in resource-constrained environments, such as embedded systems, mobile devices, or robotic platforms.
-A common approach to address this limitations is quantization, 
+
+A common approach to address these limitations is quantization, 
 where model weights are represented with reduced numerical precision (e.g., 8-bit or 4-bit instead of 32-bit floating point). 
-Quantized LLMs significantly reduce memory usage and computational requirements, enabling deployment on edge devices, while maintaining acceptable performance.
+Quantized LLMs significantly reduce memory usage and computational requirements, enabling deployment on edge devices while maintaining acceptable performance.
 
 \subsection{LLMs in Multi-Agent Systems}
 Large Language Models (LLMs) have been successfully applied in various domains, including multi-agent systems, due to their strong reasoning abilities, contextual awareness,
@@ -167,7 +172,6 @@ In the indirect approach, the model generates higher-level outputs such as subgo
 The indirect approach is generally more flexible and better suited for complex and multi-agent scenarios, 
 although it still requires reliable grounding of language into physical actions.
 
-
 \section{Related Work}
 
 \subsection{LLMs in Autonomous Systems}
@@ -177,12 +181,56 @@ Each skill is evaluated using two complementary scores: (i) a language model sco
 These scores are combined to select the most appropriate action, and the process is iteratively repeated until the task is completed.
 This work demonstrates that LLMs can be effectively applied to robotics when their outputs are constrained by physical feasibility.
 
-While SayCan focuses on a single robot, RoCo \cite{mandi2023roco} extends this paradigm to multi-robot systems through collaborative reasoning.
+When it comes to UAVs \cite{wang2025gsce} introduced a framework called GSCE, which combines guidelines, skill APIs,
+constraints and examples in one prompt using step-by-step, 
+Chain of Thought (CoT) reasoning together with few-shot examples to get executable code for a single drone.
+
+While SayCan and GSCE focuses on a single robot, RoCo \cite{mandi2023roco} extends this paradigm to multi-robot systems through collaborative reasoning.
 In RoCo, each robot is associated with an LLM-based agent that has access to its own capabilities, local observations, and partial knowledge of the environment.
 These agents communicate through a structured dialogue process, iteratively proposing, refining, and critiquing task plans.
 Through this interaction, the system converges to a shared global plan, which is then decomposed and distributed among the robots for execution.
 Additionally, RoCo leverages LLMs during execution by generating intermediate representations such as 3D waypoints, enabling more flexible and adaptive behavior.
 
-Include research gap in each subsection.
-\subsection{Multi-Agent Task Allocation and Coordination}
-\subsection{Replanning and Adaptive Systems}
+SMART-LLM \cite{kannan2024smartllm} introduces a structured framework for task planning in multi-agent systems, 
+which generates executable mission plans through a three-stage pipeline, each implemented by a dedicated LLM agent. 
+In the first stage, \textit{task decomposition}, the LLM converts a high-level natural language instruction into a set of independent subtasks. 
+Each subtask is represented as a sequence of actions, while incorporating contextual information about the environment. 
+The second stage, \textit{coalition formation}, considers the available robots and their capabilities, 
+and assigns groups of robots to each subtask such that every coalition collectively satisfies the required skill set for execution. 
+In the final stage, \textit{task allocation}, the system generates executable code for each robot based on the assigned subtasks and coalitions, 
+resulting in a distributed execution plan. 
+This work highlights the importance of decomposing complex planning problems into modular steps, 
+where each stage focuses on a specific aspect of the planning process. 
+Furthermore, it demonstrates the effectiveness of few-shot prompting, 
+where LLMs are guided by example demonstrations to improve the quality and consistency of their outputs.
+
+The novelty of the AutoHMA-LLM framework \cite{yang2025autohma} lies in its hierarchical architecture, 
+where cloud-based LLMs are responsible for decomposing and allocating mission instructions to agents, 
+while also optimizing global scheduling. Device-level LLMs, located on dispatcher devices, translate 
+allocated tasks into robot-specific instructions, while the robots themselves execute these tasks using 
+classical control algorithms. The paper explores different coordination strategies and finds that a 
+centralized hybrid model performs best, supported by continuous feedback between system layers. 
+
+Although the framework formulates scheduling as an optimization problem, it does not produce explicit, 
+time-parameterized schedules that can be directly inspected or executed. Furthermore, the AutoHMA-LLM 
+framework is evaluated primarily in simulation environments, without validation on real robotic platforms. 
+As a result, its performance under real-world conditions, including sensor noise, communication delays, 
+and execution uncertainty, remains unverified.
+
+CoMuRoS \cite{borate2025hierarchical} is another framework that incorporates a hierarchical architecture 
+with event-driven replanning. The system employs a central LLM (Task Manager) for high-level reasoning, 
+including interpreting natural language goals, decomposing tasks, allocating subtasks, and updating plans 
+based on environmental feedback. Each robot is equipped with a local LLM that translates assigned tasks 
+into executable Python code and performs event classification, distinguishing between relevant and 
+irrelevant observations. Relevant events are communicated back to the Task Manager to trigger replanning. 
+
+While the system demonstrates strong adaptability and has been validated in real-world scenarios with 
+heterogeneous robots, including drones and quadrupeds, it primarily focuses on feasibility and reactive 
+coordination. In particular, the generated plans lack explicit temporal reasoning, as tasks are not 
+associated with execution times or synchronization constraints between agents. Furthermore, 
+the framework does not incorporate a clear objective function, such as minimizing total mission time. 
+As a result, task allocation and execution remain heuristic and may lead to suboptimal utilization of 
+resources.
+
+Taken together, these limitations highlight a key gap in current LLM-based multi-robot systems, namely the 
+absence of explicit scheduling mechanisms that enable coordinated, efficient, and time-aware execution.
