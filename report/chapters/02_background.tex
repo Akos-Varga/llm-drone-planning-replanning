@@ -174,25 +174,28 @@ although it still requires reliable grounding of language into physical actions.
 
 \section{Related Work}
 
-\subsection{LLMs in Autonomous Systems}
-Among early LLM-based planners for robotics, SayCan \cite{ahn2022doasican} introduces a framework that grounds language model reasoning in real-world robot capabilities.
+Among early LLM-based planners for automous agents, 
+SayCan \cite{ahn2022doasican} introduces a framework that grounds language model reasoning in real-world robot capabilities.
 In this approach, an LLM generates candidate low-level skills from a high-level natural language instruction.
 Each skill is evaluated using two complementary scores: (i) a language model score, which measures how relevant the skill is for completing the task, and (ii) an affordance score, which estimates the feasibility of executing the skill given the robot's current state and environment.
 These scores are combined to select the most appropriate action, and the process is iteratively repeated until the task is completed.
 This work demonstrates that LLMs can be effectively applied to robotics when their outputs are constrained by physical feasibility.
 
-When it comes to UAVs \cite{wang2025gsce} introduced a framework called GSCE, which combines guidelines, skill APIs,
-constraints and examples in one prompt using step-by-step, 
-Chain of Thought (CoT) reasoning together with few-shot examples to get executable code for a single drone.
+In the context of UAVs, Wang et al. \cite{wang2025gsce} introduce the GSCE framework, which combines guidelines, skill APIs,
+constraints within a single prompt.
+By leveraging step-by-step Chain-of-Thought (CoT) reasoning together with few-shot examples, 
+the system generates executable code for a single drone.
+While SayCan and GSCE focus on single-agent systems, they highlight the potential of LLMs for grounded reasoning and executable plan generation.
 
-While SayCan and GSCE focuses on a single robot, RoCo \cite{mandi2023roco} extends this paradigm to multi-robot systems through collaborative reasoning.
+Extending these ideas to multi-agent systems, RoCo \cite{mandi2023roco} introduces a collaborative reasoning framework for multi-robot coordination. 
 In RoCo, each robot is associated with an LLM-based agent that has access to its own capabilities, local observations, and partial knowledge of the environment.
 These agents communicate through a structured dialogue process, iteratively proposing, refining, and critiquing task plans.
 Through this interaction, the system converges to a shared global plan, which is then decomposed and distributed among the robots for execution.
-Additionally, RoCo leverages LLMs during execution by generating intermediate representations such as 3D waypoints, enabling more flexible and adaptive behavior.
+Additionally, RoCo leverages LLMs during execution by generating 3D waypoints, enabling more flexible behavior.
 
+Building on multi-agent coordination, 
 SMART-LLM \cite{kannan2024smartllm} introduces a structured framework for task planning in multi-agent systems, 
-which generates executable mission plans through a three-stage pipeline, each implemented by a dedicated LLM agent. 
+generating executable mission plans through a three-stage pipeline, each implemented by a dedicated LLM agent. 
 In the first stage, \textit{task decomposition}, the LLM converts a high-level natural language instruction into a set of independent subtasks. 
 Each subtask is represented as a sequence of actions, while incorporating contextual information about the environment. 
 The second stage, \textit{coalition formation}, considers the available robots and their capabilities, 
@@ -200,37 +203,72 @@ and assigns groups of robots to each subtask such that every coalition collectiv
 In the final stage, \textit{task allocation}, the system generates executable code for each robot based on the assigned subtasks and coalitions, 
 resulting in a distributed execution plan. 
 This work highlights the importance of decomposing complex planning problems into modular steps, 
-where each stage focuses on a specific aspect of the planning process. 
-Furthermore, it demonstrates the effectiveness of few-shot prompting, 
-where LLMs are guided by example demonstrations to improve the quality and consistency of their outputs.
+where each stage focuses on a specific aspect of the planning process, 
+and demonstrates the effectiveness of few-shot prompting in improving the quality and consistency of LLM outputs.
 
-The novelty of the AutoHMA-LLM framework \cite{yang2025autohma} lies in its hierarchical architecture, 
-where cloud-based LLMs are responsible for decomposing and allocating mission instructions to agents, 
-while also optimizing global scheduling. Device-level LLMs, located on dispatcher devices, translate 
-allocated tasks into robot-specific instructions, while the robots themselves execute these tasks using 
-classical control algorithms. The paper explores different coordination strategies and finds that a 
-centralized hybrid model performs best, supported by continuous feedback between system layers. 
-
-Although the framework formulates scheduling as an optimization problem, it does not produce explicit, 
-time-parameterized schedules that can be directly inspected or executed. Furthermore, the AutoHMA-LLM 
-framework is evaluated primarily in simulation environments, without validation on real robotic platforms. 
-As a result, its performance under real-world conditions, including sensor noise, communication delays, 
-and execution uncertainty, remains unverified.
-
+To enable adaptive behavior in dynamic environments, 
 CoMuRoS \cite{borate2025hierarchical} is another framework that incorporates a hierarchical architecture 
 with event-driven replanning. The system employs a central LLM (Task Manager) for high-level reasoning, 
 including interpreting natural language goals, decomposing tasks, allocating subtasks, and updating plans 
 based on environmental feedback. Each robot is equipped with a local LLM that translates assigned tasks 
 into executable Python code and performs event classification, distinguishing between relevant and 
 irrelevant observations. Relevant events are communicated back to the Task Manager to trigger replanning. 
-
 While the system demonstrates strong adaptability and has been validated in real-world scenarios with 
 heterogeneous robots, including drones and quadrupeds, it primarily focuses on feasibility and reactive 
 coordination. In particular, the generated plans lack explicit temporal reasoning, as tasks are not 
 associated with execution times or synchronization constraints between agents. Furthermore, 
-the framework does not incorporate a clear objective function, such as minimizing total mission time. 
-As a result, task allocation and execution remain heuristic and may lead to suboptimal utilization of 
-resources.
+the framework does not incorporate a clear objective function, such as minimizing total mission time, 
+leading to potentially suboptimal utilization of resources.
 
-Taken together, these limitations highlight a key gap in current LLM-based multi-robot systems, namely the 
-absence of explicit scheduling mechanisms that enable coordinated, efficient, and time-aware execution.
+Complementary to replanning-focused approaches, 
+AutoHMA-LLM \cite{yang2025autohma} proposes a hierarchical architecture that combines cloud-based LLMs, device-level LLMs, 
+and classical control algorithms to address task coordination and scheduling. 
+In this framework, the cloud LLM performs global task decomposition, allocation, and scheduling,
+while device-level LLMs translate tasks into robot-specific instructions executed by classical control methods. 
+The system explores multiple coordination strategies and demonstrates that a centralized hybrid model achieves the best trade-off between
+efficiency and performance through continuous feedback between system layers. 
+Although the framework formulates scheduling as an optimization problem, 
+it does not produce explicit, time-parameterized schedules that can be directly inspected or executed. 
+Additionally, the system is evaluated primarily in simulation environments, without validation on real robotic platforms, 
+leaving its performance under real-world conditions unverified.
+
+Taken together, these works demonstrate the growing capabilities of LLM-based multi-agent systems in task decomposition, coordination, 
+and adaptive replanning. 
+However, they also reveal a key limitation: 
+the absence of explicit scheduling mechanisms that incorporate temporal constraints and objective-driven optimization.
+As shown in Table~\ref{tab:comparison}, while several approaches support multi-agent coordination and, in some cases, dynamic replanning, 
+none of them provide explicit, time-parameterized schedule that enable efficient and coordinated multi-agent operation.
+
+\begin{table*}[t]
+\centering
+\caption{Comparison of LLM-based multi-robot systems.}
+\label{tab:comparison}
+
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l|c c c c c c c}
+\hline
+ & SayCan & GSCE & RoCo & SMART-LLM & CoMuRoS & AutoHMA & Ours \\
+
+\hline
+Year & 2022 & 2025 & 2023 & 2024 & 2025 & 2025 & 2026 \\
+
+Multi-Robot & \xmark & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
+Heterogeneous & \cmark & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
+
+Framework
+& Centralized & Centralized & Decentralized & Centralized & Hybrid & Hybrid & Centralized \\
+
+Replanning & \xmark & \xmark & \cmark & \xmark & \cmark & \cmark & \cmark \\
+
+Hardware Demo & \cmark & \xmark & \cmark & \xmark & \cmark & \xmark & \cmark \\
+
+Scheduling 
+& \xmark & \xmark & \xmark & \xmark & \xmark & \cmark & \cmark \\
+
+Objective Function 
+& \xmark & \xmark & \xmark & \xmark & \xmark & \cmark & \cmark \\
+
+\hline
+\end{tabular}%
+}
+\end{table*}
