@@ -21,6 +21,23 @@ objects = {
     "SolarPanel2":(5.0, 5.0, 2.0),
 }
 
+# Make drones face object
+OBJECT_TO_YAW = {
+    "Base1": 0,
+    "Base2": 0,
+    "House1": 90,
+    "House2": 0,
+    "WindTurbine1": 180,
+    "WindTurbine2": 180,
+    "Tower1": 90,
+    "Tower2": 180,
+    "RoofTop2": 0,
+    "RoofTop1": 0,
+}
+
+# Drones in use
+drone_names = ["Drone1", "Drone2"]
+
 drones = {
     "Drone1": {
         "pos": (0, 0, 0),
@@ -35,28 +52,17 @@ drones = {
     "Drone3": {
         "pos": (42, 72, 57),
         "skills": ["CaptureRGBImage", "CaptureThermalImage", "RecordVideo", "DualSpectralInspect"],
-        "speed": 15
+        "speed": 1.0
     }
 }
 
-# Match drone name from world with anafi topic name
-DRONE_TO_NODE = {
-    "Drone1": "anafi2",
-    "Drone2": "anafi1",
-}
-
-# Make drones face object
-OBJECT_TO_YAW = {
-    "Base1": 0,
-    "Base2": 0,
-    "House1": 90,
-    "House2": 0,
-    "WindTurbine1": 180,
-    "WindTurbine2": 180,
-    "Tower1": 90,
-    "Tower2": 180,
-    "RoofTop2": 0,
-    "RoofTop1": 0,
+drone_configs = {
+    "Drone1": {"namespace": "anafi1", "max_flight_time": 25.0, "flight_altitude": 1.5},
+    "Drone2": {"namespace": "anafi2", "max_flight_time": 22.0, "flight_altitude": 2.0},
+    "Drone3": {"namespace": "anafi", "max_flight_time": 18.0, "flight_altitude": 2.5},
+    "Drone4": {"namespace": "anafi", "max_flight_time": 30.0, "flight_altitude": 3.5},
+    "Drone5": {"namespace": "anafi", "max_flight_time": 20.0, "flight_altitude": 4.0},
+    "Drone6": {"namespace": "anafi", "max_flight_time": 27.0, "flight_altitude": 4.5},
 }
 
 MAX_ALTITUDE = 4.0

@@ -18,6 +18,7 @@ objects = {
     'Tower': (53, 91, 57)
 }
 
+# Make drones face object
 OBJECT_TO_YAW = {
     'Base': 0,
     'House1': 90,
@@ -30,6 +31,7 @@ OBJECT_TO_YAW = {
     'Tower': 0,
 }
 
+# Drones in use
 drone_names = ["Drone1", "Drone2", "Drone3", "Drone4", "Drone5", "Drone6"]
 
 drones = {
