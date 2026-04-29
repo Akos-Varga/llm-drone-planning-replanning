@@ -27,6 +27,7 @@ def drone_worker(
     last_llm_check_time = None
     pose_sent = False
     arrived_sent = False
+    flight_started = False
 
     def wait_for_telemetry(timeout=3.0):
         deadline = time.monotonic() + timeout
@@ -60,6 +61,10 @@ def drone_worker(
                 # Stop worker
                 # ---------------------------------------------------------------------
                 if cmd_type == STOP:
+                    if flight_started:
+                        node.land()
+                        time.sleep(3.0)
+
                     event_queue.put({
                         "type": STATE_CHANGED,
                         "drone": drone_name,
@@ -142,7 +147,12 @@ def drone_worker(
                             "message": f"Admission drone failure: {reason}",
                             "time": time.monotonic(),
                         })
-                        continue
+
+                        if flight_started:
+                            node.land()
+                            time.sleep(3.0)
+                        
+                        break
 
                     # None / error / unknown decision
                     event_queue.put({
@@ -232,6 +242,18 @@ def drone_worker(
                 execution_time = current_task["finish_time"] - current_task["arrival_time"] 
 
                 if not pose_sent:
+                    if not flight_started:
+                        node.arm()
+                        time.sleep(1.0)
+
+                        node.takeoff()
+                        time.sleep(3.0)
+
+                        node.offboard()
+                        time.sleep(1.0)
+
+                        flight_started  = True
+
                     node.send_pose(target_pos, target_yaw, execution_time)
                     pose_sent = True
                     arrived_sent = False
@@ -250,9 +272,14 @@ def drone_worker(
                             "message": "Telemetry not ready during runtime recheck",
                             "time": time.monotonic(),
                         })
-                        current_task = None
-                        current_proposal_id = None
-                        continue
+
+                        if flight_started:
+                            node.land()
+                            time.sleep(3.0)
+
+                        # current_task = None
+                        # current_proposal_id = None
+                        break
                     
                     print("Inflight check")
                     decision, reason, _ = run_admission_check(current_task)
@@ -308,9 +335,13 @@ def drone_worker(
                             "time": time.monotonic(),
                         })
 
-                        current_task = None
-                        current_proposal_id = None
-                        continue
+                        if flight_started:
+                            node.land()
+                            time.sleep(3.0)
+
+                        # current_task = None
+                        # current_proposal_id = None
+                        break
 
                 # --- ARRIVAL ---
                 if not arrived_sent and node.has_arrived():
