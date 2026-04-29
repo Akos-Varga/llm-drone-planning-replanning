@@ -3,7 +3,6 @@ import time
 
 from common import *
 from simulated_drone_interface import SimDroneInterface
-from worlds.test_world import objects, OBJECT_TO_YAW
 
 LLM_RECHECK_PERIOD = 10.0
 
@@ -13,7 +12,8 @@ def drone_worker_sim(
     event_queue,
     command_queue,
     max_flight_time,
-    flight_altitude,
+    objects,
+    object_to_yaw,
 ):
     node = SimDroneInterface(drone_name, namespace, max_flight_time)
 
@@ -223,7 +223,7 @@ def drone_worker_sim(
             # -----------------------------------------------------------------
             if state == BUSY and current_task is not None:
                 target_pos = objects[current_task["object"]]
-                target_yaw = OBJECT_TO_YAW[current_task["object"]]
+                target_yaw = object_to_yaw[current_task["object"]]
                 execution_time = float(current_task["finish_time"]) - float(current_task["arrival_time"])
                 flight_time = float(current_task["arrival_time"]) - float(current_task["departure_time"])
 

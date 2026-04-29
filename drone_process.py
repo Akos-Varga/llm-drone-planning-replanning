@@ -4,7 +4,6 @@ import rclpy
 
 from common import *
 from anafi_interface import AnafiInterface
-from worlds.real_world import objects, OBJECT_TO_YAW
 
 LLM_RECHECK_PERIOD = 10.0
 
@@ -14,11 +13,17 @@ def drone_worker(
     event_queue,
     command_queue,
     max_flight_time,
-    flight_altitude
+    objects,
+    object_to_yaw,
+    flight_altitude,
+    speed,
+    max_altitude,
 ):
 
     rclpy.init()
     node = AnafiInterface(namespace, max_flight_time)
+    node.set_speed(speed)
+    node.set_max_altitude(max_altitude)
 
     state = IDLE
     proposed_task = None
@@ -241,7 +246,7 @@ def drone_worker(
             # -----------------------------------------------------------------
             if state == BUSY and current_task is not None:
                 target_pos = objects[current_task["object"]]
-                target_yaw = OBJECT_TO_YAW[current_task["object"]]
+                target_yaw = object_to_yaw[current_task["object"]]
                 execution_time = current_task["finish_time"] - current_task["arrival_time"] 
 
                 current_pose = node.get_pose()
