@@ -39,20 +39,15 @@ OBJECT_TO_YAW = {
 drone_names = ["Drone1", "Drone2"]
 
 drones = {
-    "Drone1": {
+    "Drone1": { # 4K or AI
         "pos": (0, 0, 0),
         "skills": ["CaptureRGBImage", "RecordVideo", "CaptureZoomImage"],
-        "speed": 1.0
+        "speed": 0.7
     },
-    "Drone2": {
+    "Drone2": { # USA or Thermal
         "pos": (-1, -1, 0),
         "skills": ["CaptureRGBImage", "CaptureThermalImage", "CaptureZoomImage", "RecordVideo", "DualSpectralInspect"],
         "speed": 0.5
-    },
-    "Drone3": {
-        "pos": (42, 72, 57),
-        "skills": ["CaptureRGBImage", "CaptureThermalImage", "RecordVideo", "DualSpectralInspect"],
-        "speed": 1.0
     }
 }
 

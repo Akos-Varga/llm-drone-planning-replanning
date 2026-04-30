@@ -2,12 +2,14 @@ import multiprocessing as mp
 from drone_process_sim import drone_worker_sim
 from drone_process import drone_worker
 from planner_process import planner_loop
-
+# WindTurbine1, WindTurbine2, House1, Tower
+# Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower.
+# Capture thermal and RGB image of the of the Tower, document the condition of WindTurbine1 with video and take an RGB image of House1.
 model = "gpt-5-mini"
-task = "Document the condition of all houses with video and inspect each rooftop,\n while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower"
+task = "Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower."
 
 if __name__ == "__main__":
-    USE_SIM = True
+    USE_SIM = True # Adjust
 
     if USE_SIM:
         from worlds.test_world import skills, objects, OBJECT_TO_YAW, drones, drone_names, drone_configs
