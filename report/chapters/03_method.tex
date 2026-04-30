@@ -328,10 +328,19 @@ the use of a structured output schema constrains the LLM response and allows the
 
 \section{LLM Selection}
 
-\subsection{LLM Selection for Planner Pipeline}
-For the planner pipeline cloud-based LLMs were considered 
-\input{tables/cloud_avg_inference_time_by_subtasks.tex}
+For the planner pipeline, cloud-based LLMs were considered because smaller quantized models that could run locally on a PC performed poorly in preliminary tests.
+Four ChatGPT models were evaluated on scheduling tasks with the number of subtasks ranging from 1 to 10.
+For each number of subtasks, three tasks were tested.
+
+Table~\ref{tab:avg_vrp_gap_by_subtasks} shows the schedule quality of each model by comparing the generated mission makespan to a rule-based VRP planner.
+The table also reports the number of successfully generated schedules out of three for each subtask count.
+Table~\ref{tab:avg_inference_time_by_subtasks} shows the average inference time computed over the successfully generated schedules for each model.
+
 \input{tables/cloud_avg_vrp_gap_by_subtasks.tex}
+\input{tables/cloud_avg_inference_time_by_subtasks.tex}
+
+
+
 
 \subsection{LLM Selection for Onboard Monitoring}
 \input{tables/onboard_task_admission_accuracy.tex}
