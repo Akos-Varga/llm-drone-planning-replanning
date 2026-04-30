@@ -12,14 +12,14 @@ travel_times = {'drone_to_object':  {<DroneName>: {<ArrivalObjectName>: <TravelT
 
 CONSTRAINTS:
 1) Each subtask appears exactly once in schedule across all drones.
-3) Time semantics:
+2) Time semantics:
    a) departure_time is the departure time from the drone’s current location; departure_time >= 0.
    b) arrival_time is the arrival time at the task’s object.
    c) First task: arrival_time - departure_time == travel_times['drone_to_object'][Drone][Object].
    d) For consecutive tasks from object A to B on the same drone: arrival_time - departure_time == travel_times['drone_object_to_object'][Drone][A][B].
    e) finish_time is the time when the service is completed at the object: finish_time = arrival_time + service_time
-4) For any single drone, services cannot overlap in time: current_finish_time ≤ next_departure_time
-5) Objective: minimize makespan (max over all endTime).
+3) For any single drone, services cannot overlap in time: current_finish_time ≤ next_departure_time
+4) Objective: minimize makespan (max over all endTime).
 
 OUTPUT FORMAT:
 schedule = {
