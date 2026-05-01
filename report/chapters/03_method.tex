@@ -326,22 +326,58 @@ This makes the replanning mechanism easier to adapt to different drone platforms
 At the same time, 
 the use of a structured output schema constrains the LLM response and allows the planner process to parse the decision automatically.
 
-\section{LLM Selection}
+\section{Model Selection}
 
-For the planner pipeline, cloud-based LLMs were considered because smaller quantized models that could run locally on a PC performed poorly in preliminary tests.
-Four ChatGPT models were evaluated on scheduling tasks with the number of subtasks ranging from 1 to 10.
+\section{Cloud-based Planning Pipeline}
+
+For the planner pipeline, both cloud-based and locally deployable models were evaluated. 
+Due to hardware constraints and real-time execution requirements, 
+small quantized LLMs with 1--3 billion parameters that could run locally on a PC proved too slow and unreliable, 
+even for tasks consisting of only one or two subtasks. 
+Therefore, the planner was evaluated using GPT-5, GPT-5-mini, GPT-4o, and GPT-4.1 through the OpenAI API \cite{openai_models}. 
+The models were tested on tasks with the number of subtasks ranging from 1 to 10. 
 For each number of subtasks, three tasks were tested.
 
-Table~\ref{tab:avg_vrp_gap_by_subtasks} shows the schedule quality of each model by comparing the generated mission makespan to a rule-based VRP planner.
+Task descriptions were phrased in unstructured natural language with varied wording and sentence structures to leverage
+the reasoning capabilities of the LLMs. 
+Examples ranged from simple instructions, e.g., ”Acquire a thermal image of House3.”, to more complex tasks with several subtasks, 
+e.g., ”Record videos for all solar panels and rooftops, take thermal imagery of each, and inspect the Tower and Base.”.
+For comparison, an optimal schedule for each task was computed using a VRP solver, which computed optimal solutions.
+This baseline was used to guide model evaluation and selection.
+
+Table~\ref{tab:avg_vrp_gap_by_subtasks} shows the schedule quality of each model by comparing the generated mission
+makespan to a rule-based VRP planner \cite{google_vrp}.
 The table also reports the number of successfully generated schedules out of three for each subtask count.
 Table~\ref{tab:avg_inference_time_by_subtasks} shows the average inference time computed over the successfully generated schedules for each model.
 
 \input{tables/cloud_avg_vrp_gap_by_subtasks.tex}
 \input{tables/cloud_avg_inference_time_by_subtasks.tex}
 
+The results show that GPT-5 consistently generated schedules close to the VRP baseline, 
+but its inference time was significantly higher than that of GPT-5-mini. 
+This makes GPT-5 less suitable for interactive planning and replanning. 
+GPT-5-mini produced valid schedules for most tasks and achieved near-optimal schedules for tasks with up to five subtasks, 
+while requiring considerably less inference time. 
+The smaller and older models, GPT-4o and GPT-4.1, 
+performed well on simpler tasks but increasingly produced suboptimal or invalid schedules as the number of subtasks increased. 
+Based on this trade-off between schedule quality, inference time, and API cost, GPT-5-mini was selected for the cloud-based planning pipeline.
 
+\subsection{Onboard Task Admission}
+The task admission module has different requirements from the cloud-based planner. 
+It must evaluate drone telemetry quickly and reliably during execution, and therefore a smaller locally deployable model is preferred. 
+The evaluated models were tested on four categories: acceptable tasks, drone-state errors, link-quality errors, and flight-time errors. 
+Each category contained 20 test cases.
+Seven 4-bit quantized models, ranging from 0.6 to 4 billion parameters, were evaluated from the Qwen \cite{ollama_qwen25,ollama_qwen3}, 
+Gemma \cite{ollama_gemma3}, Llama \cite{ollama_llama32}, and Phi \cite{ollama_phi4} model families.
 
+Table~\ref{tab:task_admission_accuracy} reports the number of correctly classified cases out of 20 for each category. 
+Table~\ref{tab:task_admission_inference_time} reports the average and maximum inference time for each model.
 
-\subsection{LLM Selection for Onboard Monitoring}
 \input{tables/onboard_task_admission_accuracy.tex}
 \input{tables/onboard_task_admission_inference_time.tex}
+
+The results show that qwen3:1.7b achieved perfect classification accuracy across all four categories, correctly solving all 80 test cases. 
+Although some models produced lower average inference times, they failed on important failure categories such as link-quality or flight-time errors. 
+Since the task admission module is safety-relevant and directly affects replanning decisions, 
+classification reliability was prioritized over minimal inference time. 
+Therefore, qwen3:1.7b was selected for onboard task admission.
