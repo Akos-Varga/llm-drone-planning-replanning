@@ -13,6 +13,15 @@ The architecture is consists of four main parts:
     \item a queue based communication system connecting the planner and the drones.
 \end{itemize}
 
+An overview of the implemented architecture is shown in \Cref{fig:system_architecture}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/system_architecture.pdf}
+    \caption{Software architecture of the implemented multi-drone planning and replanning system. The planner process receives the world configuration, calls the planning pipeline, dispatches commands through per-drone command queues, and receives execution events through a shared event queue.}
+    \label{fig:system_architecture}
+\end{figure}
+
 \section{System Components}
 
 \subsection{Planner}
