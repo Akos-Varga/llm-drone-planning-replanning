@@ -16,7 +16,7 @@ objects = {
 
 OUTPUT FORMAT:
 subtasks = [
-    {"name": <SubTaskName>, "skill": <SkillName>, "object": <ObjectName>, service_time: <ServiceTime>},
+    {"name": <SubTaskName>, "skill": <SkillName>, "object": <ObjectName>, "service_time": <ServiceTime>},
     ...
 ]"""
 },

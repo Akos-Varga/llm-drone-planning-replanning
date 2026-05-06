@@ -11,7 +11,7 @@ subtasks_with_drones = [
 travel_times = {'drone_to_object':  {<DroneName>: {<ArrivalObjectName>: <TravelTime>, ...}, ...}, 'drone_object_to_object': {<DroneName>:{<DepartureObjectName>: {<ArrivalObjectName>: <TravelTime>, ...}, ...}, ...}}
 
 CONSTRAINTS:
-1) Each subtask appears exactly once in schedule across all drones.
+1) Each subtask appears exactly once in the schedule across all drones.
 2) Time semantics:
    a) departure_time is the departure time from the drone’s current location; departure_time >= 0.
    b) arrival_time is the arrival time at the task’s object.
