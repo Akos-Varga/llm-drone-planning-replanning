@@ -1,13 +1,17 @@
 \chapter{Results}
 
-This chapter presents the evaluation results for the proposed LLM-based drone task planning system.
-The evaluation is divided into two parts. First, simulation experiments are used to compare planning
-quality, inference time, and model reliability under controlled conditions. Second, physical experiments
-are used to validate the selected pipeline on real drone hardware.
+This chapter presents the evaluation results of the proposed LLM-based drone planning and replanning
+architecture. The evaluation is divided into three parts. First, the individual LLM-based components are
+evaluated. 
+Second, the selected components are integrated and evaluated in an end-to-end simulation case study. 
+Finally, the system is tested on the physical drone platform to assess its behaviour under real-world execution
+conditions.
 
-\section{Simulation Results}
+\section{LLM Evaluation}
 
-\subsection{Simulation Setup}
+This section evaluates the two LLM-based components used in the proposed architecture:
+the cloud-based planner and the onboard task admission module. The purpose of this
+evaluation is to select the models used in the subsequent simulation and physical experiments.
 
 \subsection{Cloud-based Planning Pipeline}
 
@@ -81,7 +85,156 @@ failed on safety-relevant categories such as link-quality or flight-time errors.
 admission module directly affects replanning decisions, classification reliability was prioritized over
 minimal inference time. Therefore, qwen3:1.7b was selected for onboard task admission.
 
+\section{Simulation Results}
+
+This section evaluates the planning and task admission components in a simulated
+multi-drone mission environment. The purpose of the simulation is to validate the interaction
+between cloud-based planning, onboard task admission, execution monitoring, failure detection,
+and replanning before testing the system on the physical drone platform.
+
+\subsection{Simulation Setup}
+The simulation environment was designed to represent a multi-drone inspection scenario with static
+objects of interest distributed across a two-dimensional area. The environment contains several
+houses, rooftops, solar panels, a Tower, and a Base.
+
+The simulated drone team consists of multiple drones with predefined capabilities. Depending on the
+assigned subtask, a drone may be required to capture RGB images, record video, acquire thermal images,
+inspect structures, or measure wind levels. The simulator abstracts away low-level flight dynamics and
+instead focuses on task-level execution, including task allocation, admission checking, failure
+handling, and replanning.
+
+\subsection{Simulation Case Study}
+
+A representative mission execution was conducted in the simulation environment using the selected
+language models for planning and task admission. The drone team executed the following mission:
+
+\begin{quote}
+Document the condition of all houses with video and inspect each rooftop, while measuring wind levels
+near the Base and Tower. In addition, take an RGB image of the Tower.
+\end{quote}
+
+Based on the submitted natural-language mission, the cloud-based planner generated a schedule,
+and the resulting subtasks were sent to the drones for onboard admission checking.
+
+\Cref{fig:sim_execution_frames_1,fig:sim_execution_frames_2,fig:sim_execution_frames_3} show the
+main stages of the execution:
+
+\begin{enumerate}
+    \item All drones accept their assigned subtasks and start moving toward their targets
+    (\Cref{fig:frame_1}).
+    \item Once the drones arrive at their assigned targets, they begin executing their subtasks
+    (\Cref{fig:frame_2}).
+    \item Drone5's onboard admission module signla failure during the execution phase of SubTask4. 
+    The affected remaining subtasks are sent back to the cloud-based planner for rescheduling (\Cref{fig:frame_3}).
+    \item While the updated schedule is being generated, the other drones continue executing their
+    previously allocated subtasks (\Cref{fig:frame_4}).
+    \item SubTask4 is reassigned to Drone6 and acknowledged by the onboard admission module
+    (\Cref{fig:frame_5}).
+    \item All subtasks are completed by the drone team (\Cref{fig:frame_6}).
+\end{enumerate}
+
+This qualitative case study demonstrates that the implemented architecture can coordinate the
+cloud-based planner, onboard task admission module, and execution monitor within a single mission
+workflow. In particular, the sequence shows that the system can detect a drone failure, update the
+mission state, reschedule affected subtasks, and continue execution with the remaining available drones.
+
+\newcommand{\simframe}[1]{
+    \begin{minipage}{\linewidth}
+        \centering
+
+        % Top: simulation view / graph
+        \includegraphics[
+            width=\linewidth,
+            trim=7.5cm 0cm 25cm 0cm,
+            clip
+        ]{#1}
+
+        % Bottom: mission status panel
+        \includegraphics[
+            width=0.25\linewidth,
+            trim=56cm 20cm 17cm 5cm,
+            clip
+        ]{#1}
+    \end{minipage}
+}
+
+\begin{landscape}
+\begin{figure}[p]
+    \centering
+
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/1.png}
+        \caption{First allocation round.}
+        \label{fig:frame_1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/2.png}
+        \caption{The arrived drones start executing their tasks.}
+        \label{fig:frame_2}
+    \end{subfigure}
+
+    \caption{Initial stages of the simulated mission execution.}
+    \label{fig:sim_execution_frames_1}
+\end{figure}
+\end{landscape}
+
+\begin{landscape}
+\begin{figure}[p]
+    \centering
+
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/3.png}
+        \caption{Drone5's onboard admission module signals failure during task execution.}
+        \label{fig:frame_3}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/4.png}
+        \caption{The remaining drones continue executing their originally allocated subtasks while the cloud-based planner reschedules the failed task.}
+        \label{fig:frame_4}
+    \end{subfigure}
+
+    \caption{Intermediate stages of the simulated mission execution.}
+    \label{fig:sim_execution_frames_2}
+\end{figure}
+\end{landscape}
+
+\begin{landscape}
+\begin{figure}[p]
+    \centering
+
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/5.png}
+        \caption{SubTask4 is allocated and acknowledged by Drone6.}
+        \label{fig:frame_5}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/6.png}
+        \caption{All subtasks are completed.}
+        \label{fig:frame_6}
+    \end{subfigure}
+
+    \caption{Final stages of the simulated mission execution.}
+    \label{fig:sim_execution_frames_3}
+\end{figure}
+\end{landscape}
 
 \section{Experimental Results}
-\subsection{Drones}
-\subsection{Experimental setup}
+This section presents the physical experiments conducted on the drone platform. Unlike the simulation
+case study, the physical experiments did not evaluate the complete planning, onboard admission,
+failure detection, and replanning pipeline. Due to time and integration constraints, the real-drone
+experiments were limited to validating the main mission execution pipeline. 
+The purpose of these experiments is therefore to demonstrate that the core drone
+control and task execution components can operate on the physical platform, while the full
+LLM-based replanning architecture is evaluated in simulation.
+
+\subsection{Drone Platform}
+\subsection{Experimental Setup}

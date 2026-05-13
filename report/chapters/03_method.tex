@@ -12,7 +12,7 @@ taking into account travel time and task execution duration, while aiming to min
 
 The output of the pipeline is a per-drone schedule with departure, arrival, and finish times for each subtask.
 This representation enables coordinated multi-drone operation and allows the generated plan to be inspected before flight.
-An overview of the pipeline with an example task is shown in \Cref{fig:llm_pipeline}.
+An overview of the pipeline with an example task is shown in \Cref{fig:llm-pipeline}.
 
 The system also supports replanning in case of drone or task failures, such as critically low battery level, poor connection, or a crash.
 In such cases, the planner updates the set of available drones and regenerates the schedule for unfinished or interrupted subtasks.
@@ -226,7 +226,7 @@ The scheduling objective is to minimize the total mission completion time, also 
 This objective encourages the scheduler to exploit parallelism between drones and avoid unnecessary idle time.
 
 The output of the scheduler is a Python dictionary indexed by drone name.
-As shown in \Cref{fig:llm_pipeline}, each drone is assigned an ordered list of tasks, where every task contains the target object, 
+As shown in \Cref{fig:llm-pipeline}, each drone is assigned an ordered list of tasks, where every task contains the target object, 
 required skill, departure time, arrival time, and finish time.
 This explicit representation makes the generated plan directly inspectable and suitable for execution by the drone processes.
 
