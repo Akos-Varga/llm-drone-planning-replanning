@@ -115,6 +115,27 @@
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{proposition}{Proposition}[chapter]
 
+
+\newcommand{\simframe}[1]{
+    \begin{minipage}{\linewidth}
+        \centering
+
+        % Top: simulation view / graph
+        \includegraphics[
+            width=\linewidth,
+            trim=7.5cm 0cm 25cm 0cm,
+            clip
+        ]{#1}
+
+        % Bottom: mission status panel
+        \includegraphics[
+            width=0.25\linewidth,
+            trim=56cm 20cm 17cm 5cm,
+            clip
+        ]{#1}
+    \end{minipage}
+}
+
 % -------------------------------------------------
 % Front page
 % -------------------------------------------------

@@ -7,7 +7,7 @@ Second, the selected components are integrated and evaluated in an end-to-end si
 Finally, the system is tested on the physical drone platform to assess its behaviour under real-world execution
 conditions.
 
-\section{LLM Evaluation}
+\section{Component-Level LLM Evaluation}
 
 This section evaluates the two LLM-based components used in the proposed architecture:
 the cloud-based planner and the onboard task admission module. The purpose of this
@@ -124,7 +124,7 @@ main stages of the execution:
     (\Cref{fig:frame_1}).
     \item Once the drones arrive at their assigned targets, they begin executing their subtasks
     (\Cref{fig:frame_2}).
-    \item Drone5's onboard admission module signla failure during the execution phase of SubTask4. 
+    \item Drone5's onboard admission module signals failure during the execution phase of SubTask4. 
     The affected remaining subtasks are sent back to the cloud-based planner for rescheduling (\Cref{fig:frame_3}).
     \item While the updated schedule is being generated, the other drones continue executing their
     previously allocated subtasks (\Cref{fig:frame_4}).
@@ -137,26 +137,6 @@ This qualitative case study demonstrates that the implemented architecture can c
 cloud-based planner, onboard task admission module, and execution monitor within a single mission
 workflow. In particular, the sequence shows that the system can detect a drone failure, update the
 mission state, reschedule affected subtasks, and continue execution with the remaining available drones.
-
-\newcommand{\simframe}[1]{
-    \begin{minipage}{\linewidth}
-        \centering
-
-        % Top: simulation view / graph
-        \includegraphics[
-            width=\linewidth,
-            trim=7.5cm 0cm 25cm 0cm,
-            clip
-        ]{#1}
-
-        % Bottom: mission status panel
-        \includegraphics[
-            width=0.25\linewidth,
-            trim=56cm 20cm 17cm 5cm,
-            clip
-        ]{#1}
-    \end{minipage}
-}
 
 \begin{landscape}
 \begin{figure}[p]
@@ -237,4 +217,48 @@ control and task execution components can operate on the physical platform, whil
 LLM-based replanning architecture is evaluated in simulation.
 
 \subsection{Drone Platform}
+The physical experiments were conducted using drones from the Parrot Anafi platform.
+To represent a heterogeneous drone team, four variants were used: the Parrot Anafi 4K,
+Anafi Thermal, Anafi USA, and Anafi Ai.
+
+\begin{figure}[H]
+    \centering
+
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/drones/4k.png}
+        \caption{Anafi 4K.}
+        \label{fig:drone_anafi_4k}
+    \end{subfigure}
+    \hspace{0.02\textwidth}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/drones/thermal.png}
+        \caption{Anafi Thermal.}
+        \label{fig:drone_anafi_thermal}
+    \end{subfigure}
+
+    \vspace{0.3em}
+
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/drones/usa.png}
+        \caption{Anafi USA.}
+        \label{fig:drone_anafi_usa}
+    \end{subfigure}
+    \hspace{0.02\textwidth}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/drones/ai.png}
+        \caption{Anafi Ai.}
+        \label{fig:drone_anafi_ai}
+    \end{subfigure}
+
+    \caption[Drone platforms used during physical testing.]%
+            {Drone platforms used during physical testing.
+            Images adapted from Parrot product documentation
+            \cite{parrot_4k,parrot_thermal,parrot_usa,parrot_ai}.}
+    \label{fig:drone_platforms}
+\end{figure}
+
 \subsection{Experimental Setup}
