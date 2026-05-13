@@ -34,9 +34,17 @@
 \usepackage{fancyhdr}
 \usepackage{titling}
 \usepackage{float}
+\usepackage{pdflscape}
 \usepackage{pifont}
 \newcommand{\cmark}{\ding{51}} % checkmark
 \newcommand{\xmark}{\ding{55}} % cross
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    columns=fullflexible
+}
 
 % -------------------------------------------------
 % Thesis metadata (edit these)
@@ -172,9 +180,8 @@ LLM & Large Language Model
 \include{chapters/01_introduction}
 \include{chapters/02_background}
 \include{chapters/03_method}
-\include{chapters/04_architecture}
-\include{chapters/05_results}
-\include{chapters/06_conclusion}
+\include{chapters/04_results}
+\include{chapters/05_conclusion}
 
 % -------------------------------------------------
 % Bibliography
