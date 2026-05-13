@@ -156,7 +156,7 @@ task_list = [
         {"name": "SubTask8", "skill": "CaptureThermalImage", "object": "RoofTop1"}
     ]},
 
-    {"id": "Task23", "task": "Document the condition of all houses with video and inspect each rooftop, while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower", "solution": [
+    {"id": "Task23", "task": "Document the condition of all houses with video and inspect each rooftop, while measuring wind levels near the Base and Tower, in addition take an RGB image of Tower.", "solution": [
         {"name": "SubTask1", "skill": "RecordVideo", "object": "House1"},
         {"name": "SubTask2", "skill": "RecordVideo", "object": "House2"},
         {"name": "SubTask3", "skill": "RecordVideo", "object": "House3"},
