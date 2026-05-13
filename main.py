@@ -1,6 +1,4 @@
 import multiprocessing as mp
-from drone_process_sim import drone_worker_sim
-from drone_process import drone_worker
 from planner_process import planner_loop
 # WindTurbine1, WindTurbine2, House1, Tower
 # Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower.
@@ -13,8 +11,10 @@ if __name__ == "__main__":
 
     if USE_SIM:
         from worlds.test_world import skills, objects, OBJECT_TO_YAW, drones, drone_names, drone_configs
+        from drone_process_sim import drone_worker_sim
     else:
         from worlds.real_world import skills, objects, OBJECT_TO_YAW, drones, drone_names, drone_configs, MAX_ALTITUDE
+        from drone_process import drone_worker
 
     worker_target = drone_worker_sim if USE_SIM else drone_worker
     
