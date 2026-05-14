@@ -13,6 +13,7 @@ taking into account travel time and task execution duration, while aiming to min
 The output of the pipeline is a per-drone schedule with departure, arrival, and finish times for each subtask.
 This representation enables coordinated multi-drone operation and allows the generated plan to be inspected before flight.
 An overview of the pipeline with an example task is shown in \Cref{fig:llm-pipeline}.
+For readability, the prompt boxes show simplified versions of the full prompts used in the experiments.
 
 The system also supports replanning in case of drone or task failures, such as critically low battery level, poor connection, or a crash.
 In such cases, the planner updates the set of available drones and regenerates the schedule for unfinished or interrupted subtasks.
@@ -20,8 +21,10 @@ In such cases, the planner updates the set of available drones and regenerates t
 \begin{landscape}
 \begin{figure}[p]
     \centering
-    \includegraphics[width=\linewidth]{figures/llm_pipeline.pdf}
-    \caption{Caption for the horizontal graph.}
+    \includegraphics[width=0.87\linewidth]{figures/llm_pipeline.pdf}
+    \caption[Proposed LLM-based planning pipeline]{
+    Proposed LLM-based multi-drone planning pipeline. Blue arrows represent input/context data, and red arrows represent LLM-generated outputs.
+    }
     \label{fig:llm-pipeline}
 \end{figure}
 \end{landscape}
@@ -394,7 +397,8 @@ An overview of the implemented architecture is shown in \Cref{fig:system_archite
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/system_architecture.pdf}
-    \caption{Software architecture of the implemented multi-drone planning and replanning system. 
+    \caption[Software architecture of the implemented multi-drone planning and replanning system.]
+    {Software architecture of the implemented multi-drone planning and replanning system. 
     The planner process receives the world configuration, calls the planning pipeline, dispatches commands through per-drone command queues, 
     and receives execution events through a shared event queue.}
     \label{fig:system_architecture}

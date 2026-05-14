@@ -12,8 +12,7 @@ logs/
 *.fls
 *.log
 *.out
-*.synctex.gz
-*.synctex(busy).gz
+*.synctex*.gz
 *.toc
 *.lof
 *.lot
