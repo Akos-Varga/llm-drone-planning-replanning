@@ -52,7 +52,7 @@
 \newcommand{\thesistitle}{Hierarchical LLM-Based Planning and Replanning for Autonomous Multi-Drone Systems}
 % \newcommand{\thesissubtitle}{Optional Subtitle}
 \newcommand{\authorname}{Ákos Varga}
-\newcommand{\degreeprogram}{Master's Thesis in Computer Engineering}
+\newcommand{\degreeprogram}{Master's Thesis, Computer Engineering}
 \newcommand{\departmentname}{Department of Electrical and Computer Engineering}
 \newcommand{\universityname}{Aarhus University}
 \newcommand{\supervisorname}{Andriy Sarabakha}
@@ -142,38 +142,53 @@
 \begin{document}
 
 \begin{titlepage}
-    \centering
-    \vspace*{2cm}
+    \thispagestyle{empty}
 
-    {\Huge\bfseries \thesistitle\par}
-    \vspace{0.4cm}
-    %{\Large \thesissubtitle\par}
+    % Move content block down and to the right
+    \vspace*{5.1cm}
+    \hspace*{2.2cm}
+    \begin{minipage}{0.73\textwidth}
 
-    \vspace{2cm}
-    {\Large \authorname\par}
-    \vspace{1cm}
-    {\large \degreeprogram\par}
-    {\large \departmentname\par}
-    {\large \universityname\par}
+        \rule{\linewidth}{1.2pt}
+
+        \vspace{0.35cm}
+
+        {\Large \thesistitle\par}
+
+        \vspace{0.25cm}
+
+        {\large \authorname, 202403575\par}
+
+        \vspace{0.35cm}
+
+        \rule{\linewidth}{1.2pt}
+
+        \vspace{0.55cm}
+
+        {\small
+        \degreeprogram\\
+        \projectperiod\\
+        Advisor: \supervisorname
+        }
+
+    \end{minipage}
 
     \vfill
 
-    \begin{tabular}{rl}
-        Project period: & \projectperiod \\
-        Supervisor: & \supervisorname \\
-    \end{tabular}
+    % Aarhus University logo area
+    \hspace*{2.2cm}
+    
+    \includegraphics[width=0.28\linewidth]{figures/aulogo.pdf}
 
-    \vfill
+    \vspace*{1.0cm}
 
 \end{titlepage}
 
 \pagenumbering{roman}
 
-\chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
+\include{abstract}
 
-\chapter*{Preface}
-\addcontentsline{toc}{chapter}{Preface}
+\include{preface}
 
 \tableofcontents
 \clearpage
@@ -184,31 +199,7 @@
 \addcontentsline{toc}{chapter}{List of Tables}
 \clearpage
 
-\chapter*{Abbreviations}
-\addcontentsline{toc}{chapter}{Abbreviations}
-\begin{tabular}{ll}
-ALM & Audio Language Model \\
-API & Application Programming Interface \\
-CPU & Central Processing Unit \\
-DSP & Digital Signal Processing \\
-FHD & Full High Definition \\
-GPU & Graphics Processing Unit \\
-GPS & Global Positioning System \\
-HD & High Definition \\
-IMU & Inertial Measurement Unit \\
-LiDAR & Light Detection and Ranging \\
-LLM & Large Language Model \\
-MAS & Multi-Agent System \\
-MILP & Mixed-Integer Linear Programming \\
-mTSP & Multiple Traveling Agent Problem \\
-NPU & Neural Processing Unit \\
-ROS & Robot Operating System \\
-SAR & Search and Rescue \\
-UAV & Unmanned Aerial Vehicle \\
-VLM & Vision-Language Model \\
-VRP & Vehicle Routing Problem \\
-VTOL & Vertical Takeoff and Landing
-\end{tabular}
+\include{abbreviations}
 
 \clearpage
 \pagenumbering{arabic}
