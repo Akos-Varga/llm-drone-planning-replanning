@@ -94,8 +94,7 @@ and replanning before testing the system on the physical drone platform.
 
 \subsection{Simulation Setup}
 The simulation environment was designed to represent a multi-drone inspection scenario with static
-objects of interest distributed across a two-dimensional area. The environment contains several
-houses, rooftops, solar panels, a Tower, and a Base.
+objects of interest distributed across a two-dimensional area.
 
 The simulated drone team consists of multiple drones with predefined capabilities. Depending on the
 assigned subtask, a drone may be required to capture RGB images, record video, acquire thermal images,
@@ -103,8 +102,14 @@ inspect structures, or measure wind levels. The simulator abstracts away low-lev
 instead focuses on task-level execution, including task allocation, admission checking, failure
 handling, and replanning.
 
-\subsection{Simulation Case Study}
+To evaluate the system response to execution-time changes, the simulator also models battery drainage,
+link-quality variations, and drone failures. Battery levels decrease during mission execution, while
+link quality may change over time and affect whether a drone can safely accept a task. Drone failures
+can occur during execution, causing the affected drone's remaining subtasks to be returned to the
+cloud-based planner for rescheduling. These simulated disturbances allow the replanning and task
+admission mechanisms to be evaluated under dynamic mission conditions.
 
+\subsection{Simulation Case Study}
 A representative mission execution was conducted in the simulation environment using the selected
 language models for planning and task admission. The drone team executed the following mission:
 
@@ -207,31 +212,48 @@ mission state, reschedule affected subtasks, and continue execution with the rem
 \end{figure}
 \end{landscape}
 
-\section{Experimental Results}
-This section presents the physical experiments conducted on the drone platform. Unlike the simulation
-case study, the physical experiments did not evaluate the complete planning, onboard admission,
-failure detection, and replanning pipeline. Due to time and integration constraints, the real-drone
-experiments were limited to validating the main mission execution pipeline. 
-The purpose of these experiments is therefore to demonstrate that the core drone
-control and task execution components can operate on the physical platform, while the full
-LLM-based replanning architecture is evaluated in simulation.
+% \section{Experimental Results}
+% This section presents the physical experiments conducted on the drone platform. Unlike the simulation
+% case study, the physical experiments did not evaluate the complete planning, onboard admission,
+% failure detection, and replanning pipeline. Due to time and integration constraints, the real-drone
+% experiments were limited to validating the main mission execution pipeline. 
+% The purpose of these experiments is therefore to demonstrate that the core drone
+% control and task execution components can operate on the physical platform, while the full
+% LLM-based replanning architecture is evaluated in simulation.
+
+\section{Physical Platform and Experimental Setup}
+
+This section describes the physical drone platform, laboratory environment, and control interface used
+as the basis for real-world deployment of the proposed architecture.
+
+\subsection{Scope of Physical Integration}
+
+The full closed-loop architecture, including cloud-based planning, onboard LLM-based task admission,
+failure detection, and replanning, was not deployed on the physical drones within the scope of this
+thesis. Instead, the physical platform is described to show the intended deployment environment and the
+connection between the symbolic drone skills used by the planner and the capabilities of the Anafi
+drones.
+
+The complete system behavior is therefore evaluated in the simulation results, while the physical
+platform description provides context for future real-world deployment.
 
 \subsection{Drone Platform}
-The physical experiments were conducted using drones from the Parrot Anafi platform.
-To represent a heterogeneous drone team, four variants were used: the Parrot Anafi 4K,
-Anafi Thermal, Anafi USA, and Anafi Ai.
+The physical platform was based on drones from the Parrot Anafi family. To represent a
+drone team with heterogeneous sensing capabilities, four variants were considered: the
+Parrot Anafi 4K, Anafi Thermal, Anafi USA, and Anafi Ai. These platforms are shown in
+\Cref{fig:drone_platforms}.
 
 \begin{figure}[H]
     \centering
 
-    \begin{subfigure}{0.32\textwidth}
+    \begin{subfigure}{0.25\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/drones/4k.png}
         \caption{Anafi 4K.}
         \label{fig:drone_anafi_4k}
     \end{subfigure}
     \hspace{0.02\textwidth}
-    \begin{subfigure}{0.32\textwidth}
+    \begin{subfigure}{0.25\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/drones/thermal.png}
         \caption{Anafi Thermal.}
@@ -240,14 +262,14 @@ Anafi Thermal, Anafi USA, and Anafi Ai.
 
     \vspace{0.3em}
 
-    \begin{subfigure}{0.32\textwidth}
+    \begin{subfigure}{0.25\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/drones/usa.png}
         \caption{Anafi USA.}
         \label{fig:drone_anafi_usa}
     \end{subfigure}
     \hspace{0.02\textwidth}
-    \begin{subfigure}{0.32\textwidth}
+    \begin{subfigure}{0.25\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/drones/ai.png}
         \caption{Anafi Ai.}
@@ -261,4 +283,67 @@ Anafi Thermal, Anafi USA, and Anafi Ai.
     \label{fig:drone_platforms}
 \end{figure}
 
-\subsection{Experimental Setup}
+\Cref{tab:anafi_capabilities} summarizes the project-relevant specifications of the
+drone variants used in the experiments, together with the symbolic skills assigned to
+each platform in the planner.
+
+\input{tables/anafi_drones.tex}
+
+\subsection{Laboratory and Control Setup}
+
+The intended physical setup consists of an indoor laboratory environment, a Vicon-based localization
+system, and a ROS-based control interface for communicating with the Anafi drones. This setup provides
+the infrastructure required for executing high-level mission commands on the physical drone platform.
+
+\subsubsection{Laboratory Environment}
+
+The laboratory environment is equipped with a Vicon motion capture system \cite{vicon_tracker}.
+Since GPS-based localization is not available indoors, the Vicon system can provide position and
+orientation feedback during flight. Reflective markers can be mounted on the drone, allowing the
+motion capture system to track the drone within the available flight area.
+
+Similar target objects to those used in the simulation environment can be defined in the physical
+setup. Unlike the two-dimensional simulation setup, the laboratory environment is represented in three
+dimensions. Each target object can be assigned a position in the Vicon coordinate frame, allowing the
+drone to navigate to target locations using 3D position feedback.
+
+\subsubsection{Drone Control Interface}
+
+The physical setup uses the \texttt{anafi\_autonomy} ROS package
+\cite{sarabakha2023anafiros} as the control interface between the mission execution pipeline and the
+Parrot Anafi drones. The package provides ROS topics and services for controlling the drone and
+accessing sensor data. In the proposed integration, it would be used to execute high-level mission
+commands such as takeoff, landing, and navigation.
+
+The LLM-based planner does not directly control the drone hardware. Instead, it generates symbolic
+subtasks, which are translated by the mission execution layer into commands supported by the drone
+control interface. This separation allows the planning system to remain platform-independent, while
+the execution layer handles platform-specific communication with the Anafi drones.
+
+% \subsection{Experimental Setup}
+% This setup validates the execution layer of the proposed architecture. While the full LLM-based
+% replanning loop was not deployed on the physical drones, the experiments confirmed that generated
+% mission actions could be transferred to and executed by the Anafi control interface.
+
+% \subsubsection{Laboratory Environment}
+% The physical experiments were conducted in an indoor laboratory environment equipped with a Vicon
+% motion capture system \cite{vicon_tracker}. The Vicon system was used to provide accurate position feedback for the drone
+% during flight, since GPS-based localization is not available indoors. Reflective markers were mounted
+% on the drone, allowing the motion capture system to track its position and orientation within the
+% flight area.
+
+% Similar target objects to those used in the simulation environment were defined for the physical
+% experiments. However, unlike the two-dimensional simulation setup, the experimental environment was
+% represented in three dimensions. Each target object was assigned a position in the Vicon coordinate
+% frame, allowing the drone to navigate to target locations using 3D position feedback.
+
+% \subsubsection{Drone Control Interface}
+% The physical drone experiments used the \texttt{anafi\_autonomy} ROS package \cite{sarabakha2023anafiros} as the control interface
+% between the mission execution pipeline and the Parrot Anafi drones. The package provides ROS topics,
+% services for controlling the drone and accessing sensor data. In this thesis, it was used
+% to execute high-level mission commands such as takeoff, landing, navigation.
+
+% The LLM-based planner does not directly control the drone hardware. Instead, it generates symbolic
+% subtasks, which are translated by the mission execution layer into commands supported by the drone
+% control interface. This separation allows the planning system to remain platform-independent, while
+% the execution layer handles the platform-specific communication with the Anafi drones.
