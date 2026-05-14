@@ -32,7 +32,7 @@ Many modern UAV applications rely on artificial intelligence (AI) for tasks such
 However, developers often face strict hardware constraints in drone systems. While cloud-based AI can provide significant computational resources, it introduces latency and 
 dependence on network availability.
 The emergence of edge AI enables real-time decision-making by allowing drones to process sensor data locally and operate independently of external infrastructure
-\cite{mcenroe2022edgeaiuav}. These platforms often support hardware acceleration through GPUs, DSPs, or NPUs, enabling efficient execution of machine learning models.
+\cite{mcenroe2022edgeaiuav}. These platforms often support hardware acceleration through GPUs, DSPs, or NPUs, enabling efficient execution of machine learning models \cite{modalai2024companion}.
 This is particularly relevant for deploying compact and quantized large language models (LLMs) directly onboard drones.
 
 \section{Multi-Agent Systems}
@@ -102,9 +102,9 @@ The choice between these approaches depends on the requirements of the system, i
 and adaptability to dynamic environments.
 
 Many multi-agent planning problems can be formulated as optimization problems. 
-A common abstraction is the multi-traveling salesman problem (mTSP), where multiple agents must visit a set of locations while minimizing a cost function. 
+A common abstraction is the multiple traveling salesman problem (mTSP), where multiple agents must visit a set of locations while minimizing a cost function. 
 In this formulation, tasks correspond to nodes, agents correspond to salesmen, and decision variables determine the assignment and ordering of tasks for each agent.
-While the multi-traveling salesman problem (mTSP) provides a useful abstraction, more realistic formulations are given by the Vehicle Routing Problem (VRP). 
+While mTSP provides a useful abstraction, more realistic formulations are given by the Vehicle Routing Problem (VRP). 
 In the VRP, the objective is to determine optimal routes for multiple vehicles that must visit a set of locations. 
 In the special case of a single vehicle, the problem reduces to the classical Traveling Salesperson Problem (TSP).
 The notion of optimality in VRP depends on the application context. 
@@ -115,7 +115,7 @@ Furthermore, VRP formulations can incorporate additional constraints,
 such as capacity limits and time windows, which allow modeling of practical considerations like energy constraints and task deadlines in multi-drone systems.
 
 Different solution approaches exist for such problems. 
-Exact methods, such as Mixed Integer Linear Programming (MILP), can provide optimal solutions but often suffer from high computational complexity and limited scalability. 
+Exact methods, such as Mixed-Integer Linear Programming (MILP), can provide optimal solutions but often suffer from high computational complexity and limited scalability. 
 In contrast, heuristic and metaheuristic methods, such as genetic algorithms, can provide faster solutions and are more suitable for large-scale problems, 
 albeit without guarantees of optimality \cite{bektas2006mtsp}.
 
