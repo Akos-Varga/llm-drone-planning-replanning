@@ -5,6 +5,9 @@ misc/
 __pycache__/
 notes.txt
 logs/
+task_admission/*.png
+task_admission/test_results.txt
+task_admission/plotting.py
 
 # LaTeX build files
 *.aux

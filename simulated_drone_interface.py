@@ -1,7 +1,7 @@
 import time
 import random
 
-from onboard_llm.task_admission_llm import onboard_task_admission, Telemetry
+from task_admission.task_admission_llm import onboard_task_admission, Telemetry
 
 class SimDroneInterface:
     def __init__(self, drone_name, namespace, max_flight_time):

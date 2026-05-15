@@ -8,6 +8,8 @@ from anafi_autonomy.msg import PoseCommand, KeyboardCommand
 from rcl_interfaces.msg import ParameterValue, Parameter as ParameterMsg
 from rcl_interfaces.srv import SetParameters
 
+from task_admission.task_admission_llm import onboard_task_admission, Telemetry
+
 class SimplePose:
     def __init__(self, d):
         self.x = d["x"]
@@ -123,7 +125,6 @@ class AnafiInterface(Node):
         flight_dur: float,
         task_dur: float,
     ):
-        from onboard_llm.task_admission_llm import onboard_task_admission, Telemetry
         if not self.telemetry_ready():
             return None, "Telemetry not ready", None
 
