@@ -317,9 +317,9 @@ The system supports replanning when the original schedule can no longer be execu
 In real drone missions, this may occur due to changes in the drone state, low battery level, poor communication quality, 
 or task requirements that exceed the drone's remaining capabilities. 
 To detect such cases, 
-the system uses an LLM-based task admission module before executing a scheduled task and periodically during flight.
+the system uses a local LLM-based task admission module before executing a scheduled task and periodically during flight.
 
-The task admission module receives telemetry information from the drone and information about the planned task. 
+The local task admission module receives telemetry information from the drone and information about the planned task. 
 The telemetry includes the maximum flight time, current battery percentage, battery health, link quality, drone state, 
 estimated flight duration, and estimated task duration. 
 Based on this information, the module classifies the situation into one of three categories: 
@@ -361,7 +361,7 @@ T_{\text{required}} = T_{\text{flight}} + T_{\text{task}}.
 If \(T_{\text{available}} < T_{\text{required}}\), the task is rejected with \texttt{task\_failure}. 
 Otherwise, no rejection rule is triggered and the task is accepted.
 
-When the admission module returns \texttt{ok}, the drone proceeds with the scheduled task. 
+When the local admission module returns \texttt{ok}, the drone proceeds with the scheduled task. 
 When it returns \texttt{drone\_failure}, 
 the planner removes the affected drone from the set of currently available drones 
 and regenerates the schedule for the unfinished subtasks. 
@@ -469,11 +469,11 @@ to the LLM-based planning pipeline.
 The pipeline returns a schedule containing the generated subtasks, their assigned drones, and their planned execution order.
 
 Each drone is first assigned its initial subtask from the generated schedule. 
-The onboard task admission module then decides whether to accept or reject the proposed subtask. 
+The local task admission module then decides whether to accept or reject the proposed subtask. 
 Execution only begins once all drones have accepted their assigned proposals.
 If any drone rejects its proposed subtask, the schedule is recomputed before execution begins. 
 
-Once execution has started, the same onboard module periodically monitors the drone state and reports failures when detected. 
+Once execution has started, the same module periodically monitors the drone state and reports failures when detected. 
 If no failures are reported, the drones continue according to the original schedule. 
 If a drone fails during execution, the schedule is recomputed for the remaining subtasks that have not yet been completed or started. 
 This replanning step also considers the expected completion times of busy drones, 

@@ -10,7 +10,7 @@ conditions.
 \section{Component-Level LLM Evaluation}
 
 This section evaluates the two LLM-based components used in the proposed architecture:
-the cloud-based planner and the onboard task admission module. The purpose of this
+the cloud-based planner and the task admission module. The purpose of this
 evaluation is to select the models used in the subsequent simulation and physical experiments.
 
 \subsection{Cloud-based Planning Pipeline}
@@ -56,8 +56,8 @@ produced suboptimal or invalid schedules as the number of subtasks increased.
 Based on this trade-off between schedule quality, inference time, and API cost, GPT-5-mini was selected
 for the cloud-based planning pipeline.
 
-\subsection{Onboard Task Admission}
-The onboard task admission module has different requirements from the cloud-based planner. While the
+\subsection{Local Task Admission Module}
+The task admission module has different requirements from the cloud-based planner. While the
 planner must produce high-quality mission schedules, the admission module must evaluate drone telemetry
 quickly and reliably during execution. Since this module directly affects whether a task is accepted,
 rejected, or sent for replanning, reliability is particularly important.
@@ -72,24 +72,24 @@ Llama \cite{ollama_llama32}, and Phi \cite{ollama_phi4} model families.
 \subsubsection{Classification Accuracy}
 \Cref{tab:task_admission_accuracy} reports the number of correctly classified cases out of 20 for each category. 
 
-\input{tables/onboard_task_admission_accuracy.tex}
+\input{tables/task_admission_accuracy.tex}
 
 \subsubsection{Inference Time}
 \Cref{tab:task_admission_inference_time} reports the average and maximum inference time for each model.
-\input{tables/onboard_task_admission_inference_time.tex}
+\input{tables/task_admission_inference_time.tex}
 
 \subsubsection{Model Selection}
 The results show that qwen3:1.7b achieved perfect classification accuracy across all four categories,
 correctly solving all 80 test cases. Although some models achieved lower average inference times, they
 failed on safety-relevant categories such as link-quality or flight-time errors. Since the task
 admission module directly affects replanning decisions, classification reliability was prioritized over
-minimal inference time. Therefore, qwen3:1.7b was selected for onboard task admission.
+minimal inference time. Therefore, qwen3:1.7b was selected for the local task admission module.
 
 \section{Simulation Results}
 
 This section evaluates the planning and task admission components in a simulated
 multi-drone mission environment. The purpose of the simulation is to validate the interaction
-between cloud-based planning, onboard task admission, execution monitoring, failure detection,
+between cloud-based planning, locall task admission, execution monitoring, failure detection,
 and replanning before testing the system on the physical drone platform.
 
 \subsection{Simulation Setup}
@@ -119,7 +119,7 @@ near the Base and Tower. In addition, take an RGB image of the Tower.
 \end{quote}
 
 Based on the submitted natural-language mission, the cloud-based planner generated a schedule,
-and the resulting subtasks were sent to the drones for onboard admission checking.
+and the resulting subtasks were sent to the drones for admission checking.
 
 \Cref{fig:sim_execution_frames_1,fig:sim_execution_frames_2,fig:sim_execution_frames_3} show the
 main stages of the execution:
@@ -129,17 +129,17 @@ main stages of the execution:
     (\Cref{fig:frame_1}).
     \item Once the drones arrive at their assigned targets, they begin executing their subtasks
     (\Cref{fig:frame_2}).
-    \item Drone5's onboard admission module signals failure during the execution phase of SubTask4. 
+    \item Drone5's task local task admission module signals failure during the execution phase of SubTask4. 
     The affected remaining subtasks are sent back to the cloud-based planner for rescheduling (\Cref{fig:frame_3}).
     \item While the updated schedule is being generated, the other drones continue executing their
     previously allocated subtasks (\Cref{fig:frame_4}).
-    \item SubTask4 is reassigned to Drone6 and acknowledged by the onboard admission module
+    \item SubTask4 is reassigned to Drone6 and acknowledged by the local task admission module
     (\Cref{fig:frame_5}).
     \item All subtasks are completed by the drone team (\Cref{fig:frame_6}).
 \end{enumerate}
 
 This qualitative case study demonstrates that the implemented architecture can coordinate the
-cloud-based planner, onboard task admission module, and execution monitor within a single mission
+cloud-based planner, local task admission module, and execution monitor within a single mission
 workflow. In particular, the sequence shows that the system can detect a drone failure, update the
 mission state, reschedule affected subtasks, and continue execution with the remaining available drones.
 
@@ -173,7 +173,7 @@ mission state, reschedule affected subtasks, and continue execution with the rem
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/3.png}
-        \caption{Drone5's onboard admission module signals failure during task execution.}
+        \caption{Drone5's local task admission module signals failure during task execution.}
         \label{fig:frame_3}
     \end{subfigure}
     \hfill
@@ -228,7 +228,7 @@ as the basis for real-world deployment of the proposed architecture.
 
 \subsection{Scope of Physical Integration}
 
-The full closed-loop architecture, including cloud-based planning, onboard LLM-based task admission,
+The full closed-loop architecture, including cloud-based planning, local LLM-based task admission,
 failure detection, and replanning, was not deployed on the physical drones within the scope of this
 thesis. Instead, the physical platform is described to show the intended deployment environment and the
 connection between the symbolic drone skills used by the planner and the capabilities of the Anafi

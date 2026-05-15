@@ -1,1 +1,44 @@
 \chapter{Conclusion and Future Work}
+
+\section{Conclusion}
+This thesis investigated the use of Large Language Models for high-level task planning in multi-drone systems. 
+The goal was to bridge the gap between natural-language mission descriptions and executable multi-drone schedules
+by using LLMs for task decomposition, task allocation, and task scheduling.
+
+A cloud-based planning pipeline was developed in which a user mission is transformed into atomic subtasks, 
+assigned to suitable drones based on their capabilities, and scheduled while considering travel time and task duration. 
+The resulting output is a per-drone schedule. 
+In addition, an local task admission module was developed to evaluate whether individual drones are able to accept assigned
+tasks based on their state, link quality, and available flight time.
+
+The system was evaluated in three parts. 
+First, several cloud-based LLMs were compared on missions containing one to ten subtasks and evaluated against a 
+vehicle routing problem baseline. The results showed that GPT-5-mini provided the best trade-off between schedule
+quality, validity, inference time, and cost, and was therefore selected for the cloud-based planner. Second, seven
+quantized locally deployable models were evaluated for task admission. Among these, qwen3:1.7b achieved the 
+highest reliability and was selected for the admission module. Finally, the complete system was validated in a simulated 
+multi-drone environment, demonstrating that the generated plans could be translated into executable drone actions.
+
+Overall, the results show that LLMs can be used effectively for high-level mission planning in heterogeneous multi-drone 
+systems. The cloud-based planner was able to generate structured schedules from natural-language instructions, while the 
+admission module provided an additional layer of local decision-making before task execution.
+However, the results also show that LLM-based planning still requires careful prompting and validation mechanism to ensure 
+reliability in safety-critical applications.
+
+\section{Future Work}
+Several directions can be explored to improve the proposed system. First, future work should investigate real-world
+deployment on physical drones. While simulation provides a controlled environment for testing task planning and execution, 
+real-world operation introduces additional challenges such as localization errors, communication delays, wind disturbances, 
+obstacle avoidance, and sensor noise.
+
+In addition, the task admission module could be extended with additional constraints, such as weather conditions, no-fly zones, 
+payload limitations, obstacle proximity, and uncertainty in battery consumption. This would make the admission decision 
+more realistic and better suited for deployment in dynamic environments.
+
+Finally, future work could investigate more advanced local deployment of LLMs on embedded drone hardware. 
+This includes optimizing models for hardware acceleration, reducing inference latency, and evaluating whether small onboard 
+models can support not only task admission, but also limited replanning and failure recovery during flight.
+
+In summary, this thesis demonstrates the potential of LLMs as a high-level interface between human operators and autonomous 
+multi-drone systems. With further improvements in validation, real-world testing, and embedded deployment, LLM-based planning 
+could become a useful component in future autonomous drone coordination systems.

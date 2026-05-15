@@ -14,7 +14,7 @@ The README focuses on how to run the code, required setup, folder structure, and
 ```
 LLM-DRONE-PLANNING-REPLANNING/
 ├── pipeline/                  # LLM-based planning pipeline for task decomposition, allocation, and scheduling
-├── task_admission/            # Onboard task admission logic for checking whether assigned tasks can be executed
+├── task_admission/            # Local task admission logic for checking whether assigned tasks can be executed
 ├── worlds/                    # World definitions, drone configurations, objects, and skill mappings
 │   ├── real_world.py           # Configuration for real-drone experiments
 │   └── test_world.py           # Configuration for simulation experiments
