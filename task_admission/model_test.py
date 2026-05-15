@@ -1,5 +1,5 @@
 import random
-from task_admission_llm import onboard_task_admission, Telemetry
+from task_admission_llm import run_task_admission, Telemetry
 
 def task_admission(t: Telemetry):
     OPERATIONAL_STATES = {"LANDED", "LANDING", "TAKINGOFF", "HOVERING", "FLYING"}
@@ -64,7 +64,7 @@ def test_helper(model: str, t: Telemetry, results, error_type, inference_times):
         """)
     print(f"TEST CASE: {error_type}\n")
     results[error_type]['total'] += 1
-    decision, reason, inference_time = onboard_task_admission(model, t)
+    decision, reason, inference_time = run_task_admission(model, t)
     inference_times.append(inference_time)
     print(f"Inference time: {inference_time:.2f}")
     if not decision:

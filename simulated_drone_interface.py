@@ -1,7 +1,7 @@
 import time
 import random
 
-from task_admission.task_admission_llm import onboard_task_admission, Telemetry
+from task_admission.task_admission_llm import run_task_admission, Telemetry
 
 class SimDroneInterface:
     def __init__(self, drone_name, namespace, max_flight_time):
@@ -90,7 +90,7 @@ class SimDroneInterface:
             f"link={telemetry['link_quality']}"
         )
 
-        return onboard_task_admission(model=model, t=t)
+        return run_task_admission(model=model, t=t)
 
     def send_pose(self, pos, yaw_deg, flight_time, execution_time):
         self._update_simulation()

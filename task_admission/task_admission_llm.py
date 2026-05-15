@@ -106,7 +106,7 @@ def get_resp(model, t : Telemetry):
 
     return resp, end - start
 
-def onboard_task_admission(model, t: Telemetry):
+def run_task_admission(model, t: Telemetry):
     response, inference_time = get_resp(model, t)
     decision, reason = parse_llm_response(response)
     return decision, reason, inference_time

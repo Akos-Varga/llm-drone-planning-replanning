@@ -8,7 +8,7 @@ from anafi_autonomy.msg import PoseCommand, KeyboardCommand
 from rcl_interfaces.msg import ParameterValue, Parameter as ParameterMsg
 from rcl_interfaces.srv import SetParameters
 
-from task_admission.task_admission_llm import onboard_task_admission, Telemetry
+from task_admission.task_admission_llm import run_task_admission, Telemetry
 
 class SimplePose:
     def __init__(self, d):
@@ -147,7 +147,7 @@ class AnafiInterface(Node):
             f"link={telemetry['link_quality']}"
         )
 
-        return onboard_task_admission(model=model, t=t)
+        return run_task_admission(model=model, t=t)
     
     def get_pose(self) -> SimplePose | None:
         if self.current_pose is None:
