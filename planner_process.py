@@ -623,7 +623,18 @@ def drain_ready_events(event_queue, drone_status, subtasks_with_drones, task_cat
 # =============================================================================
 # Planner loop
 # =============================================================================
-def planner_loop(event_queue, command_queues, model, task, skills, objects, drones):
+def planner_loop(
+        event_queue, 
+        command_queues, 
+        model, 
+        task, 
+        skills, 
+        objects, 
+        drones,
+        rule_based_allocation,
+        rule_based_schedule,
+        ):
+    
     start_time = time.monotonic()
     
 
@@ -653,7 +664,7 @@ def planner_loop(event_queue, command_queues, model, task, skills, objects, dron
         model=model,
         drones=drones,
         decomposed_task=decomposed_task,
-        rule_based=True
+        rule_based=rule_based_allocation,
     )
 
     task_catalog = {subtask["name"]: subtask.copy() for subtask in subtasks_with_drones}
@@ -709,7 +720,7 @@ def planner_loop(event_queue, command_queues, model, task, skills, objects, dron
                 model=model,
                 subtasks_with_drones=subtasks_with_drones,
                 travel_times=travel_times,
-                rule_based=True
+                rule_based=rule_based_schedule,
             )
 
             if not schedule:
