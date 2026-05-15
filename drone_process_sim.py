@@ -7,6 +7,7 @@ from simulated_drone_interface import SimDroneInterface
 LLM_RECHECK_PERIOD = 10.0
 
 def drone_worker_sim(
+    model_name,
     drone_name,
     namespace,
     event_queue,
@@ -36,7 +37,7 @@ def drone_worker_sim(
     
     def run_admission_check(task):
         return node.admit_task_from_live_telemetry(
-            model="qwen3:1.7b",
+            model=model_name,
             flight_dur=float(task["arrival_time"]) - float(task["departure_time"]),
             task_dur=float(task["finish_time"]) - float(task["arrival_time"]),
         )

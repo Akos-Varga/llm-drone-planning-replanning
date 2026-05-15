@@ -2,41 +2,61 @@ import multiprocessing as mp
 from planner_process import planner_loop
 import argparse
 
-parser = argparse.ArgumentParser(
-    description="Run a drone mission",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument(
-    "--task", 
-    type=str, 
-    default="Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower.", 
-    help="Task to execute."
-    )
-parser.add_argument(
-    "--real",
-    action="store_true",
-    help="Run on the real drone environment instead of simulation."
-)
-parser.add_argument(
-    "--rule_based_allocation",
-    action="store_true",
-    help="Rule based calculation of allocation instead of LLM."
-)
-
-parser.add_argument(
-    "--rule_based_schedule",
-    action="store_true",
-    help="Rule based schedule of allocation instead of LLM."
-)
-
-args = parser.parse_args()
-
-model = "gpt-5-mini"
-task = args.task
-use_sim = not args.real
-rule_based_allocation = args.rule_based_allocation
-rule_based_schedule = args.rule_based_schedule
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Run a drone mission",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        "--task", 
+        type=str, 
+        default="Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower.", 
+        help="Task to execute."
+        )
+    parser.add_argument(
+        "--planner-model",
+        type=str,
+        default="gpt-5-mini",
+        help="GPT model for pipeline inference."
+    )
+    parser.add_argument(
+        "--admission-model",
+        type=str,
+        default="gpt-5-mini",
+        help="Ollama model for task admission inference."
+    )
+    parser.add_argument(
+        "--real",
+        action="store_true",
+        help="Run on the real drone environment instead of simulation."
+    )
+    parser.add_argument(
+        "--visualize",
+        action="store_true",
+        help="Create mission visualization after simulation. Only valid without --real."
+    )
+    parser.add_argument(
+        "--rule-alloc",
+        action="store_true",
+        help="Rule based calculation of allocation instead of LLM."
+    )
+    parser.add_argument(
+        "--rule-sched",
+        action="store_true",
+        help="Rule based schedule of allocation instead of LLM."
+    )
+
+    args = parser.parse_args()
+
+    if args.real and args.visualize:
+        parser.error("--visualize can only be used in simulation mode. Do not use it with --real.")
+
+    planner_model = args.planner_model
+    admission_model = args.admission_model
+    task = args.task
+    rule_based_allocation = args.rule_alloc
+    rule_based_schedule = args.rule_sched
+
+    use_sim = not args.real
     if use_sim:
         from worlds.test_world import skills, objects, OBJECT_TO_YAW, drones, drone_names, drone_configs
         from drone_process_sim import drone_worker_sim
@@ -56,6 +76,7 @@ if __name__ == "__main__":
         for name in drone_names:
             cfg = drone_configs[name]
             worker_kwargs = dict(
+                model_name=admission_model,
                 drone_name=name,
                 namespace=cfg["namespace"],
                 event_queue=event_queue,
@@ -82,7 +103,7 @@ if __name__ == "__main__":
         planner_loop(
             event_queue, 
             command_queues, 
-            model, 
+            planner_model, 
             task, 
             skills, 
             objects, 
@@ -97,3 +118,12 @@ if __name__ == "__main__":
 
         for p in processes:
             p.join()
+
+    if args.visualize:
+        from simulation import create_visualization
+
+        create_visualization(
+            event_log_path="logs/events.jsonl",
+            output_video_path="logs/drone_execution_with_labels.mp4",
+            mission_descr=task,
+        )
