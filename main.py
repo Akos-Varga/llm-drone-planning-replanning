@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--admission-model",
         type=str,
-        default="gpt-5-mini",
+        default="qwen3:1.7b",
         help="Ollama model for task admission inference."
     )
     parser.add_argument(
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         help="Run on the real drone environment instead of simulation."
     )
     parser.add_argument(
-        "--visualize",
+        "--vis",
         action="store_true",
         help="Create mission visualization after simulation. Only valid without --real."
     )
@@ -49,12 +49,6 @@ if __name__ == "__main__":
 
     if args.real and args.visualize:
         parser.error("--visualize can only be used in simulation mode. Do not use it with --real.")
-
-    planner_model = args.planner_model
-    admission_model = args.admission_model
-    task = args.task
-    rule_based_allocation = args.rule_alloc
-    rule_based_schedule = args.rule_sched
 
     use_sim = not args.real
     if use_sim:
@@ -76,7 +70,7 @@ if __name__ == "__main__":
         for name in drone_names:
             cfg = drone_configs[name]
             worker_kwargs = dict(
-                model_name=admission_model,
+                model_name=args.admission_model,
                 drone_name=name,
                 namespace=cfg["namespace"],
                 event_queue=event_queue,
@@ -103,13 +97,13 @@ if __name__ == "__main__":
         planner_loop(
             event_queue, 
             command_queues, 
-            planner_model, 
-            task, 
+            args.planner_model, 
+            args.task, 
             skills, 
             objects, 
             drones,
-            rule_based_allocation = args.rule_based_allocation,
-            rule_based_schedule = args.rule_based_schedule,
+            rule_based_allocation = args.rule_alloc,
+            rule_based_schedule = args.rule_sched,
             )
 
     finally:
@@ -119,11 +113,11 @@ if __name__ == "__main__":
         for p in processes:
             p.join()
 
-    if args.visualize:
+    if args.vis:
         from simulation import create_visualization
 
         create_visualization(
             event_log_path="logs/events.jsonl",
             output_video_path="logs/drone_execution_with_labels.mp4",
-            mission_descr=task,
+            mission_descr=args.task,
         )
