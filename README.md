@@ -1,9 +1,9 @@
-# Large Language Model–Based Multi-Agent Planning for Autonomous Drones
+# Hierarchical LLM-Based Planning and Replanning for Autonomous Multi-Drone Systems
 
 This repository contains code for running **LLM-based multi-agent planning** for autonomous drones in two modes:
 
-1. **Offline evaluation on a test dataset (simulated world)**
-2. **Online execution with real autonomous drones (ROS 2)**
+1. **Evaluation in a simulation environment**
+2. *Execution on a real team of drones**
 
 The README focuses on **how to run the code**, required setup, folder structure, and command-line arguments.
 
@@ -13,16 +13,29 @@ The README focuses on **how to run the code**, required setup, folder structure,
 
 ```
 .
-├── main_pipeline.py        # Run planning on test dataset using the simulation environment
-├── main.py                 # Run planning + execution on drones (ROS 2)
-├── test_tasks.py           # Test task dataset
-├── publisher.py            # ROS 2 drone interface
-├── pipeline/               # LLM prompts, planners, validators, utilities
-├── worlds/
-│   ├── test_world/         # Simulated world (skills, objects, drones)
-│   └── real_world/         # Real drone configuration
-├── results/                # Generated CSVs and visualizations
-└── README.md
+## Project Structure
+
+```text
+LLM-DRONE-PLANNING-REPLANNING/
+├── pipeline/                  # LLM-based planning pipeline for task decomposition, allocation, and scheduling
+├── task_admission/            # Onboard task admission logic for checking whether assigned tasks can be executed
+├── worlds/                    # World definitions, drone configurations, objects, and skill mappings
+│   ├── real_world.py           # Configuration for real-drone experiments
+│   └── test_world.py           # Configuration for simulation experiments
+├── report/                    # Thesis/report-related files
+├── videos/                    # Recorded mission videos or simulation outputs
+├── main.py                    # Main entry point for running a mission
+├── planner_process.py         # Planner process that runs the planning/replanning pipeline
+├── drone_process.py           # Drone worker process for real-drone execution
+├── drone_process_sim.py       # Drone worker process for simulation
+├── anafi_interface.py         # Interface for communicating with Parrot Anafi drones
+├── simulated_drone_interface.py # Interface for simulated drone behavior
+├── simulation.py              # Simulation environment and execution logic
+├── common.py                  # Shared utilities, data structures, and helper functions
+├── test_tasks.py              # Example mission commands or test cases
+├── requirements.txt           # Python dependencies
+├── README.md                  # Project documentation
+└── .env                       # Environment variables and API keys
 ```
 
 ---
@@ -31,7 +44,11 @@ The README focuses on **how to run the code**, required setup, folder structure,
 
 - **Python ≥ 3.9**
 - Internet access for LLM API calls
-- (For drones) **ROS 2** installed and configured
+- For simulation: no physical drone setup is required
+- For real-drone execution:
+  - **Ubuntu 22.04**
+  - **ROS 2 Humble** installed and configured
+  - **[`anafi_autonomy`](https://github.com/andriyukr/anafi_autonomy)** installed and configured for communication with Parrot Anafi drones
 
 Install Python dependencies:
 
@@ -41,117 +58,24 @@ pip install -r requirements.txt
 
 ---
 
-## LLM API Key Setup
+## Setup OpenAI API key
 
-The LLM API key is loaded inside `pipeline/utils/inference.py` using `python-dotenv`:
-
-```python
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
-client = openai.OpenAI(api_key=api_key)
-```
-
-### Steps
-
-1. Create a `.env` file in the project root:
+Create a `.env` file in the project root:
 
 ```bash
 OPENAI_API_KEY=your_api_key_here
 ```
 
-2. `python-dotenv` is already included in `requirements.txt`.
+----
 
----
-
-## Running on the Test Dataset (Simulated World)
-
-This mode runs the full planning pipeline on a **predefined test dataset** without controlling real drones.
-
-### Entry Point
-
-```bash
-python main_pipeline.py
-```
-
-### Command-Line Arguments
+## Running the code
 
 | Argument | Description |
 |--------|------------|
-| `--model` | LLM model name (default: `gpt-5-mini`) |
-| `--task_id` | Run a specific task (e.g., `Task1`) |
-| `--save` | Save results to `results/test_results.csv` |
-| `--vrp` | Compute VRP baseline for comparison |
-| `--visualize` | Generate a GIF animation of the schedule |
-
-### Examples
-
-Run all tasks:
-
-```bash
-python main_pipeline.py --model gpt-5-mini
-```
-
-Run a single task with visualization:
-
-```bash
-python main_pipeline.py --task_id Task1 --visualize
-```
-
-Save results to CSV:
-
-```bash
-python main_pipeline.py --save
-```
-
-### Outputs
-
-- CSV results: `results/test_results.csv`
-- Animations (optional): `results/animations/*.gif`
-
----
-
-## Running on Real Autonomous Drones (ROS 2)
-
-**Warning:** This mode sends commands to drones. Only run in a controlled and safe environment.
-
-### Prerequisites
-
-- **ROS 2 (e.g., Humble)** installed
-- Drone middleware running (PX4 / MAVROS / custom bridge)
-- Correct configuration in: `worlds/real_world.py`
-
-Source ROS 2 before running:
-
-```bash
-source /opt/ros/humble/setup.bash
-```
-
-### Entry Point
-
-```bash
-python main.py --task "<TASK DESCRIPTION>"
-```
-
-### Command-Line Arguments
-
-| Argument | Description |
-|--------|------------|
-| `--task` | Natural language task description (required) |
-| `--model` | LLM model name (default: `gpt-5-mini`) |
-
-### Example
-
-```bash
-python main.py \
-  --model gpt-5-mini \
-  --task "Inspect the rooftop and tower."
-```
-
-### Notes
-
-- One ROS 2 node is launched per drone
-- Each drone executes its assigned schedule in parallel
-- Altitudes are automatically staggered for safety
+| `--task` | Description of task to execute (default: `Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower.`) |
+| `--real` | Run on the real drone environment instead of simulation. (default: False) |
+| `--rule_based_allocation` | Rule based calculation of allocation instead of LLM. (default: False) |
+| `--rule_based_schedule` | Rule based schedule of allocation instead of LLM. (default: False) |
 
 ---
 
