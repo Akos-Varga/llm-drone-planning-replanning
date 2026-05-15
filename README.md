@@ -5,15 +5,11 @@ This repository contains code for running **LLM-based multi-agent planning** for
 1. **Evaluation in a simulation environment**
 2. **Execution on a real team of drones**
 
-The README focuses on **how to run the code**, required setup, folder structure, and command-line arguments.
+The README focuses on how to run the code, required setup, folder structure, and command-line arguments.
 
 ---
 
 ## Repository Structure
-
-```
-.
-## Project Structure
 
 ```
 LLM-DRONE-PLANNING-REPLANNING/
