@@ -8,6 +8,7 @@ logs/
 task_admission/*.png
 task_admission/test_results.txt
 task_admission/plotting.py
+results/
 
 # LaTeX build files
 *.aux
