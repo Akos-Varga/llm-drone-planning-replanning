@@ -3,7 +3,7 @@
 This repository contains code for running **LLM-based multi-agent planning** for autonomous drones in two modes:
 
 1. **Evaluation in a simulation environment**
-2. *Execution on a real team of drones**
+2. **Execution on a real team of drones**
 
 The README focuses on **how to run the code**, required setup, folder structure, and command-line arguments.
 
@@ -15,7 +15,7 @@ The README focuses on **how to run the code**, required setup, folder structure,
 .
 ## Project Structure
 
-```text
+```
 LLM-DRONE-PLANNING-REPLANNING/
 ├── pipeline/                  # LLM-based planning pipeline for task decomposition, allocation, and scheduling
 ├── task_admission/            # Onboard task admission logic for checking whether assigned tasks can be executed
