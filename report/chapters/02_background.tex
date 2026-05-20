@@ -44,18 +44,9 @@ drone failures, thereby increasing mission success rate in constrast to a single
 The key challenges in multi-agent systems are the efficient coordination between agents and the creation of a mission plan for heterogeneous agents,
 particularly under constraints such as limited communication, energy, and computation.
 
-\section{Multi-Agent Systems}
-
-Multi-agent systems (MAS) consist of multiple autonomous agents that interact within a shared environment to achieve individual or collective goals. 
-In the context of autonomous drone systems, each drone can be modeled as an autonomous agent with its own sensing, computation, communication, and decision-making capabilities. 
-Deploying heterogeneous UAV agents can increase the number of available sensing modalities, expand the area that can be inspected, and provide redundancy in case of drone failures, 
-thereby improving mission robustness compared to a single-agent solution \cite{pantelimon2019survey}. 
-However, multi-agent systems also introduce challenges related to coordination, task allocation, and mission planning, 
-particularly under constraints such as limited communication bandwidth, finite battery capacity, and restricted onboard computation.
-
 \subsection{Coordination in Multi-Agent Systems}
 
-Two common architectural approaches for coordination in multi-agent systems are centralized and decentralized coordination. 
+Two common architectural approaches for coordination in multi-agent systems are centralized and decentralized coordination.
 In a centralized architecture, a base station or ground control station is responsible for critical mission decisions and coordinates the behavior of the agents. 
 Since the central unit is often equipped with greater computational resources than the individual agents, centralized approaches can support more complex planning and optimization. 
 However, this architecture introduces a single point of failure: if the base station fails or communication with it is lost, the mission may be compromised.
@@ -67,13 +58,13 @@ However, coordination becomes more challenging because agents must reach decisio
 
 Several mechanisms can support decentralized coordination. 
 Leader election methods dynamically select a coordinating agent responsible for organizing group decisions. 
-Auction-based methods allocate tasks by allowing agents to bid based on local cost, capability, or availability, with tasks assigned according to the most suitable bid. 
+Auction-based methods allocate tasks by allowing agents to bid based on cost, capability, or availability, with each task assigned to the agent that submits the best bid according to the chosen objective.
 Voting mechanisms allow agents to collectively choose between alternatives, 
 while bargaining and negotiation approaches enable agents to iteratively exchange proposals until an agreement is reached.
 
 Hybrid approaches combine elements of both centralized and decentralized coordination. 
 For example, a ground station may perform high-level mission planning, 
-while individual UAVs retain autonomy to make local decisions based on their current state and surrounding environment. 
+while individual agents retain autonomy to make local decisions based on their current state and surrounding environment. 
 Such architectures can exploit the computational resources of centralized systems while preserving some of the robustness and adaptability of decentralized systems.
 
 \subsection{Planning in Multi-Agent Systems}
@@ -174,24 +165,45 @@ although it still requires reliable grounding of language into physical actions.
 
 \section{Related Work}
 
-Among early LLM-based planners for automous agents, 
+Recent work has increasingly explored the use of Large Language Models (LLMs) for robotic planning, 
+multi-agent coordination, and autonomous task execution. 
+LLMs are particularly attractive in this context because they can interpret high-level natural language instructions 
+and transform them into structured plans, executable code, or robot-specific actions. 
+However, robotic systems operate under physical constraints, including limited energy, sensing capabilities, 
+communication quality, and environmental uncertainty. 
+For this reason, LLM-based planning systems must not only generate reasonable plans, 
+but also ensure that these plans are feasible, executable, and adaptable during execution.
+
+Among early LLM-based planners for autonomous agents, 
 SayCan \cite{ahn2022doasican} introduces a framework that grounds language model reasoning in real-world robot capabilities.
 In this approach, an LLM generates candidate low-level skills from a high-level natural language instruction.
 Each skill is evaluated using two complementary scores: (i) a language model score, which measures how relevant the skill is for completing the task, and (ii) an affordance score, which estimates the feasibility of executing the skill given the robot's current state and environment.
 These scores are combined to select the most appropriate action, and the process is iteratively repeated until the task is completed.
 This work demonstrates that LLMs can be effectively applied to robotics when their outputs are constrained by physical feasibility.
+However, SayCan focuses primarily on single-agent sequential decision-making and does not address task allocation, scheduling, 
+or coordination between multiple robots.
+Furthermore, while feasibility is considered at the skill-selection level, the framework does not generate explicit multi-agent 
+schedules or perform mission-level replanning when execution conditions change.
 
-In the context of UAVs, Wang et al. \cite{wang2025gsce} introduce the GSCE framework, which combines guidelines, skill APIs,
-constraints within a single prompt.
+In the context of UAVs, Wang et al. \cite{wang2025gsce} introduced the GSCE framework, which combines guidelines, skill APIs,
+constraints, and examples within a single prompt.
 By leveraging step-by-step Chain-of-Thought (CoT) reasoning together with few-shot examples, 
 the system generates executable code for a single drone.
-While SayCan and GSCE focus on single-agent systems, they highlight the potential of LLMs for grounded reasoning and executable plan generation.
+The framework is relevant because it shows how LLMs can map natural language instructions to executable drone actions while respecting predefined APIs and operational constraints.
+This is important for UAV applications, where generated plans must be compatible with the available control interface.
+However, GSCE is mainly designed for single-drone operation.
+It does not address the additional challenges that arise in multi-drone missions, such as assigning subtasks to different drones, coordinating parallel execution, balancing workload, or replanning when one drone becomes unable to complete its assigned task.
+Thus, while SayCan and GSCE highlight the potential of LLMs for grounded reasoning and executable plan generation, they do not fully address multi-agent scheduling or execution-time adaptation.
 
 Extending these ideas to multi-agent systems, RoCo \cite{mandi2023roco} introduces a collaborative reasoning framework for multi-robot coordination. 
 In RoCo, each robot is associated with an LLM-based agent that has access to its own capabilities, local observations, and partial knowledge of the environment.
 These agents communicate through a structured dialogue process, iteratively proposing, refining, and critiquing task plans.
 Through this interaction, the system converges to a shared global plan, which is then decomposed and distributed among the robots for execution.
 Additionally, RoCo leverages LLMs during execution by generating 3D waypoints, enabling more flexible behavior.
+RoCo is important because it demonstrates how LLMs can support communication and collaborative reasoning between multiple robots rather than relying on a single planner.
+However, the generated plans are primarily the result of dialogue-based coordination and are not represented as explicit, time-parameterized schedules.
+As a result, it is difficult to evaluate schedule quality using objective metrics such as mission completion time, workload balance, or synchronization constraints.
+Furthermore, although the system supports flexible execution, it does not focus on structured replanning based on explicit feasibility checks of assigned subtasks.
 
 Building on multi-agent coordination, 
 SMART-LLM \cite{kannan2024smartllm} introduces a structured framework for task planning in multi-agent systems, 
@@ -205,20 +217,32 @@ resulting in a distributed execution plan.
 This work highlights the importance of decomposing complex planning problems into modular steps, 
 where each stage focuses on a specific aspect of the planning process, 
 and demonstrates the effectiveness of few-shot prompting in improving the quality and consistency of LLM outputs.
+SMART-LLM is closely related to this thesis because it also separates high-level mission planning into decomposition and allocation stages.
+However, the framework does not explicitly focus on temporal scheduling, schedule optimization, or runtime replanning.
+The resulting plans specify which robots should perform which tasks, but they do not provide a detailed execution schedule with explicit timing information.
+Moreover, the system does not include a dedicated task admission mechanism for checking whether assigned subtasks remain feasible before and during execution.
+This limits its ability to detect infeasible assignments and revise the plan when drone states or communication conditions change.
 
 To enable adaptive behavior in dynamic environments, 
 CoMuRoS \cite{borate2025hierarchical} is another framework that incorporates a hierarchical architecture 
-with event-driven replanning. The system employs a central LLM (Task Manager) for high-level reasoning, 
+with event-driven replanning. 
+The system employs a central LLM, referred to as the Task Manager, for high-level reasoning, 
 including interpreting natural language goals, decomposing tasks, allocating subtasks, and updating plans 
-based on environmental feedback. Each robot is equipped with a local LLM that translates assigned tasks 
+based on environmental feedback. 
+Each robot is equipped with a local LLM that translates assigned tasks 
 into executable Python code and performs event classification, distinguishing between relevant and 
-irrelevant observations. Relevant events are communicated back to the Task Manager to trigger replanning. 
-While the system demonstrates strong adaptability and has been validated in real-world scenarios with 
-heterogeneous robots, including drones and quadrupeds, it primarily focuses on feasibility and reactive 
-coordination. In particular, the generated plans lack explicit temporal reasoning, as tasks are not 
-associated with execution times or synchronization constraints between agents. Furthermore, 
-the framework does not incorporate a clear objective function, such as minimizing total mission time, 
+irrelevant observations. 
+Relevant events are communicated back to the Task Manager to trigger replanning. 
+This makes CoMuRoS particularly relevant to this thesis because it explicitly considers replanning as part of the execution process.
+The framework demonstrates that LLM-based systems can adapt to changes in the environment and revise plans in response to runtime events.
+
+However, CoMuRoS primarily focuses on feasibility and reactive coordination rather than explicit schedule generation.
+Although the system demonstrates strong adaptability and has been validated in real-world scenarios with heterogeneous robots, including drones and quadrupeds, 
+the generated plans lack explicit temporal reasoning.
+Furthermore, the framework does not incorporate a clear objective function, such as minimizing total mission time, 
 leading to potentially suboptimal utilization of resources.
+The replanning process is therefore mainly event-driven and reactive, rather than being connected to a time-parameterized schedule that can be evaluated, updated, and compared against an optimization baseline.
+This leaves open the question of how LLM-based replanning can be integrated with explicit scheduling in multi-drone missions.
 
 Complementary to replanning-focused approaches, 
 AutoHMA-LLM \cite{yang2025autohma} proposes a hierarchical architecture that combines cloud-based LLMs, device-level LLMs, 
@@ -227,16 +251,26 @@ In this framework, the cloud LLM performs global task decomposition, allocation,
 while device-level LLMs translate tasks into robot-specific instructions executed by classical control methods. 
 The system explores multiple coordination strategies and demonstrates that a centralized hybrid model achieves the best trade-off between
 efficiency and performance through continuous feedback between system layers. 
-Although the framework formulates scheduling as an optimization problem, 
+AutoHMA-LLM is relevant because it explicitly considers scheduling and hierarchical coordination, 
+which are important for multi-agent systems where high-level reasoning and low-level execution must be combined.
+However, although the framework formulates scheduling as an optimization problem, 
 it does not produce explicit, time-parameterized schedules that can be directly inspected or executed. 
 Additionally, the system is evaluated primarily in simulation environments, without validation on real robotic platforms, 
 leaving its performance under real-world conditions unverified.
+The framework also does not focus on task admission as a mechanism for detecting infeasible subtasks before or during execution.
 
-Taken together, these works demonstrate the growing capabilities of LLM-based multi-agent systems in task decomposition, coordination, 
-and adaptive replanning. 
-However, they also reveal a key limitation: 
-the absence of explicit scheduling mechanisms that incorporate temporal constraints and objective-driven optimization.
-As shown in \Cref{tab:comparison}, while several approaches support multi-agent coordination and, in some cases, dynamic replanning, 
-none of them provide explicit, time-parameterized schedule that enable efficient and coordinated multi-agent operation.
+Taken together, these works demonstrate the growing capabilities of LLM-based multi-agent systems in task decomposition, 
+coordination, scheduling, and adaptive replanning.
+However, they also reveal a key limitation: existing approaches often treat replanning as a reactive update mechanism 
+rather than as part of an explicit scheduling framework.
+While several systems can adapt to environmental changes or agent feedback, they typically do not generate time-parameterized schedules 
+that can be inspected, evaluated, and updated when execution conditions change.
+
+This creates a research gap for LLM-based multi-drone planning systems that combine natural language task decomposition, 
+capability-aware allocation, explicit scheduling, and execution-time replanning.
+In particular, there is a need for systems that can not only generate an initial mission plan, but also evaluate whether assigned subtasks 
+remain feasible during execution and revise the schedule when drone states, communication conditions, or task requirements change.
+This thesis addresses this gap by developing a planning pipeline that produces explicit execution schedules and integrates 
+a task admission module for detecting infeasible subtasks before and during execution, enabling replanning in response to runtime changes.
 
 \input{tables/literature_comparison.tex}

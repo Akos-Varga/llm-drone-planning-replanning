@@ -7,11 +7,10 @@ architecture in which a cloud-based planning pipeline generates mission plans fr
 instructions, while a smaller locally deployable model performs task admission based on the 
 drone's state.
 
-The planning pipeline decomposes a mission description into atomic subtasks, assigns them to drones
-according to their capabilities, and generates an execution schedule. During
-execution, the task local admission module determines whether assigned subtasks remain feasible. If a drone
-failure or task rejection occurs, the affected subtasks are returned to the cloud-based planner for
-rescheduling.
+The planning pipeline decomposes a human-language mission description into atomic subtasks, assigns them to drones
+according to their capabilities, and generates an execution schedule. Before and during execution, the task 
+admission module determines whether assigned subtasks are feasible given the drone's state. 
+If a drone failure or task rejection occurs, the affected subtasks are returned to the cloud-based planner for rescheduling.
 
 The system was evaluated in three parts. First, several cloud-based LLMs were compared for task
 decomposition, allocation, and scheduling using missions with one to ten subtasks. The generated

@@ -104,7 +104,6 @@ The allocator determines which assignments are possible,
 while the scheduler later selects the final drone for each subtask based on temporal criteria such as flight time and availability.
 
 Each drone is described by its available skills, current position, and speed.
-Each subtask is described by its name, required skill, target object, and estimated service time.
 In the allocation stage, only skill information is used.
 A drone qualifies for a subtask if the required skill of the subtask is included in the drone's skill list.
 Position and speed are intentionally ignored at this stage, since they are considered later by the scheduler when evaluating timing and efficiency.
@@ -191,7 +190,7 @@ rather than repeatedly computing distances and travel times during generation.
 The scheduler is constrained to assign each subtask exactly once across the drone team.
 Furthermore, a subtask may only be assigned to a drone contained in its candidate drone list.
 For each scheduled task, three temporal attributes are produced: \textit{departure\_time}, \textit{arrival\_time}, and \textit{finish\_time}.
-The departure time denotes when a drone starts travelling toward the target object, the arrival time denotes when it reaches the object, 
+The departure time denotes when a drone starts flying toward the target object, the arrival time denotes when it reaches the object, 
 and the finish time denotes when the required service has been completed.
 For a first task assigned to a drone, the arrival time is computed using the travel time from the drone's initial position to the task object.
 For consecutive tasks assigned to the same drone, 
@@ -229,7 +228,7 @@ The scheduling objective is to minimize the total mission completion time, also 
 This objective encourages the scheduler to exploit parallelism between drones and avoid unnecessary idle time.
 
 The output of the scheduler is a Python dictionary indexed by drone name.
-As shown in \Cref{fig:llm-pipeline}, each drone is assigned an ordered list of tasks, where every task contains the target object, 
+Each drone is assigned an ordered list of tasks, where every task contains the target object, 
 required skill, departure time, arrival time, and finish time.
 This explicit representation makes the generated plan directly inspectable and suitable for execution by the drone processes.
 
@@ -322,7 +321,7 @@ the system uses a local LLM-based task admission module before executing a sched
 The local task admission module receives telemetry information from the drone and information about the planned task. 
 The telemetry includes the maximum flight time, current battery percentage, battery health, link quality, drone state, 
 estimated flight duration, and estimated task duration. 
-Based on this information, the module classifies the situation into one of three categories: 
+Based on this information, the module classifies the scenario into one of three categories: 
 \texttt{ok}, \texttt{drone\_failure}, or \texttt{task\_failure}. 
 The \texttt{ok} decision indicates that the task can be executed as planned. 
 The \texttt{drone\_failure} decision indicates that the drone is currently not suitable for execution, 

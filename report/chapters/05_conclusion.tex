@@ -1,14 +1,14 @@
 \chapter{Conclusion and Future Work}
 
 \section{Conclusion}
-This thesis investigated the use of Large Language Models for high-level task planning in multi-drone systems. 
-The goal was to bridge the gap between natural-language mission descriptions and executable multi-drone schedules
-by using LLMs for task decomposition, task allocation, and task scheduling.
+This thesis investigated the use of Large Language Models for high-level planning and replanning in multi-drone systems.
+The goal was to bridge the gap between natural-language mission descriptions and executable mission schedules, 
+while enabling the system to adapt when assigned subtasks become infeasible during execution.
 
 A cloud-based planning pipeline was developed in which a user mission is transformed into atomic subtasks, 
 assigned to suitable drones based on their capabilities, and scheduled while considering travel time and task duration. 
 The resulting output is a per-drone schedule. 
-In addition, an local task admission module was developed to evaluate whether individual drones are able to accept assigned
+In addition, a local task admission module was developed to evaluate whether individual drones are able to accept assigned
 tasks based on their state, link quality, and available flight time.
 
 The system was evaluated in three parts. 
