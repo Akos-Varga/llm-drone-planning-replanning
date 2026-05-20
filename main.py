@@ -86,14 +86,16 @@ if __name__ == "__main__":
                     speed=drones[name]["speed"],
                     max_altitude=MAX_ALTITUDE,
                 )
-
+            
+            # Start a worker process for each drone
             p = mp.Process(
                 target=worker_target,
                 kwargs=worker_kwargs,
             )
             p.start()
             processes.append(p)
-
+        
+        # Start planner loop
         planner_loop(
             event_queue, 
             command_queues, 

@@ -5,8 +5,6 @@ This repository contains code for running **LLM-based multi-agent planning** for
 1. **Evaluation in a simulation environment**
 2. **Execution on a real team of drones**
 
-The README focuses on how to run the code, required setup, folder structure, and command-line arguments.
-
 ---
 
 ## Repository Structure
@@ -69,9 +67,12 @@ OPENAI_API_KEY=your_api_key_here
 | Argument | Description |
 |--------|------------|
 | `--task` | Description of task to execute (default: `Record video of both wind turbines, take thermal image of House1 and measure wind at the Tower.`) |
+| `--planner-model` | GPT model for pipeline inference (default: gpt-5-mini) |
+| `--admission-model` | Ollama model for task admission inference. (default: qwen3:1.7b) |
 | `--real` | Run on the real drone environment instead of simulation. (default: False) |
-| `--rule_based_allocation` | Rule based calculation of allocation instead of LLM. (default: False) |
-| `--rule_based_schedule` | Rule based schedule of allocation instead of LLM. (default: False) |
+| `--vis` | Create mission visualization after simulation. Only valid without --real. (default: False) |
+| `--rule-alloc` | Rule based calculation of allocation instead of LLM. (default: False) |
+| `--rule-sched` | Rule based schedule of allocation instead of LLM. (default: False) |
 
 ---
 
