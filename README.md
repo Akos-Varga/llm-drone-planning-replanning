@@ -1,6 +1,6 @@
 # Hierarchical LLM-Based Planning and Replanning for Autonomous Multi-Drone Systems
 
-This repository contains code for running **LLM-based multi-agent planning** for autonomous drones in two modes:
+This repository contains code for running **LLM-based multi-agent planning and replanning** for autonomous drones in two modes:
 
 1. **Evaluation in a simulation environment**
 2. **Execution on a real team of drones**
