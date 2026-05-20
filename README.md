@@ -73,9 +73,3 @@ OPENAI_API_KEY=your_api_key_here
 | `--vis` | Create mission visualization after simulation. Only valid without --real. (default: False) |
 | `--rule-alloc` | Rule based calculation of allocation instead of LLM. (default: False) |
 | `--rule-sched` | Rule based schedule of allocation instead of LLM. (default: False) |
-
----
-
-## Safety Disclaimer
-
-This software controls physical robots. The authors assume **no responsibility** for damage, injury, or regulatory violations. Always test in simulation first and follow local aviation laws.
