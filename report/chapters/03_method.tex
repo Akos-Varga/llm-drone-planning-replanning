@@ -57,8 +57,14 @@ Given the user-defined mission instruction
 \texttt{"Inspect Tower and measure wind conditions at House2."}, 
 together with the available skills and objects defined in the world configuration:
 
-\begin{samepage}
-\begin{lstlisting}[language=Python, numbers=none]
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[
+language=Python,
+numbers=none,
+basicstyle=\ttfamily\footnotesize,
+aboveskip=4pt,
+belowskip=4pt
+]
 skills = {
     'CaptureRGBImage': 1.1,
     'CaptureThermalImage': 2.4,
@@ -73,13 +79,19 @@ objects = {
     'Tower': (53, 91, 57),
 }
 \end{lstlisting}
-\end{samepage}
+\end{minipage}
 
 
 the decomposer generates the following atomic subtasks:
 
-\begin{samepage}
-\begin{lstlisting}[language=Python, numbers=none]
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[
+language=Python,
+numbers=none,
+basicstyle=\ttfamily\footnotesize,
+aboveskip=4pt,
+belowskip=4pt
+]
 subtasks = [
     {
         "name": "SubTask1",
@@ -95,7 +107,7 @@ subtasks = [
     },
 ]
 \end{lstlisting}
-\end{samepage}
+\end{minipage}
 
 \section{Task Allocation}
 The task allocator identifies which drones are capable of executing each decomposed subtask, 
@@ -123,8 +135,14 @@ Each dictionary preserves the original subtask information and adds a list of ca
 \subsection{Example}
 Using the decomposed subtasks from \Cref{subsec:decomposition_example} and the following drone configuration:
 
-\begin{samepage}
-\begin{lstlisting}[language=Python, numbers=none]
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[
+language=Python,
+numbers=none,
+basicstyle=\ttfamily\footnotesize,
+aboveskip=4pt,
+belowskip=4pt
+]
 drones = {
     "Drone1":
     {
@@ -146,7 +164,7 @@ drones = {
     }
 }
 \end{lstlisting}
-\end{samepage}
+\end{minipage}
 
 \texttt{SubTask1} requires the \texttt{InspectStructure} skill. 
 Therefore, \texttt{Drone1} and \texttt{Drone3} are included in its candidate drone set. 
@@ -154,8 +172,14 @@ Similarly, \texttt{SubTask2} requires the \texttt{MeasureWind} skill, which can 
 At this stage, the allocator does not select the final executing drone; it only identifies the feasible candidates for each subtask.
 The resulting allocated subtasks are:
 
-\begin{samepage}
-\begin{lstlisting}[language=Python, numbers=none]
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[
+language=Python,
+numbers=none,
+basicstyle=\ttfamily\footnotesize,
+aboveskip=4pt,
+belowskip=4pt
+]
 subtasks_with_drones = [
     {
         "name": "SubTask1",
@@ -173,7 +197,7 @@ subtasks_with_drones = [
     }
 ]
 \end{lstlisting}
-\end{samepage}
+\end{minipage}
 
 \section{Task Scheduling}
 The scheduler converts the allocated subtasks into a time-parameterized multi-drone execution schedule.
@@ -236,8 +260,14 @@ This explicit representation makes the generated plan directly inspectable and s
 
 Continuing the same example, the scheduler receives the allocated subtasks together with a precomputed travel-time table:
 
-\begin{samepage}
-\begin{lstlisting}[language=Python, numbers=none]
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[
+language=Python,
+numbers=none,
+basicstyle=\ttfamily\footnotesize,
+aboveskip=4pt,
+belowskip=4pt
+]
 travel_times = {
     "drone_to_object": {
         "Drone1": {"Tower": 4.0, "House2": 6.0},
@@ -260,12 +290,18 @@ travel_times = {
     }
 }
 \end{lstlisting}
-\end{samepage}
+\end{minipage}
 
+\noindent\begin{minipage}{\linewidth}
 One feasible schedule produced by the scheduler is:
 
-\begin{samepage}
-\begin{lstlisting}[language=Python, numbers=none]
+\begin{lstlisting}[
+language=Python,
+numbers=none,
+basicstyle=\ttfamily\footnotesize,
+aboveskip=4pt,
+belowskip=4pt
+]
 schedule = {
     "Drone1": [
         {
@@ -290,7 +326,7 @@ schedule = {
     "Drone3": []
 }
 \end{lstlisting}
-\end{samepage}
+\end{minipage}
 
 In this schedule, \texttt{SubTask1} is assigned to \texttt{Drone1}. 
 Since it is the first task assigned to \texttt{Drone1}, the arrival time is computed from the initial drone-to-object travel time:

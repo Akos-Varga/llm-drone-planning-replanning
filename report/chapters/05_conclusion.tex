@@ -25,6 +25,21 @@ admission module provided an additional layer of local decision-making before ta
 However, the results also show that LLM-based planning still requires careful prompting and validation mechanism to ensure 
 reliability in safety-critical applications.
 
+\section{Limitations}
+Although the system demonstrated promising results, several limitations should be considered when interpreting the findings.
+The most important limitation is the inference time of the LLM-based planning pipeline. Long inference times limit the system's
+suitability for time-critical missions and missions requiring frequent replanning. While smaller locally deployable models can
+reduce latency, the results also showed that they are generally less reliable than larger cloud-based models. Similarly, the
+inference time of the task admission module limits how frequently drone status checks can be performed during execution.
+
+Another limitation is the possibility of invalid LLM outputs. Although structured prompts and validation mechanisms were used,
+the planner may still occasionally produce malformed JSON files, missing fields, or schedules that violate system constraints.
+Such invalid outputs can disrupt execution because they trigger replanning and thereby delay the mission.
+
+In addition, the generated schedules do not guarantee optimality. As shown in the evaluation, LLM-generated schedules may be valid
+and executable, but they are not always optimal with respect to the given optimization criterion. This is a limitation compared to
+classical optimization methods, which can provide stronger guarantees under well-defined assumptions.
+
 \section{Future Work}
 Several directions can be explored to improve the proposed system. First, future work should investigate real-world
 deployment on physical drones. While simulation provides a controlled environment for testing task planning and execution, 
