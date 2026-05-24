@@ -29,7 +29,7 @@ LLM-DRONE-PLANNING-REPLANNING/
 ├── test_tasks.py              # Example mission commands or test cases
 ├── requirements.txt           # Python dependencies
 ├── README.md                  # Project documentation
-└── .env                       # Environment variables and API keys
+└── .env                       # OpenAI key
 ```
 
 ---
