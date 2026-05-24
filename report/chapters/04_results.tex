@@ -40,11 +40,11 @@ three for each subtask count.
 
 \input{tables/cloud_avg_vrp_gap_by_subtasks.tex}
 
+\input{tables/cloud_avg_inference_time_by_subtasks.tex}
+
 \subsubsection{Inference Time}
 \Cref{tab:avg_inference_time_by_subtasks} shows the average inference time for each model, computed
 only over successfully generated schedules.
-
-\input{tables/cloud_avg_inference_time_by_subtasks.tex}
 
 \subsubsection{Model Selection}
 The results show that GPT-5 consistently generated schedules close to the VRP baseline, but required
@@ -121,15 +121,20 @@ near the Base and Tower. In addition, take an RGB image of the Tower.
 Based on the submitted natural-language mission, the cloud-based planner generated a schedule,
 and the resulting subtasks were sent to the drones for admission checking.
 
+\Cref{tab:sim_subtasks_suitable_drones} shows the decomposed subtasks and the drones from the world
+configuration that have the required skill to execute each subtask.
+
+\input{tables/simulation_setup.tex}
+
 \Cref{fig:sim_execution_frames_1,fig:sim_execution_frames_2,fig:sim_execution_frames_3} show the
 main stages of the execution:
 
 \begin{enumerate}
     \item All drones accept their assigned subtasks and start moving toward their targets
-    (\Cref{fig:frame_1}).
+    (\mbox{\Cref{fig:frame_1}}).
     \item Once the drones arrive at their assigned targets, they begin executing their subtasks
     (\Cref{fig:frame_2}).
-    \item Drone5's task local task admission module signals failure during the execution phase of SubTask4. 
+    \item Drone5's local task admission module signals failure during the execution phase of SubTask4.
     The affected remaining subtasks are sent back to the cloud-based planner for rescheduling (\Cref{fig:frame_3}).
     \item While the updated schedule is being generated, the other drones continue executing their
     previously allocated subtasks (\Cref{fig:frame_4}).
@@ -137,6 +142,10 @@ main stages of the execution:
     (\Cref{fig:frame_5}).
     \item All subtasks are completed by the drone team (\Cref{fig:frame_6}).
 \end{enumerate}
+
+\Cref{tab:simulation_case_summary} summarizes the system response during the simulated replanning case study.
+
+\input{tables/simulation_results.tex}
 
 This qualitative case study demonstrates that the implemented architecture can coordinate the
 cloud-based planner, local task admission module, and execution monitor within a single mission
