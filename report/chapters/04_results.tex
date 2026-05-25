@@ -79,11 +79,11 @@ Llama \cite{ollama_llama32}, and Phi \cite{ollama_phi4} model families.
 \input{tables/task_admission_inference_time.tex}
 
 \subsubsection{Model Selection}
-The results show that qwen3:1.7b achieved perfect classification accuracy across all four categories,
+The results show that \texttt{qwen3:1.7b} achieved perfect classification accuracy across all four categories,
 correctly solving all 80 test cases. Although some models achieved lower average inference times, they
 failed on safety-relevant categories such as link-quality or flight-time errors. Since the task
 admission module directly affects replanning decisions, classification reliability was prioritized over
-minimal inference time. Therefore, qwen3:1.7b was selected for the local task admission module.
+minimal inference time. Therefore, \texttt{qwen3:1.7b} was selected for the local task admission module.
 
 \section{Simulation Results}
 
