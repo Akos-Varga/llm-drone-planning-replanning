@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 from matplotlib.lines import Line2D
 
-from worlds.test_world import drones, objects
-
 def create_visualization(
         mission_descr,
+        drones,
+        objects,
         event_log_path = "logs/events.jsonl",
-        output_video_path="logs/drone_execution_with_labels.mp4",
+        output_video_path="logs/drone_execution.mp4",
 ):
     # ------------------------------------------------------------
     # 1. Settings
@@ -634,7 +634,7 @@ def create_visualization(
                     dict(facecolor="white", alpha=0.7, edgecolor="none", pad=1.5)
                 )
 
-        time_text.set_text(f"Time: {t - t_min:.2f} s")
+        time_text.set_text(f"Time: {t - t_min:.2f} min")
 
         pending = visible_pending_subtasks_at(t)
 

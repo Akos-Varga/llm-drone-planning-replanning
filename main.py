@@ -1,6 +1,7 @@
 import multiprocessing as mp
 from planner_process import planner_loop
 import argparse
+import copy
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -47,7 +48,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.real and args.visualize:
+    if args.real and args.vis:
         parser.error("--visualize can only be used in simulation mode. Do not use it with --real.")
 
     use_sim = not args.real
@@ -57,6 +58,8 @@ if __name__ == "__main__":
     else:
         from worlds.real_world import skills, objects, OBJECT_TO_YAW, drones, drone_names, drone_configs, MAX_ALTITUDE
         from drone_process import drone_worker
+
+    runtime_drones = copy.deepcopy(drones)
 
     worker_target = drone_worker_sim if use_sim else drone_worker
     
@@ -103,7 +106,7 @@ if __name__ == "__main__":
             args.task, 
             skills, 
             objects, 
-            drones,
+            runtime_drones,
             rule_based_allocation = args.rule_alloc,
             rule_based_schedule = args.rule_sched,
             )
@@ -119,7 +122,9 @@ if __name__ == "__main__":
         from simulation import create_visualization
 
         create_visualization(
-            event_log_path="logs/events.jsonl",
-            output_video_path="logs/drone_execution_with_labels.mp4",
             mission_descr=args.task,
+            drones=drones,
+            objects=objects,
+            event_log_path="logs/events.jsonl",
+            output_video_path="logs/drone_execution.mp4",
         )
