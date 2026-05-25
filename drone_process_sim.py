@@ -16,7 +16,7 @@ def drone_worker_sim(
     objects,
     object_to_yaw,
 ):
-    node = SimDroneInterface(drone_name, namespace, max_flight_time)
+    node = SimDroneInterface(drone_name, max_flight_time)
 
     state = IDLE
     proposed_task = None
@@ -223,13 +223,11 @@ def drone_worker_sim(
             # Execution
             # -----------------------------------------------------------------
             if state == BUSY and current_task is not None:
-                target_pos = objects[current_task["object"]]
-                target_yaw = object_to_yaw[current_task["object"]]
                 execution_time = float(current_task["finish_time"]) - float(current_task["arrival_time"])
                 flight_time = float(current_task["arrival_time"]) - float(current_task["departure_time"])
 
                 if not pose_sent:
-                    node.send_pose(target_pos, target_yaw, flight_time, execution_time)
+                    node.send_pose(flight_time, execution_time)
                     pose_sent = True
                     arrived_sent = False
 
