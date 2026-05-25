@@ -4,22 +4,13 @@ import random
 from task_admission.task_admission_llm import run_task_admission, Telemetry
 
 class SimDroneInterface:
-    def __init__(self, drone_name, namespace, max_flight_time):
+    def __init__(self, drone_name, max_flight_time):
         self.drone_name = drone_name
-        self.name = namespace
         self.max_flight_time = float(max_flight_time)
 
-        self.position = [0.0, 0.0, 0.0]
-        self.yaw = 0.0
-
-        self.goal_x = None
-        self.goal_y = None
-        self.goal_z = None
-        self.goal_yaw = None
-
         self._telemetry_ready = True
-        self.battery_percentage = round(random.uniform(60.0, 100.0), 2)
-        self.battery_health = round(random.uniform(60.0, 100.0), 2)
+        self.battery_percentage = round(random.uniform(55.0, 80.0), 2)
+        self.battery_health = round(random.uniform(55.0, 80.0), 2)
         self.link_quality = random.randint(4, 5)
         self.drone_state = "LANDED"
 
@@ -30,7 +21,7 @@ class SimDroneInterface:
 
         self._last_update_time = time.monotonic()
         self._battery_drain_per_sec = 0.005
-        self._failure_probability = 0.001
+        self._failure_probability = 0.0005
         self._link_drop_probability = 0.005
 
     def _update_simulation(self):
@@ -92,10 +83,8 @@ class SimDroneInterface:
 
         return run_task_admission(model=model, t=t)
 
-    def send_pose(self, pos, yaw_deg, flight_time, execution_time):
+    def send_pose(self, flight_time, execution_time):
         self._update_simulation()
-        (self.goal_x, self.goal_y, self.goal_z) = pos
-        self.goal_yaw = yaw_deg
         self.execution_time = execution_time
         self.flight_time = flight_time 
         self.departure_time = time.monotonic()
