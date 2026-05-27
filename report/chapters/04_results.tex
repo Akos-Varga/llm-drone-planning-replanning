@@ -120,32 +120,60 @@ Inspect both solar panels, record thermal image of the tower and both rooftops.
 Based on the submitted natural-language mission, the cloud-based planner generated a schedule,
 and the resulting subtasks were sent to the drones for admission checking.
 
-% \Cref{tab:sim_subtasks_suitable_drones} shows the decomposed subtasks and the drones from the world
-% configuration that have the required skill to execute each subtask.
+The main steps of the simulation are as follows:
+
+\begin{enumerate}
+    \item The planning pipeline decomposes the mission and identifies all capable drones from the world configuration
+    (\Cref{tab:sim_subtasks_suitable_drones}).
+
+    \item The planning pipeline creates an initial schedule with a makespan of 11.2 min 
+    (\Cref{tab:first_schedule}), and each drone's task admission module receives its first subtask (\Cref{fig:frame_1}).
+
+    \item Drone3 rejects its assigned subtask, SubTask4, with the following message:
+    \begin{quote}
+    \small\ttfamily
+    available flight time (7.61 min) $<$ 
+    required mission time (9.5 min)
+    \end{quote}
+
+    \item The planner removes Drone3 as a candidate for SubTask4 and 
+    generates an updated schedule with a longer makespan of 16.4 min (\Cref{tab:second_schedule}).
+
+    \item The updated schedule is acknowledged by all drones (\Cref{fig:frame_2}).
+    
+    \item The drones start flying towards their target objects (\Cref{fig:frame_3}) 
+    and begin execution once they arrive (\Cref{fig:frame_4}).
+
+    \item After completing their assigned subtasks, the drone become idle (\Cref{fig:frame_5}).
+    
+    \item Since no issues were detected during the previous subtasks, no rescheduling is required. 
+    Drone5 therefore receives its next pending subtask from the existing schedule.
+
+    \item Drone5's onboard admission module accepts the subtask, 
+    after which it starts flying towards SolarPanel2 (\Cref{fig:frame_6}).
+    
+    \item During execution at RoofTop1 Drone1 performs a periodic in-flight admission check using the task admission module (\Cref{fig:frame_7}), which returns:
+    \begin{quote}
+    \small\ttfamily
+    Drone is in suitable state, link quality 5, \\
+    available flight time $>$ required mission time
+    \end{quote}
+    This indicates that the execution can continue.
+
+    \item Drone1 and Drone5 finish their subtasks, thereby completing the user-defined mission (\Cref{fig:frame_8}).
+\end{enumerate}
 
 \input{tables/simulation_setup.tex}
 
-% \Cref{fig:sim_execution_frames_1,fig:sim_execution_frames_2,fig:sim_execution_frames_3,fig:sim_execution_frames_4} show the
-% main stages of the execution:
+\input{tables/first_schedule.tex}
 
-% \mbox{\Cref{fig:frame_1}}
-
-The main steps of the simulation:
-
-\begin{enumerate}
-    \item The planning pipeline decomposes and allocates subtasks to all capable drones from the world configuration. (\Cref{tab:sim_subtasks_suitable_drones})
-    \item The planning pipeline creates an initial schedule and each drone's task admission is sent the first subtask. % Missing graph
-    \item 
-\end{enumerate}
-
-\Cref{tab:simulation_case_summary} summarizes the system response during the simulated replanning case study.
-
-\input{tables/simulation_results.tex}
+\input{tables/second_schedule.tex}
 
 This qualitative case study demonstrates that the implemented architecture can coordinate the
 cloud-based planner, local task admission module, and execution monitor within a single mission
-workflow. In particular, the sequence shows that the system can detect a drone failure, update the
-mission state, reschedule affected subtasks, and continue execution with the remaining available drones.
+workflow. The sequence shows that the system can identify an infeasible task assignment during
+local admission checking, update the allocation by excluding the unsuitable drone for the affected
+subtask, generate an updated schedule, and continue the mission with the remaining suitable drones.
 
 \begin{landscape}
 \begin{figure}[p]
