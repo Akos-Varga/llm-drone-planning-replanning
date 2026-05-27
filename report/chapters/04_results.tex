@@ -114,33 +114,28 @@ A representative mission execution was conducted in the simulation environment u
 language models for planning and task admission. The drone team executed the following mission:
 
 \begin{quote}
-Document the condition of all houses with video and inspect each rooftop, while measuring wind levels
-near the Base and Tower. In addition, take an RGB image of the Tower.
+Inspect both solar panels, record thermal image of the tower and both rooftops.
 \end{quote}
 
 Based on the submitted natural-language mission, the cloud-based planner generated a schedule,
 and the resulting subtasks were sent to the drones for admission checking.
 
-\Cref{tab:sim_subtasks_suitable_drones} shows the decomposed subtasks and the drones from the world
-configuration that have the required skill to execute each subtask.
+% \Cref{tab:sim_subtasks_suitable_drones} shows the decomposed subtasks and the drones from the world
+% configuration that have the required skill to execute each subtask.
 
 \input{tables/simulation_setup.tex}
 
-\Cref{fig:sim_execution_frames_1,fig:sim_execution_frames_2,fig:sim_execution_frames_3} show the
-main stages of the execution:
+% \Cref{fig:sim_execution_frames_1,fig:sim_execution_frames_2,fig:sim_execution_frames_3,fig:sim_execution_frames_4} show the
+% main stages of the execution:
+
+% \mbox{\Cref{fig:frame_1}}
+
+The main steps of the simulation:
 
 \begin{enumerate}
-    \item All drones accept their assigned subtasks and start moving toward their targets
-    (\mbox{\Cref{fig:frame_1}}).
-    \item Once the drones arrive at their assigned targets, they begin executing their subtasks
-    (\Cref{fig:frame_2}).
-    \item Drone5's local task admission module signals failure during the execution phase of SubTask4.
-    The affected remaining subtasks are sent back to the cloud-based planner for rescheduling (\Cref{fig:frame_3}).
-    \item While the updated schedule is being generated, the other drones continue executing their
-    previously allocated subtasks (\Cref{fig:frame_4}).
-    \item SubTask4 is reassigned to Drone6 and acknowledged by the local task admission module
-    (\Cref{fig:frame_5}).
-    \item All subtasks are completed by the drone team (\Cref{fig:frame_6}).
+    \item The planning pipeline decomposes and allocates subtasks to all capable drones from the world configuration. (\Cref{tab:sim_subtasks_suitable_drones})
+    \item The planning pipeline creates an initial schedule and each drone's task admission is sent the first subtask. % Missing graph
+    \item 
 \end{enumerate}
 
 \Cref{tab:simulation_case_summary} summarizes the system response during the simulated replanning case study.
@@ -159,18 +154,18 @@ mission state, reschedule affected subtasks, and continue execution with the rem
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/1.png}
-        \caption{First allocation round.}
+        \caption{First allocation round with rejection from Drone3.}
         \label{fig:frame_1}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/2.png}
-        \caption{The arrived drones start executing their tasks.}
+        \caption{Second, succesful allocation round.}
         \label{fig:frame_2}
     \end{subfigure}
 
-    \caption{Initial stages of the simulated mission execution.}
+    \caption{Initial allocation attempts in the simulated mission.}
     \label{fig:sim_execution_frames_1}
 \end{figure}
 \end{landscape}
@@ -182,18 +177,18 @@ mission state, reschedule affected subtasks, and continue execution with the rem
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/3.png}
-        \caption{Drone5's local task admission module signals failure during task execution.}
+        \caption{The drones are moving towards their target objects.}
         \label{fig:frame_3}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/4.png}
-        \caption{The remaining drones continue executing their originally allocated subtasks while the cloud-based planner reschedules the failed task.}
+        \caption{The arrived drones start executing their subtask.}
         \label{fig:frame_4}
     \end{subfigure}
 
-    \caption{Intermediate stages of the simulated mission execution.}
+    \caption{Drone navigation and subtask execution during the simulated mission.}
     \label{fig:sim_execution_frames_2}
 \end{figure}
 \end{landscape}
@@ -205,19 +200,42 @@ mission state, reschedule affected subtasks, and continue execution with the rem
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/5.png}
-        \caption{SubTask4 is allocated and acknowledged by Drone6.}
+        \caption{After execution the drones become idle.}
         \label{fig:frame_5}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/6.png}
-        \caption{All subtasks are completed.}
+        \caption{Drone5 accepts its next task and starts moving towards the target object.}
         \label{fig:frame_6}
     \end{subfigure}
 
-    \caption{Final stages of the simulated mission execution.}
+    \caption{Transition between completed and newly assigned subtasks.}
     \label{fig:sim_execution_frames_3}
+\end{figure}
+\end{landscape}
+
+\begin{landscape}
+\begin{figure}[p]
+    \centering
+
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/7.png}
+        \caption{Drone1 performs an in-flight task check.}
+        \label{fig:frame_7}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \simframe{figures/frames/8.png}
+        \caption{All subtasks are completed.}
+        \label{fig:frame_8}
+    \end{subfigure}
+
+    \caption{In-flight task admission checking and mission completion.}
+    \label{fig:sim_execution_frames_4}
 \end{figure}
 \end{landscape}
 
