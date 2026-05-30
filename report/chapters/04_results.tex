@@ -4,8 +4,8 @@ This chapter presents the evaluation results of the proposed LLM-based drone pla
 architecture. The evaluation is divided into three parts. First, the individual LLM-based components are
 evaluated. 
 Second, the selected components are integrated and evaluated in an end-to-end simulation case study. 
-Finally, the system is tested on the physical drone platform to assess its behaviour under real-world execution
-conditions.
+Finally, the physical drone platform and laboratory setup are described to relate the proposed architecture
+to a real-world deployment environment.
 
 \section{Component-Level LLM Evaluation}
 
@@ -89,8 +89,8 @@ minimal inference time. Therefore, \texttt{qwen3:1.7b} was selected for the loca
 
 This section evaluates the planning and task admission components in a simulated
 multi-drone mission environment. The purpose of the simulation is to validate the interaction
-between cloud-based planning, locall task admission, execution monitoring, failure detection,
-and replanning before deployement on a physical drone platform.
+between cloud-based planning, local task admission, execution monitoring, failure detection,
+and replanning before deployment on a physical drone platform.
 
 \subsection{Simulation Setup}
 The simulation environment was designed to represent a multi-drone inspection scenario with static
@@ -144,7 +144,7 @@ The main steps of the simulation are as follows:
     \item The drones start flying towards their target objects (\Cref{fig:frame_3}) 
     and begin execution once they arrive (\Cref{fig:frame_4}).
 
-    \item After completing their assigned subtasks, the drone become idle (\Cref{fig:frame_5}).
+    \item After completing their assigned subtasks, the drones become idle (\Cref{fig:frame_5}).
     
     \item Since no issues were detected during the previous subtasks, no rescheduling is required. 
     Drone5 therefore receives its next pending subtask from the existing schedule.
@@ -152,7 +152,7 @@ The main steps of the simulation are as follows:
     \item Drone5's onboard admission module accepts the subtask, 
     after which it starts flying towards SolarPanel2 (\Cref{fig:frame_6}).
     
-    \item During execution at RoofTop1 Drone1 performs a periodic in-flight admission check using the task admission module (\Cref{fig:frame_7}), which returns:
+    \item During execution at RoofTop1, Drone1 performs a periodic in-flight admission check using the task admission module (\Cref{fig:frame_7}), which returns:
     \begin{quote}
     \small\ttfamily
     Drone is in suitable state, link quality 5, \\
@@ -189,7 +189,7 @@ subtask, generate an updated schedule, and continue the mission with the remaini
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/2.png}
-        \caption{Second, succesful allocation round.}
+        \caption{Second, successful allocation round.}
         \label{fig:frame_2}
     \end{subfigure}
 
@@ -331,8 +331,8 @@ Parrot Anafi 4K, Anafi Thermal, Anafi USA, and Anafi Ai. These platforms are sho
         \label{fig:drone_anafi_ai}
     \end{subfigure}
 
-    \caption[Drone platforms used during physical testing.]%
-            {Drone platforms used during physical testing.
+    \caption[Drone platforms considered for physical testing.]%
+            {Drone platforms considered for physical testing.
             Images adapted from Parrot product documentation
             \cite{parrot_4k,parrot_thermal,parrot_usa,parrot_ai}.}
     \label{fig:drone_platforms}

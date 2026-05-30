@@ -2,7 +2,7 @@
 
 \section{System Overview}
 The core of the system is a cloud-based multi-drone task scheduling pipeline.
-Given a high-level mission command from a user, the system creates a time-parameterized schedule for a team of heterogeneous drones.
+Given a high-level mission command from a user, the system creates an explicit schedule for a team of heterogeneous drones.
 The pipeline consists of three stages: task decomposition, task allocation, and task scheduling.
 First, the task decomposition stage converts the natural-language mission into a list of atomic subtasks.
 Second, the task allocation stage assigns each subtask a set of suitable candidate drones based on the required skill for the subtask
@@ -40,7 +40,7 @@ their estimated execution times, the required output format, and few-shot exampl
 The model is instructed to generate only subtasks that can be expressed using the predefined skill set.
 This constrains the LLM output and reduces the risk of hallucinated actions that cannot be executed by the system.
 
-The output of this stage can be represented as:
+The output of this stage is represented as:
 \[
 S = \{s_1, s_2, \dots, s_n\},
 \]
@@ -68,8 +68,8 @@ belowskip=4pt
 skills = {
     'CaptureRGBImage': 1.1,
     'CaptureThermalImage': 2.4,
-    'InspectStructure': 1.3,
-    'MeasureWind': 2.7,
+    'InspectStructure': 2.0,
+    'MeasureWind': 1.5,
 }
 
 objects = {
@@ -200,7 +200,7 @@ subtasks_with_drones = [
 \end{minipage}
 
 \section{Task Scheduling}
-The scheduler converts the allocated subtasks into a time-parameterized multi-drone execution schedule.
+The scheduler converts the allocated subtasks into an explicit multi-drone execution schedule.
 While task decomposition determines what must be done and task allocation determines which drones can perform each task, 
 scheduling assigns the final drone to each subtask and determines when each task should be executed.
 
@@ -214,7 +214,7 @@ rather than repeatedly computing distances and travel times during generation.
 The scheduler is constrained to assign each subtask exactly once across the drone team.
 Furthermore, a subtask may only be assigned to a drone contained in its candidate drone list.
 For each scheduled task, three temporal attributes are produced: \textit{departure\_time}, \textit{arrival\_time}, and \textit{finish\_time}.
-The departure time denotes when a drone starts flying toward the target object, the arrival time denotes when it reaches the object, 
+The departure time denotes when a drone starts flying towards the target object, the arrival time denotes when it reaches the object, 
 and the finish time denotes when the required service has been completed.
 For a first task assigned to a drone, the arrival time is computed using the travel time from the drone's initial position to the task object.
 For consecutive tasks assigned to the same drone, 
@@ -410,7 +410,7 @@ For example, new rejection criteria, different battery safety margins, communica
 or task-specific constraints can be added without changing the program logic. 
 This makes the replanning mechanism easier to adapt to different drone platforms, mission types, and safety requirements. 
 At the same time, 
-the use of a structured output schema constrains the LLM response and allows the planner process to parse the decision automatically.
+the use of a structured output schema constrains the LLM response and allows the planner to parse the decision automatically.
 
 \section{System Architecture}
 
@@ -418,13 +418,13 @@ This chapter describes the architecture of the implemented multi-drone planning 
 
 \subsection{Overview}
 
-The architecture is consists of four main parts:
+The architecture consists of four main parts:
 
 \begin{itemize}
-    \item a planner process responsible for task decompositon, allocation, scheduling, execution monitoring and replanning;
+    \item a planner process responsible for task decomposition, allocation, scheduling, execution monitoring and replanning;
     \item multiple drone worker processes each representing one drone;
-    \item a world configuration defining objects, skills and drone capabilities;
-    \item a queue based communication system connecting the planner and the drones.
+    \item a world configuration defining objects, skills, and drone capabilities;
+    \item a queue-based communication system connecting the planner and the drones.
 \end{itemize}
 
 An overview of the implemented architecture is shown in \Cref{fig:system_architecture}.
@@ -448,7 +448,7 @@ The planner is the central coordination component of the system. It receives the
 assigns subtasks to drones and monitors the mission during execution.
 
 The planner maintains the current mission state, including which subtasks are pending, assigned, completed, rejected or failed.
-Based on this state, it decides whether normal execution should continue or or whether replanning is required.
+Based on this state, it decides whether normal execution should continue or whether replanning is required.
 If a drone rejects a task or fails during execution, 
 the planner updates the mission state and attempts to reallocate the remaining work to other available drones.
 
@@ -498,7 +498,7 @@ Multiple drones can receive and execute commands independently, while the planne
 
 \subsubsection{Execution Flow}
 
-A mission begins with a natural language instruction provided by the user. 
+A mission begins with a natural-language instruction provided by the user. 
 The planner sends this instruction, together with information about the available drones, skills, and environment, 
 to the LLM-based planning pipeline. 
 The pipeline returns a schedule containing the generated subtasks, their assigned drones, and their planned execution order.

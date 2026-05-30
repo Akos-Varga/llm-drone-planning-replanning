@@ -4,10 +4,9 @@
 This thesis investigates the use of Large Language Models (LLMs) for high-level planning and
 adaptive replanning in heterogeneous multi-drone systems. The system uses a hierarchical
 architecture in which a cloud-based planning pipeline generates mission plans from natural-language
-instructions, while a smaller locally deployable model performs task admission based on the 
-drone's state.
+instructions, while a smaller locally deployable model performs task admission.
 
-The planning pipeline decomposes a human-language mission description into atomic subtasks, assigns them to drones
+The planning pipeline decomposes a natural-language mission description into atomic subtasks, assigns them to drones
 according to their capabilities, and generates an execution schedule. Before and during execution, the task 
 admission module determines whether assigned subtasks are feasible given the drone's state. 
 If a drone failure or task rejection occurs, the affected subtasks are returned to the cloud-based planner for rescheduling.
@@ -17,16 +16,15 @@ decomposition, allocation, and scheduling using missions with one to ten subtask
 schedules were evaluated against a vehicle routing problem baseline in terms of schedule quality,
 validity, and inference time. GPT-5-mini was selected for the cloud-based planner because it provided
 the best trade-off between quality, latency, and cost. Second, seven quantized locally
-deployable models were evaluated for task admission using scenarios involving drone-state errors, 
-link-quality errors, and flight-time errors. The \texttt{qwen3:1.7b} model achieved
-the highest reliability and was selected for the local task admission module.
+deployable models were evaluated for task admission using scenarios involving drone-state constraints, link-quality issues, and flight-time limitations.
+The \texttt{qwen3:1.7b} model achieved the highest reliability and was selected for the local task admission module.
 
 Finally, the selected components were integrated into a simulation environment containing
 heterogeneous drones and diverse target objects, while also simulating battery drainage,
 link-quality variation, and drone failures. The simulation case study demonstrated that the system
-can generate mission schedules, perform task admission checks, detect execution-time failures,
-reschedule affected subtasks, and continue execution with the remaining drones. The physical Anafi
-drone platform and laboratory integration setup are also described to relate the symbolic planner
+can generate mission schedules, perform task admission checks, detect runtime failures,
+reschedule affected subtasks, and continue execution with the remaining drones. The physical Parrot Anafi
+drone platform and laboratory integration setup are also described to map the symbolic planner
 skills to real drone capabilities.
 
 The results show that LLMs can support flexible high-level mission planning and replanning when

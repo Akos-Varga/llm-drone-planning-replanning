@@ -15,14 +15,14 @@ The system was evaluated in three parts.
 First, several cloud-based LLMs were compared on missions containing one to ten subtasks and evaluated against a 
 vehicle routing problem baseline. The results showed that GPT-5-mini provided the best trade-off between schedule
 quality, validity, inference time, and cost, and was therefore selected for the cloud-based planner. Second, seven
-quantized locally deployable models were evaluated for task admission. Among these,\texttt{qwen3:1.7b} achieved the 
+quantized locally deployable models were evaluated for task admission. Among these, \texttt{qwen3:1.7b} achieved the 
 highest reliability and was selected for the admission module. Finally, the complete system was validated in a simulated 
 multi-drone environment, demonstrating that the generated plans could be translated into executable drone actions.
 
 Overall, the results show that LLMs can be used effectively for high-level mission planning in heterogeneous multi-drone 
 systems. The cloud-based planner was able to generate structured schedules from natural-language instructions, while the 
 admission module provided an additional layer of local decision-making before task execution.
-However, the results also show that LLM-based planning still requires careful prompting and validation mechanism to ensure 
+However, the results also show that LLM-based planning still requires careful prompting and validation mechanisms to ensure 
 reliability in safety-critical applications.
 
 \section{Limitations}
@@ -33,7 +33,7 @@ reduce latency, the results also showed that they are generally less reliable th
 inference time of the task admission module limits how frequently drone status checks can be performed during execution.
 
 Another limitation is the possibility of invalid LLM outputs. Although structured prompts and validation mechanisms were used,
-the planner may still occasionally produce malformed JSON files, missing fields, or schedules that violate system constraints.
+the planner may still occasionally produce malformed JSON outputs, missing fields, or schedules that violate system constraints.
 Such invalid outputs can disrupt execution because they trigger replanning and thereby delay the mission.
 
 In addition, the generated schedules do not guarantee optimality. As shown in the evaluation, LLM-generated schedules may be valid

@@ -7,12 +7,12 @@ control and sensing capabilities have been widely developed, expressing high-lev
 way that is both intuitive for human operators and executable by autonomous systems remains
 a challenge.
 
-Existing approaches rely on predefined workflows or formal planning models, which require expert knowledge and lacks flexibility
+Existing approaches rely on predefined workflows or formal planning models, which require expert knowledge and lack flexibility
 when faced with dynamic, changing environments. As a result, translating human instructions into concrete mission plans
 remains a bottleneck.
 
 Recent advances in Large Language Models (LLMs) offer a promising approach for bridging
-this gap. LLMs can interpret natural language instructions and infer task structure, enabling
+this gap. LLMs can interpret natural-language instructions and infer task structure, enabling
 them to transform human mission descriptions into structured plans that autonomous systems
 can execute. This capability makes them well suited for high-level reasoning tasks such as task
 decomposition, allocation, and scheduling in multi-agent systems.
@@ -59,18 +59,21 @@ This thesis aims to explore the following research goals:
 
 \section{Thesis Structure}
 
+\section{Thesis Structure}
+
 This thesis is organized as follows:
 
-Chapter 2 reviews the technical background of the project and explores related work on autonomous multi agent
-systems using Large Language Models for reasoning and decision-making with a focus on drone implementations.
+Chapter 2 provides the technical background required for the thesis. It introduces autonomous
+drone systems, multi-agent coordination and planning, vehicle routing concepts, Large Language
+Models, and related work on LLM-based robotic and multi-agent planning.
 
-Chapter 3 presents the overall system architecture, including the design of the LLM-based
-planning pipeline and the hierarchical replanning mechanism as well as integration with drone control interfaces.
+Chapter 3 presents the proposed methodology and system architecture. It describes the
+LLM-based planning pipeline and also explains the local task admission module, the replanning mechanism, and the software
+architecture used to coordinate the planner and drone workers.
 
-Chapter 4 presents the experimental setup and evaluation methodology, including simulation
-and real-world test scenarios, as well as performance metrics.
+Chapter 4 presents the evaluation results, including cloud-based planner comparisons against a vehicle routing problem baseline, 
+local task admission evaluation, and a simulation case study demonstrating planning, failure handling, and replanning. 
+It also describes the physical Parrot Anafi platform and laboratory setup for future real-world deployment.
 
-Chapter 5 discusses the results, analyzing the effectiveness, robustness, and limitations
-of the proposed approach.
-
-Chapter 6 concludes the thesis and outlines directions for future work.
+Chapter 5 concludes the thesis by summarizing the main findings, discussing the limitations
+of the proposed approach, and outlining directions for future work.
