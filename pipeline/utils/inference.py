@@ -38,8 +38,9 @@ def LM(model, messages):
         
 if __name__ == "__main__":
   # Models -----------------------------------------------------------------
-  m1 = "gpt-4o-mini"
+  m1 = "gpt-4o"
   m2 = "gpt-5-mini"
 
   message = [{"role": "user", "content": "Tell me a joke."}]
-  resp = LM(model=m2, messages=message)
+  resp = LM(model=m1, messages=message)
+  print(resp)
