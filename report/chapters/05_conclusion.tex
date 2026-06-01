@@ -1,29 +1,34 @@
 \chapter{Conclusion and Future Work}
 
 \section{Conclusion}
-This thesis investigated the use of Large Language Models for high-level planning and replanning in multi-drone systems.
-The goal was to bridge the gap between natural-language mission descriptions and executable mission schedules, 
-while enabling the system to adapt when assigned subtasks become infeasible during execution.
+The main contribution of this thesis is not only the use of LLMs for task planning, but the
+combination of four key elements in one multi-drone architecture: natural-language mission
+interpretation, capability-aware allocation, explicit schedule generation, and local task admission
+with replanning of unfinished subtasks. This distinguishes the proposed system from LLM-based
+robotic planning approaches that generate sequential plans, dialogue-based coordination, or
+reactive updates without explicit per-drone schedules and execution-time admission checking.
 
-A cloud-based planning pipeline was developed in which a user mission is transformed into atomic subtasks, 
-assigned to suitable drones based on their capabilities, and scheduled while considering travel time and task duration. 
-The resulting output is a per-drone schedule. 
+A cloud-based planning pipeline was developed in which a user mission is transformed into atomic subtasks,
+assigned to suitable drones based on their capabilities, and scheduled while considering travel time and task duration.
+The resulting output is an explicit per-drone schedule containing departure, arrival, and finish times.
 In addition, a local task admission module was developed to evaluate whether individual drones are able to accept assigned
 tasks based on their state, link quality, and available flight time.
 
-The system was evaluated in three parts. 
-First, several cloud-based LLMs were compared on missions containing one to ten subtasks and evaluated against a 
+The system was evaluated in three parts.
+First, several cloud-based LLMs were compared on missions containing one to ten subtasks and evaluated against a
 vehicle routing problem baseline. The results showed that GPT-5-mini provided the best trade-off between schedule
 quality, validity, inference time, and cost, and was therefore selected for the cloud-based planner. Second, seven
-quantized locally deployable models were evaluated for task admission. Among these, \texttt{qwen3:1.7b} achieved the 
-highest reliability and was selected for the admission module. Finally, the complete system was validated in a simulated 
-multi-drone environment, demonstrating that the generated plans could be translated into executable drone actions.
+quantized locally deployable models were evaluated for task admission. Among these, \texttt{qwen3:1.7b} achieved the
+highest reliability and was selected for the admission module. Finally, the complete system was evaluated in a simulated
+multi-drone environment, demonstrating that the generated plans could be translated into executable drone actions and
+that unfinished or infeasible subtasks could be returned to the planner for rescheduling.
 
-Overall, the results show that LLMs can be used effectively for high-level mission planning in heterogeneous multi-drone 
-systems. The cloud-based planner was able to generate structured schedules from natural-language instructions, while the 
-admission module provided an additional layer of local decision-making before task execution.
-However, the results also show that LLM-based planning still requires careful prompting and validation mechanisms to ensure 
-reliability in safety-critical applications.
+In summary, this thesis demonstrates that LLMs can serve as a high-level planning interface for
+heterogeneous multi-drone systems when their outputs are constrained by structured task
+representations, capability-aware allocation, explicit scheduling, and local feasibility checks.
+The proposed architecture shows how natural-language mission planning can be connected to
+schedule-based replanning, allowing unfinished subtasks to be reassigned when a drone rejects a
+task or becomes unsuitable during execution.
 
 \section{Limitations}
 Although the system demonstrated promising results, several limitations should be considered when interpreting the findings.

@@ -26,8 +26,21 @@ in which cloud-based LLMs perform high-level mission planning, while smaller loc
 monitor system state and enable adaptive replanning in response to failures, delays, or environmental changes.
 The goal is to develop a flexible and robust framework capable of translating human intent into coordinated 
 multi-drone behavior.
+In this architecture, the LLM is used only for high-level mission planning and task admission.
+It does not directly control safety-critical low-level flight behavior, which remains handled by
+the execution layers.
 
-The implementation is publicly available to support reproducibility and further development.
+Compared with existing LLM-based robotic planning systems, the novelty of this thesis is the
+integration of natural-language multi-drone mission planning with explicit schedule generation,
+capability-aware task allocation, local task admission, and replanning of unfinished subtasks.
+While prior systems have explored LLM-based task decomposition, robot coordination, or reactive
+replanning, they often do not produce inspectable execution schedules with explicit timing
+information, or they do not combine scheduling with execution-time feasibility checks. This thesis
+addresses this gap by generating per-drone schedules from natural-language mission descriptions,
+checking assigned subtasks locally before and during execution, and returning unfinished or
+infeasible subtasks to the planner for rescheduling.
+
+The implementation is available to support reproducibility and further development.
 \footnote{The source code developed for this thesis is available at: 
 \url{https://github.com/Akos-Varga/llm-drone-planning-replanning}.}
 
@@ -56,8 +69,6 @@ This thesis aims to explore the following research goals:
     \item To identify the limitations of LLM-based planning approaches and determine under which conditions they
     outperform or fall short of traditional planning methods.
 \end{itemize}
-
-\section{Thesis Structure}
 
 \section{Thesis Structure}
 

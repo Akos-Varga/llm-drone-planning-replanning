@@ -85,6 +85,25 @@ failed on safety-relevant categories such as link-quality or flight-time errors.
 admission module directly affects replanning decisions, classification reliability was prioritized over
 minimal inference time. Therefore, \texttt{qwen3:1.7b} was selected for the local task admission module.
 
+\subsection{Reproducability Details}
+
+Because LLM outputs may vary across model versions, API updates, inference parameters, and
+runtime environments, the evaluation was documented with the exact model identifiers and
+execution settings used during testing.
+
+\Cref{tab:llm_shared_reproducibility} reports the shared hardware and software environment.
+\Cref{tab:local_llm_reproducibility} provides the runtime settings used for the local task
+admission models, while \Cref{tab:cloud_llm_reproducibility} reports the corresponding
+settings for the cloud-based planning models. The exact model identifiers are reported in
+\Cref{tab:local_llm_metadata,tab:cloud_llm_metadata} for the local and cloud-based models,
+respectively.
+
+\input{tables/repr_shared.tex}
+\input{tables/repr_onboard_runtime.tex}
+\input{tables/repr_cloud.tex}
+\input{tables/onboard_llm_metadata.tex}
+\input{tables/cloud_llm_metadata.tex}
+
 \section{Simulation Results}
 
 This section evaluates the planning and task admission components in a simulated
@@ -276,21 +295,17 @@ subtask, generate an updated schedule, and continue the mission with the remaini
 % control and task execution components can operate on the physical platform, while the full
 % LLM-based replanning architecture is evaluated in simulation.
 
-\section{Physical Platform and Experimental Setup}
+\section{Physical Integration Readiness}
 
-This section describes the physical drone platform, laboratory environment, and control interface used
-as the basis for real-world deployment of the proposed architecture.
-
-\subsection{Scope of Physical Integration}
+This section describes the physical drone platform, laboratory environment, and control
+interface prepared for future real-world deployment of the proposed architecture. The purpose
+of this section is not to report a physical validation experiment, but to document the readiness
+of the system for future physical integration.
 
 The full closed-loop architecture, including cloud-based planning, local LLM-based task admission,
-failure detection, and replanning, was not deployed on the physical drones within the scope of this
-thesis. Instead, the physical platform is described to show the intended deployment environment and the
-connection between the symbolic drone skills used by the planner and the capabilities of the Anafi
-drones.
-
-The complete system behavior is therefore evaluated in the simulation results, while the physical
-platform description provides context for future real-world deployment.
+and replanning, was not deployed on the physical drones within the scope of this
+thesis. Therefore, the complete system behavior is evaluated in simulation. The physical setup is
+included to show how the symbolic planner could be connected to a real drone platform and control interface.
 
 \subsection{Drone Platform}
 The physical platform was based on drones from the Parrot Anafi family. To represent a

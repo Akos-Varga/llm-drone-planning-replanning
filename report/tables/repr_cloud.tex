@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+\centering
+\caption{Reproducibility details for cloud-based planning model evaluation.}
+\label{tab:cloud_llm_reproducibility}
+\begin{tabular}{ll}
+\toprule
+Item & Value \\
+\midrule
+Evaluation date & 30.04.2026 \\
+API provider & OpenAI API \\
+OpenAI Python package version & \texttt{2.26.0} \\
+Inference settings &
+\begin{tabular}[t]{@{}l@{}}
+GPT-5 models: \texttt{temperature = 1.0}$^{\dagger}$ \\
+GPT-4 models: \texttt{temperature = 0.0}
+\end{tabular} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\footnotesize
+\footnotesize{$^{\dagger}$  For GPT-5 models, the OpenAI
+API only supports the default temperature value of \texttt{1.0}.
+For non-GPT-5 models, \texttt{temperature = 0.0} was explicitly set to reduce sampling variability.}
+\end{table}

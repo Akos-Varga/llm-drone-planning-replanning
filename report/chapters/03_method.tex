@@ -363,7 +363,7 @@ The \texttt{ok} decision indicates that the task can be executed as planned.
 The \texttt{drone\_failure} decision indicates that the drone is currently not suitable for execution, 
 for example due to poor connection, an emergency state, or insufficient operational readiness. 
 The \texttt{task\_failure} decision indicates that the task requirements exceed the drone's available resources, 
-for example when the estimated mission duration is longer than the available flight time predicted by the model.
+for example when the estimated mission duration is longer than the available flight time estimated by the model.
 
 The task admission policy is provided to the LLM through a structured system prompt. 
 The model is instructed to follow the policy and return a JSON object containing both the decision and a short explanation. 
@@ -402,15 +402,37 @@ the planner removes the affected drone from the set of currently available drone
 and regenerates the schedule for the unfinished subtasks. 
 When it returns \texttt{task\_failure}, 
 the planner treats the current assignment as infeasible and attempts to reassign the affected task to another capable drone. 
-In both failure cases, completed tasks are preserved, while unfinished or interrupted tasks are returned to the planning pipeline.
+In both failure cases, completed tasks are preserved, while unfinished tasks are returned to the planning pipeline.
 
-Compared with a purely rule-based replanning module, 
-this LLM-based approach has the advantage that the admission and replanning policies can be modified flexibly through the prompt. 
-For example, new rejection criteria, different battery safety margins, communication thresholds, 
-or task-specific constraints can be added without changing the program logic. 
-This makes the replanning mechanism easier to adapt to different drone platforms, mission types, and safety requirements. 
-At the same time, 
-the use of a structured output schema constrains the LLM response and allows the planner to parse the decision automatically.
+In the current implementation, a subtask is marked as completed only after the drone reports
+successful completion of the full assigned action. If a drone fails before this completion
+message is received, the subtask is treated as unfinished and is
+returned to the planning pipeline as a full subtask. Partial progress within a subtask is not
+credited, since the system does not yet model partial completion of sensing or inspection
+actions.
+
+Although the current implementation evaluates explicit conditions for drone state,
+link quality, and available flight time, the use of an LLM-based task admission module is
+motivated mainly by extensibility. In the current system, these conditions could also be
+implemented using conventional rule-based logic. However, an LLM-based module allows the
+admission policy to be adapted through natural-language prompt changes as new platforms,
+telemetry fields, and mission-specific constraints are introduced.
+
+This is useful in future deployments where feasibility decisions may depend on more ambiguous
+information than the numerical fields used in the simulation. For example,
+different drone platforms may report state, communication quality, battery warnings, or
+payload limitations using different terminology or diagnostic messages. An LLM can help
+interpret such platform-specific descriptions and map them to a common admission decision,
+such as \texttt{ok}, \texttt{drone\_failure}, or \texttt{task\_failure}. Additional policies, such as
+weather restrictions, safety margins, no-fly-zone constraints, payload-dependent battery
+consumption, or task-specific risk levels, can also be incorporated by modifying the prompt
+and output schema rather than rewriting the admission logic.
+
+Therefore, the LLM-based admission module should be viewed as a flexible policy interface
+for execution-time feasibility checking. In this thesis, it is evaluated on explicit conditions
+to ensure controlled and measurable behavior, while its main advantage is the ability to
+extend the same mechanism to richer telemetry descriptions, platform-specific policies, and
+more complex mission constraints in future work.
 
 \section{System Architecture}
 
