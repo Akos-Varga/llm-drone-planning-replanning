@@ -23,7 +23,7 @@ execution schedule.
 
 To address the challenges of real-world deployment, the system adopts a hierarchical architecture
 in which cloud-based LLMs perform high-level mission planning, while smaller locally deployed models
-monitor system state and enable adaptive replanning in response to failures, delays, or environmental changes.
+perform task admission checks and trigger replanning when assigned tasks become infeasible.
 The goal is to develop a flexible and robust framework capable of translating human intent into coordinated 
 multi-drone behavior.
 In this architecture, the LLM is used only for high-level mission planning and task admission.
@@ -51,7 +51,7 @@ Large Language Models for high-level planning and adaptive replanning in multi-d
 While LLMs have demonstrated strong capabilities in natural-language understanding and reasoning,
 their applicability to real-time, safety-critical autonomous systems remains an open question.
 
-This thesis aims to explore the following research goals:
+This thesis addresses the following research goals:
 
 \begin{itemize}
     \item To evaluate how effectively LLMs can translate natural-language mission descriptions into structured,
@@ -83,7 +83,7 @@ LLM-based planning pipeline and also explains the local task admission module, t
 architecture used to coordinate the planner and drone workers.
 
 Chapter 4 presents the evaluation results, including cloud-based planner comparisons against a vehicle routing problem baseline, 
-local task admission evaluation, and a simulation case study demonstrating planning, failure handling, and replanning. 
+local task admission evaluation,  an end-to-end simulation evaluation across multiple mission scenarios, and a representative simulation case study.
 It also describes the physical Parrot Anafi platform and laboratory setup for future real-world deployment.
 
 Chapter 5 concludes the thesis by summarizing the main findings, discussing the limitations
