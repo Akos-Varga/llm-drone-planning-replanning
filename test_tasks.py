@@ -1,6 +1,3 @@
-# Skills: "CaptureRGBImage", "CaptureThermalImage", "RecordVideo", "InspectStructure", "MeasureWind"
-# Objects: House1-3, SolarPanel1-2, Tower, Base, Rooftop1-2
-
 task_list = [
     # === 1-subtask tasks ===
     {"id": "Task1", "task": "Inspect the Tower for structural integrity.", "solution": [
@@ -179,7 +176,7 @@ task_list = [
     ]},
 
     # === 9-subtask tasks ===
-    {"id": "Task25", "task": "Record videos of all houses, inspect all rooftops, and measure wind conditions at the Base, Tower, and both solar panels.", "solution": [
+    {"id": "Task25", "task": "Record videos of all houses, inspect all rooftops and the Tower, and measure wind conditions at the Base, Tower, and both solar panels.", "solution": [
         {"name": "SubTask1", "skill": "RecordVideo", "object": "House1"},
         {"name": "SubTask2", "skill": "RecordVideo", "object": "House2"},
         {"name": "SubTask3", "skill": "RecordVideo", "object": "House3"},
