@@ -73,7 +73,7 @@ class AnafiInterface(Node):
         self.create_subscription(String, f"{self.namespace}/drone/state", self._drone_state_cb, 10)
 
         # service client
-        self.anafi_node_name = f"{self.namespace}/anafi"
+        self.anafi_node_name = f"/{self.namespace}/anafi"
         self.set_param_client = self.create_client(SetParameters, f"{self.anafi_node_name}/set_parameters")
         while not self.set_param_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info(f"Waiting for parameter service: {self.anafi_node_name}/set_parameters") 
@@ -155,8 +155,10 @@ class AnafiInterface(Node):
         return SimplePose(self.current_pose)
     
     def send_pose(self, pos, yaw_deg, execution_time):
-        (self.goal_x, self.goal_y, self.goal_z) = pos
-        self.goal_yaw = yaw_deg
+        self.goal_x = float(pos[0])
+        self.goal_y = float(pos[1])
+        self.goal_z = float(pos[2])
+        self.goal_yaw = float(yaw_deg)
         self.execution_time = execution_time
 
         self.arrived_since = None
@@ -273,7 +275,7 @@ class AnafiInterface(Node):
         self._set_param("drone/max_vertical_speed", speed)
 
     def set_max_altitude(self, altitude: float):
-        self._set_param("drone/max_altitude", altitude)
+        self._set_param("/drone/max_altitude", altitude)
 
     # ---------------- Arm, Takeoff, Land and Offboard ----------------
 
@@ -306,8 +308,14 @@ class AnafiInterface(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "body"
         msg.drone_action = 4
-        self.keyboard_pub.publish(msg)
-        self.get_logger().info("Sent LAND command (drone_action=4)")
+
+        for _ in range(10):
+            msg.header.stamp = self.get_clock().now().to_msg()
+            self.keyboard_pub.publish(msg)
+            rclpy.spin_once(self, timeout_sec=0.05)
+            time.sleep(0.05)
+
+        self.get_logger().info("Sent LAND command repeatedly (drone_action=4)")
 
     def offboard(self):
         msg = KeyboardCommand()

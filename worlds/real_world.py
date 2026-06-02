@@ -1,3 +1,5 @@
+# Take a thermal image of House1 and RGB image of WindTurbine1.
+
 skills = {
     "CaptureRGBImage": 1.8,
     "CaptureThermalImage": 2.2,
@@ -9,12 +11,11 @@ skills = {
 objects = {
     "Base1": (0, 0, 0),
     "Base2": (-1.5, -1.5, 0),
-    "House1": (2.2, 4.3, 0.5),
+    "House1": (3.61, 3.90, 0.7),
     "House2": (2.6, -3.4, 0.7),
-    "WindTurbine1": (-3.4, -1.4, 1.4),
-    "WindTurbine2": (-3.3, -3.5, 1.4),
-    "Tower1": (-1.0, 4.1, 1.6),
-    "Tower2": (-1.9, 1.0, 1.6),
+    "WindTurbine1": (3.81, -3.33, 0.75),
+    "WindTurbine2": (4.07, -1.86, 0.75),
+    "Tower": (2.20, 3.71, 1.0),
     "RoofTop2":(2.0, 2.0, 2.0),
     "RoofTop1":(5.0, 5.0, 2.0),
     "SolarPanel1":(3.4, 2.4, 2.0),
@@ -27,10 +28,9 @@ OBJECT_TO_YAW = {
     "Base2": 0,
     "House1": 90,
     "House2": 0,
-    "WindTurbine1": 180,
-    "WindTurbine2": 180,
-    "Tower1": 90,
-    "Tower2": 180,
+    "WindTurbine1": 0,
+    "WindTurbine2": 0,
+    "Tower": 90,
     "RoofTop2": 0,
     "RoofTop1": 0,
 }
@@ -40,16 +40,17 @@ drone_names = ["Drone1", "Drone2"]
 
 drones = {
     "Drone1": { # 4K or AI
-        "pos": (0, 0, 0),
+        "pos": (2.08, 0.39, 0),
         "skills": ["CaptureRGBImage", "RecordVideo", "CaptureZoomImage"],
         "speed": 0.7
     },
     "Drone2": { # USA or Thermal
-        "pos": (-1, -1, 0),
+        "pos": (1.51, 0.04, 0),
         "skills": ["CaptureRGBImage", "CaptureThermalImage", "CaptureZoomImage", "RecordVideo", "DualSpectralInspect"],
         "speed": 0.5
     }
 }
+
 
 drone_configs = {
     "Drone1": {"namespace": "anafi1", "max_flight_time": 25.0, "flight_altitude": 1.5},
