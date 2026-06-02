@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{End-to-end simulation results across ten mission scenarios.}
+\label{tab:simulation_mission_results}
+\begin{tabular}{lllllllll}
+\toprule
+Mission & Subtasks & Disturbance & Outcome & Completed & Init. plan [s] & Replans & Remaining & Replan latency [s] &  \\
+\midrule
+M1  & 1  & None                                        & Completed  & 1/1 & 14.92  & 0      & --          & -- \\
+M2  & 2  & None                                        & Completed  & 2/2 & 27.81  & 0      & --          & -- \\
+M3  & 3  & None                                        & Completed  & 3/3 & 26.82  & 0      & --          & -- \\
+M4  & 4  & Drone in emergency state, low link-quality  & Completed  & 4/4 & 53.70  & 2      & 1, 1        & 6.07, 6.36 \\
+M5  & 5  & Link quality                                & Completed  & 5/5 & 64.36  & 1      & 1           & 5.45 \\
+M6  & 6  & None                                        & Completed  & 6/6 & 59.83  & 0      & --          & -- \\
+M7  & 7  & Drone in emergency state                    & Completed  & 7/7 & 95.64  & 1      & 1           & 6.22 \\
+M8  & 8  & Flight-time error                           & Completed  & 8/8 & 96.26  & 1      & 2           & 12.66 \\
+M9  & 9  & Runtime drone failure                       & Completed  & 9/9 & 161.76 & 0      & --          & -- \\
+M10 & 10 & Drone in emergency state, low link-quality  & Infeasible & 8/10 & 94.93 & 2      & 5, 5       & 25.68, 29.18 \\
+\bottomrule
+\end{tabular}
+\end{table}
