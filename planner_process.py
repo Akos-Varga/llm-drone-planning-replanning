@@ -52,6 +52,7 @@ def append_event_log(path, event):
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(event) + "\n")
 
+
 def planner_now(start_time):
     return time.monotonic() - start_time
 
@@ -66,17 +67,6 @@ def str_to_code(s):
         return ast.literal_eval(rhs)
     except (SyntaxError, ValueError, IndexError, AttributeError):
         return None
-
-
-def append_row_csv(save, path, row, fieldnames):
-    if save:
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        write_header = not os.path.exists(path)
-        with open(path, "a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if write_header:
-                writer.writeheader()
-            writer.writerow(row)
 
 
 # =============================================================================
@@ -644,20 +634,13 @@ def planner_loop(
     drone_status = init_drone_status(drones)
 
     # --- Decomposer ---
+    t0 = time.monotonic()
     decomposed_task = pipeline_decomposer(
         model=model,
         task=task,
         skills=skills,
         objects=objects,
     )
-
-    if not decomposed_task:
-        print("ERROR during task decomposition.")
-        for q in command_queues.values():
-            q.put({"type": STOP})
-        return
-    
-    init_event_log("logs/events.jsonl", decomposed_task)
 
     # --- Allocator ---
     subtasks_with_drones = pipeline_allocator(
@@ -666,6 +649,15 @@ def planner_loop(
         decomposed_task=decomposed_task,
         rule_based=rule_based_allocation,
     )
+    inference_time = time.monotonic() - t0
+    planner_event = {
+        "type": "INFERENCE_TIME",
+        "inference": inference_time,
+        "message": "Decomposer + Allocator inference time",
+        "time": time.monotonic(),
+    }
+    print(f"[PLANNER] {json.dumps(planner_event)}")
+    append_event_log("logs/events.jsonl", planner_event)
 
     task_catalog = {subtask["name"]: subtask.copy() for subtask in subtasks_with_drones}
 
@@ -716,12 +708,22 @@ def planner_loop(
             print("\n\nNew allocated tasks:")
             pprint(subtasks_with_drones, sort_dicts=False)
 
+            t0 = time.monotonic()
             schedule = pipeline_scheduler(
                 model=model,
                 subtasks_with_drones=subtasks_with_drones,
                 travel_times=travel_times,
                 rule_based=rule_based_schedule,
             )
+            inference_time = time.monotonic() - t0
+            planner_event = {
+            "type": "INFERENCE_TIME",
+            "inference": inference_time,
+            "message": "Scheduling inference time",
+            "time": time.monotonic(),
+            }
+            print(f"[PLANNER] {json.dumps(planner_event)}")
+            append_event_log("logs/events.jsonl", planner_event)
 
             if not schedule:
                 print("Stopping: scheduler could not produce a schedule.")
