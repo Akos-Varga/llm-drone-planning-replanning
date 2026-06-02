@@ -14,7 +14,7 @@ the cloud-based planner and the task admission module. The purpose of this
 evaluation is to select the models used in the subsequent simulation and physical experiments.
 
 \subsection{Cloud-based Planning Pipeline}
-
+\label{sec:cloud_planning_evaluation}
 The cloud-based planner was evaluated to determine which model provided the best trade-off between
 schedule quality, inference time, and reliability. Both cloud-based and locally deployable models were
 initially considered. However, due to hardware constraints and real-time execution requirements, small
@@ -27,6 +27,14 @@ The models were tested on tasks containing between one and ten subtasks. For eac
 three task descriptions were evaluated. The task descriptions were written in unstructured natural
 language with varied wording and sentence structure in order to test the models' ability to interpret
 high-level mission instructions.
+
+All planning cases were generated using the same world configuration, consisting of a heterogeneous
+drone team and a set of predefined target objects. The drone team contained agents with different
+skill sets, so not every drone was capable of executing every subtask. The evaluated mission
+descriptions varied the requested target objects and required skills, including tasks such as capturing
+RGB images, recording video, acquiring thermal images, inspecting structures, and measuring wind
+conditions. The planner was therefore required to decompose each mission, identify suitable drones,
+and generate a valid schedule for the resulting subtasks.
 
 The generated schedules were compared against an optimal schedule computed using a VRP solver
 \cite{google_vrp}. The VRP solution was used as a baseline for evaluating the makespan of the
@@ -44,11 +52,15 @@ schedules out of three test cases.
 
 \input{tables/cloud_avg_vrp_gap_by_subtasks.tex}
 
+\FloatBarrier
+
 \subsubsection{Inference Time}
 \Cref{tab:avg_inference_time_by_subtasks} shows the average inference time for each model, computed
 only over successfully generated schedules.
 
 \input{tables/cloud_avg_inference_time_by_subtasks.tex}
+
+\FloatBarrier
 
 \subsubsection{Model Selection}
 The results show that GPT-5 produced valid schedules for all evaluated cases and remained
@@ -107,6 +119,8 @@ respectively.
 \input{tables/onboard_llm_metadata.tex}
 \input{tables/cloud_llm_metadata.tex}
 
+\FloatBarrier
+
 \section{Simulation Results}
 
 This section evaluates the planning and task admission components in a simulated
@@ -118,11 +132,11 @@ and replanning before deployment on a physical drone platform.
 The simulation environment was designed to represent a multi-drone inspection scenario with static
 objects of interest distributed across a two-dimensional area.
 
-The simulated drone team consists of multiple drones with predefined capabilities. Depending on the
-assigned subtask, a drone may be required to capture RGB images, record video, acquire thermal images,
-inspect structures, or measure wind levels. The simulator abstracts away low-level flight dynamics and
-instead focuses on task-level execution, including task allocation, admission checking, failure
-handling, and replanning.
+The simulation used the same drone team and target objects as the cloud-based planning
+evaluation described in \Cref{sec:cloud_planning_evaluation}.
+The simulator abstracts away low-level flight dynamics andinstead focuses on task-level execution, 
+including task allocation, admission checking, failure handling, and replanning. For visualization, 
+the simulated drone movements are projected onto a two-dimensional plane.
 
 To evaluate the system response to execution-time changes, the simulator also models battery drainage,
 link-quality variations, and drone failures. Battery levels decrease during mission execution, while
@@ -131,9 +145,35 @@ can occur during execution, causing the affected drone's remaining subtasks to b
 cloud-based planner for rescheduling. These simulated disturbances allow the replanning and task
 admission mechanisms to be evaluated under dynamic mission conditions.
 
-\subsection{Simulation Case Study}
-A representative mission execution was conducted in the simulation environment using the selected
-language models for planning and task admission. The drone team executed the following mission:
+\subsection{Simulation Evaluation}
+To evaluate the robustness of the complete architecture, the simulation was executed over ten mission
+scenarios. Each scenario used a different mission description with varying target objects and increasing
+complexity in terms of the number of subtasks.
+
+A mission was classified as \textit{Completed} if all subtasks were completed without requiring replanning.
+It was classified as \textit{Recovered} if at least one rejection or runtime failure occurred, but replanning
+produced a valid updated schedule and all subtasks were eventually completed. It was classified as
+\textit{Infeasible} if the system correctly determined that no remaining drone could execute one or more
+unfinished subtasks. Infeasible missions were not counted as system failures, since the correct behaviour
+in this situation is to stop rather than assign an infeasible task. \Cref{tab:simulation_mission_results}
+shows the simulation results across the ten mission scenarios.
+
+\input{tables/mission_results.tex}
+
+Across the ten simulation scenarios, nine missions were completed, either directly or after
+replanning, giving a mission completion rate of 90.0\%. One mission was classified as
+infeasible because no available drone could safely execute the remaining subtasks. Since this
+condition was correctly detected by the system, the feasibility-aware success rate was 100.0\%.
+Overall, 53 out of 55 subtasks were completed, corresponding to a task completion rate of
+96.4\%. The average initial planning latency was 12.66 s per subtask, while the average
+replanning latency was 5.73 s per remaining subtask. The lower normalized replanning latency is 
+expected, since replanning is performed only for unfinished subtasks and reuses the existing 
+decomposed and allocated subtask representation instead of repeating the LLM-based decomposition 
+and allocation stages. No invalid system failures occurred.
+
+\subsection{Representative Simulation Case Study}
+As a qualitative result, a representative mission execution was conducted, where the drone team
+executed the following mission:
 
 \begin{quote}
 Inspect both solar panels, record thermal image of the tower and both rooftops.
@@ -141,6 +181,14 @@ Inspect both solar panels, record thermal image of the tower and both rooftops.
 
 Based on the submitted natural-language mission, the cloud-based planner generated a schedule,
 and the resulting subtasks were sent to the drones for admission checking.
+
+\input{tables/simulation_setup.tex}
+
+\input{tables/first_schedule.tex}
+
+\input{tables/second_schedule.tex}
+
+\FloatBarrier
 
 The main steps of the simulation are as follows:
 
@@ -173,6 +221,8 @@ The main steps of the simulation are as follows:
 
     \item Drone5's onboard admission module accepts the subtask, 
     after which it starts flying towards SolarPanel2 (\Cref{fig:frame_6}).
+
+    \newpage
     
     \item During execution at RoofTop1, Drone1 performs a periodic in-flight admission check using the task admission module (\Cref{fig:frame_7}), which returns:
     \begin{quote}
@@ -184,12 +234,6 @@ The main steps of the simulation are as follows:
 
     \item Drone1 and Drone5 finish their subtasks, thereby completing the user-defined mission (\Cref{fig:frame_8}).
 \end{enumerate}
-
-\input{tables/simulation_setup.tex}
-
-\input{tables/first_schedule.tex}
-
-\input{tables/second_schedule.tex}
 
 This qualitative case study demonstrates that the implemented architecture can coordinate the
 cloud-based planner, local task admission module, and execution monitor within a single mission
