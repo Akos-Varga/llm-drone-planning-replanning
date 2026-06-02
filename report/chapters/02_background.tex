@@ -99,7 +99,7 @@ While mTSP provides a useful abstraction, more realistic formulations are given 
 In the VRP, the objective is to determine optimal routes for multiple vehicles that must visit a set of locations. 
 In the special case of a single vehicle, the problem reduces to the classical Traveling Salesperson Problem (TSP).
 The notion of optimality in VRP depends on the application context. 
-A common objective is to minimize the total distance traveled by all vehicles; however, this may lead to unbalanced solutions where a single-agent performs most tasks. 
+A common objective is to minimize the total distance traveled by all vehicles; however, this may lead to unbalanced solutions where a single agent performs most tasks. 
 An alternative objective is to minimize the length of the longest route, 
 which promotes balanced workload distribution and reduces overall mission completion time. 
 Furthermore, VRP formulations can incorporate additional constraints, 
@@ -117,7 +117,7 @@ Hybrid approaches may combine both strategies, allowing systems to balance globa
 \section{Large Language Models}
 
 \subsection{Fundamentals of Large Language Models}
-Large Language Models (LLMs) are computational systems designed to generate and understand natural language by modeling the statistical structure of text.
+Large Language Models (LLMs) are computational systems designed to generate and understand natural-language by modeling the statistical structure of text.
 At their core, LLMs estimate the probability distribution of the next token given a sequence of preceding tokens.
 Formally, given a context of $\omega_1, \omega_2, \dots, \omega_{t-1}$, the model predicts the next token $w_t$, thereby enabling both language understanding and generation.
 The key idea that enables modern LLMs is pretraining, 
@@ -144,8 +144,8 @@ Large Language Models (LLMs) have been successfully applied in various domains, 
 and generalization capabilities.
 In this context, their applications can be broadly categorized into communication, perception, planning, and control, following \cite{kim2024llmrobots}.
 
-LLMs are particularly effective at handling the ambiguity of natural language and can be used for both \textit{interpretation} and \textit{grounding}. 
-Interpretation refers to converting natural language into structured representations, such as code or formal planning languages (e.g., PDDL). 
+LLMs are particularly effective at handling the ambiguity of natural-language and can be used for both \textit{interpretation} and \textit{grounding}. 
+Interpretation refers to converting natural-language into structured representations, such as code or formal planning languages (e.g., PDDL). 
 Grounding involves mapping human instructions to objects, actions, or processes that can be recognized and executed by agents.
 
 Perception enables agents to operate in real-world environments.
@@ -158,7 +158,7 @@ In contrast, LLM-based planning through prompting allows for flexible task speci
 However, due to the risk of hallucinations, LLM-generated plans should be validated against system constraints or combined with external planning methods.
 
 For control, LLMs can be used in two main ways. 
-In the direct approach, the model maps natural language instructions directly to control commands or actions. 
+In the direct approach, the model maps natural-language instructions directly to control commands or actions. 
 In the indirect approach, the model generates higher-level outputs such as subgoals or plans, which are then executed by separate control systems. 
 The indirect approach is generally more flexible and better suited for complex and multi-agent scenarios, 
 although it still requires reliable grounding of language into physical actions.
@@ -167,7 +167,7 @@ although it still requires reliable grounding of language into physical actions.
 
 Recent work has increasingly explored the use of Large Language Models (LLMs) for robotic planning, 
 multi-agent coordination, and autonomous task execution. 
-LLMs are particularly attractive in this context because they can interpret high-level natural language instructions 
+LLMs are particularly attractive in this context because they can interpret high-level natural-language instructions 
 and transform them into structured plans, executable code, or robot-specific actions. 
 However, robotic systems operate under physical constraints, including limited energy, sensing capabilities, 
 communication quality, and environmental uncertainty. 
@@ -176,7 +176,7 @@ but also ensure that these plans are feasible, executable, and adaptable during 
 
 Among early LLM-based planners for autonomous agents, 
 SayCan \cite{ahn2022doasican} introduces a framework that grounds language model reasoning in real-world robot capabilities.
-In this approach, an LLM generates candidate low-level skills from a high-level natural language instruction.
+In this approach, an LLM generates candidate low-level skills from a high-level natural-language instruction.
 Each skill is evaluated using two complementary scores: (i) a language model score, which measures how relevant the skill is for completing the task, and (ii) an affordance score, which estimates the feasibility of executing the skill given the robot's current state and environment.
 These scores are combined to select the most appropriate action, and the process is iteratively repeated until the task is completed.
 This work demonstrates that LLMs can be effectively applied to robotics when their outputs are constrained by physical feasibility.
@@ -189,7 +189,7 @@ In the context of UAVs, Wang et al. \cite{wang2025gsce} introduced the GSCE fram
 constraints, and examples within a single prompt.
 By leveraging step-by-step Chain-of-Thought (CoT) reasoning together with few-shot examples, 
 the system generates executable code for a single drone.
-The framework is relevant because it shows how LLMs can map natural language instructions to executable drone actions while respecting predefined APIs and operational constraints.
+The framework is relevant because it shows how LLMs can map natural-language instructions to executable drone actions while respecting predefined APIs and operational constraints.
 This is important for UAV applications, where generated plans must be compatible with the available control interface.
 However, GSCE is mainly designed for single-drone operation.
 It does not address the additional challenges that arise in multi-drone missions, such as assigning subtasks to different drones, coordinating parallel execution, balancing workload, or replanning when one drone becomes unable to complete its assigned task.
@@ -208,7 +208,7 @@ Furthermore, although the system supports flexible execution, it does not focus 
 Building on multi-agent coordination, 
 SMART-LLM \cite{kannan2024smartllm} introduces a structured framework for task planning in multi-agent systems, 
 generating executable mission plans through a three-stage pipeline, each implemented by a dedicated LLM agent. 
-In the first stage, \textit{task decomposition}, the LLM converts a high-level natural language instruction into a set of independent subtasks. 
+In the first stage, \textit{task decomposition}, the LLM converts a high-level natural-language instruction into a set of independent subtasks. 
 Each subtask is represented as a sequence of actions, while incorporating contextual information about the environment. 
 The second stage, \textit{coalition formation}, considers the available robots and their capabilities, 
 and assigns groups of robots to each subtask such that every coalition collectively satisfies the required skill set for execution. 
@@ -227,7 +227,7 @@ To enable adaptive behavior in dynamic environments,
 CoMuRoS \cite{borate2025hierarchical} is another framework that incorporates a hierarchical architecture 
 with event-driven replanning. 
 The system employs a central LLM, referred to as the Task Manager, for high-level reasoning, 
-including interpreting natural language goals, decomposing tasks, allocating subtasks, and updating plans 
+including interpreting natural-language goals, decomposing tasks, allocating subtasks, and updating plans 
 based on environmental feedback. 
 Each robot is equipped with a local LLM that translates assigned tasks 
 into executable Python code and performs event classification, distinguishing between relevant and 
@@ -259,18 +259,18 @@ Additionally, the system is evaluated primarily in simulation environments, with
 leaving its performance under real-world conditions unverified.
 The framework also does not focus on task admission as a mechanism for detecting infeasible subtasks before or during execution.
 
-Taken together, these works demonstrate the growing capabilities of LLM-based multi-agent systems in task decomposition, 
-coordination, scheduling, and adaptive replanning.
-However, they also reveal a key limitation: existing approaches often treat replanning as a reactive update mechanism 
-rather than as part of an explicit scheduling framework.
-While several systems can adapt to environmental changes or agent feedback, they typically do not generate explicit schedules 
-that can be inspected, evaluated, and updated when execution conditions change.
+\input{tables/literature_comparison.tex}
 
-This creates a research gap for LLM-based multi-drone planning systems that combine natural language task decomposition, 
+As shown in \Cref{tab:literature_comparison}, existing research demonstrates the growing
+capabilities of LLM-based multi-agent systems in task decomposition, coordination,
+scheduling, and adaptive replanning. However, these capabilities are often addressed
+separately, and existing systems typically do not combine explicit schedule generation with
+execution-time feasibility checking and replanning in a single multi-drone architecture.
+
+This creates a research gap for LLM-based multi-drone planning systems that combine natural-language task decomposition, 
 capability-aware allocation, explicit scheduling, and execution-time replanning.
 In particular, there is a need for systems that can not only generate an initial mission plan, but also evaluate whether assigned subtasks 
 remain feasible during execution and revise the schedule when drone states, communication conditions, or task requirements change.
 This thesis addresses this gap by developing a planning pipeline that produces explicit execution schedules and integrates 
 a task admission module for detecting infeasible subtasks before and during execution, enabling replanning in response to runtime changes.
 
-\input{tables/literature_comparison.tex}

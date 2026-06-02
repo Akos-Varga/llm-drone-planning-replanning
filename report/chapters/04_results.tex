@@ -11,7 +11,7 @@ to a real-world deployment environment.
 
 This section evaluates the two LLM-based components used in the proposed architecture:
 the cloud-based planner and the task admission module. The purpose of this
-evaluation is to select the models used in the subsequent simulation and physical experiments.
+evaluation is to select the models used in the subsequent simulation and physical integration setup.
 
 \subsection{Cloud-based Planning Pipeline}
 \label{sec:cloud_planning_evaluation}
@@ -28,13 +28,22 @@ three task descriptions were evaluated. The task descriptions were written in un
 language with varied wording and sentence structure in order to test the models' ability to interpret
 high-level mission instructions.
 
-All planning cases were generated using the same world configuration, consisting of a heterogeneous
-drone team and a set of predefined target objects. The drone team contained agents with different
-skill sets, so not every drone was capable of executing every subtask. The evaluated mission
-descriptions varied the requested target objects and required skills, including tasks such as capturing
-RGB images, recording video, acquiring thermal images, inspecting structures, and measuring wind
-conditions. The planner was therefore required to decompose each mission, identify suitable drones,
-and generate a valid schedule for the resulting subtasks.
+All planning cases were generated using the same world configuration, consisting of a
+heterogeneous drone team and a set of predefined target objects. The drone team contained
+agents with different skill sets, so not every drone was capable of executing every subtask.
+The planning dataset contained 30 mission descriptions, with three missions for each subtask
+count from one to ten. In total, the ground-truth decompositions contained 165 subtasks.
+
+The evaluated mission descriptions varied the requested target objects and required skills.
+As summarized in \Cref{tab:planning_dataset_distribution}, the dataset covered five skill
+types: RGB image capture, thermal image capture, video recording, structure inspection, and
+wind measurement. The subtasks were distributed across nine target objects, including houses,
+rooftops, solar panels, the tower, and the base. The planner was therefore evaluated on
+missions requiring different sensing capabilities and target locations, and was required to
+decompose each mission, identify suitable drones, and generate a valid schedule for the
+resulting subtasks.
+
+\input{tables/planning_dataset.tex}
 
 The generated schedules were compared against an optimal schedule computed using a VRP solver
 \cite{google_vrp}. The VRP solution was used as a baseline for evaluating the makespan of the
@@ -52,15 +61,11 @@ schedules out of three test cases.
 
 \input{tables/cloud_avg_vrp_gap_by_subtasks.tex}
 
-\FloatBarrier
-
 \subsubsection{Inference Time}
 \Cref{tab:avg_inference_time_by_subtasks} shows the average inference time for each model, computed
 only over successfully generated schedules.
 
 \input{tables/cloud_avg_inference_time_by_subtasks.tex}
-
-\FloatBarrier
 
 \subsubsection{Model Selection}
 The results show that GPT-5 produced valid schedules for all evaluated cases and remained
@@ -91,6 +96,7 @@ Llama \cite{ollama_llama32}, and Phi \cite{ollama_phi4} model families.
 
 \subsubsection{Inference Time}
 \Cref{tab:task_admission_inference_time} reports the average and maximum inference time for each model.
+
 \input{tables/task_admission_inference_time.tex}
 
 \subsubsection{Model Selection}
@@ -100,7 +106,7 @@ failed on safety-relevant categories such as link-quality or flight-time errors.
 admission module directly affects replanning decisions, classification reliability was prioritized over
 minimal inference time. Therefore, \texttt{qwen3:1.7b} was selected for the local task admission module.
 
-\subsection{Reproducability Details}
+\subsection{Reproducibility Details}
 
 Because LLM outputs may vary across model versions, API updates, inference parameters, and
 runtime environments, the evaluation was documented with the exact model identifiers and
@@ -119,8 +125,6 @@ respectively.
 \input{tables/onboard_llm_metadata.tex}
 \input{tables/cloud_llm_metadata.tex}
 
-\FloatBarrier
-
 \section{Simulation Results}
 
 This section evaluates the planning and task admission components in a simulated
@@ -134,7 +138,7 @@ objects of interest distributed across a two-dimensional area.
 
 The simulation used the same drone team and target objects as the cloud-based planning
 evaluation described in \Cref{sec:cloud_planning_evaluation}.
-The simulator abstracts away low-level flight dynamics andinstead focuses on task-level execution, 
+The simulator abstracts away low-level flight dynamics and instead focuses on task-level execution, 
 including task allocation, admission checking, failure handling, and replanning. For visualization, 
 the simulated drone movements are projected onto a two-dimensional plane.
 
@@ -154,7 +158,7 @@ A mission was classified as \textit{Completed} if all subtasks were completed wi
 It was classified as \textit{Recovered} if at least one rejection or runtime failure occurred, but replanning
 produced a valid updated schedule and all subtasks were eventually completed. It was classified as
 \textit{Infeasible} if the system correctly determined that no remaining drone could execute one or more
-unfinished subtasks. Infeasible missions were not counted as system failures, since the correct behaviour
+unfinished subtasks. Infeasible missions were not counted as system failures, since the correct behavior
 in this situation is to stop rather than assign an infeasible task. \Cref{tab:simulation_mission_results}
 shows the simulation results across the ten mission scenarios.
 
@@ -188,8 +192,6 @@ and the resulting subtasks were sent to the drones for admission checking.
 
 \input{tables/second_schedule.tex}
 
-\FloatBarrier
-
 The main steps of the simulation are as follows:
 
 \begin{enumerate}
@@ -221,8 +223,6 @@ The main steps of the simulation are as follows:
 
     \item Drone5's onboard admission module accepts the subtask, 
     after which it starts flying towards SolarPanel2 (\Cref{fig:frame_6}).
-
-    \newpage
     
     \item During execution at RoofTop1, Drone1 performs a periodic in-flight admission check using the task admission module (\Cref{fig:frame_7}), which returns:
     \begin{quote}
@@ -271,14 +271,14 @@ subtask, generate an updated schedule, and continue the mission with the remaini
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/3.png}
-        \caption{The drones are moving towards their target objects.}
+        \caption{The drones move towards their target objects.}
         \label{fig:frame_3}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/4.png}
-        \caption{The arrived drones start executing their subtask.}
+        \caption{Arrived drones start executing their subtasks.}
         \label{fig:frame_4}
     \end{subfigure}
 
@@ -294,7 +294,7 @@ subtask, generate an updated schedule, and continue the mission with the remaini
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/5.png}
-        \caption{After execution the drones become idle.}
+        \caption{Drones become idle after completing their subtasks.}
         \label{fig:frame_5}
     \end{subfigure}
     \hfill
@@ -317,7 +317,7 @@ subtask, generate an updated schedule, and continue the mission with the remaini
     \begin{subfigure}{0.49\linewidth}
         \centering
         \simframe{figures/frames/7.png}
-        \caption{Drone1 performs an in-flight task check.}
+        \caption{Drone1 performs an in-flight task admission check.}
         \label{fig:frame_7}
     \end{subfigure}
     \hfill
@@ -333,15 +333,6 @@ subtask, generate an updated schedule, and continue the mission with the remaini
 \end{figure}
 \end{landscape}
 
-% \section{Experimental Results}
-% This section presents the physical experiments conducted on the drone platform. Unlike the simulation
-% case study, the physical experiments did not evaluate the complete planning, onboard admission,
-% failure detection, and replanning pipeline. Due to time and integration constraints, the real-drone
-% experiments were limited to validating the main mission execution pipeline. 
-% The purpose of these experiments is therefore to demonstrate that the core drone
-% control and task execution components can operate on the physical platform, while the full
-% LLM-based replanning architecture is evaluated in simulation.
-
 \section{Physical Integration Readiness}
 
 This section describes the physical drone platform, laboratory environment, and control
@@ -355,10 +346,9 @@ thesis. Therefore, the complete system behavior is evaluated in simulation. The 
 included to show how the symbolic planner could be connected to a real drone platform and control interface.
 
 \subsection{Drone Platform}
-The physical platform was based on drones from the Parrot Anafi family. To represent a
-drone team with heterogeneous sensing capabilities, four variants were considered: the
-Parrot Anafi 4K, Anafi Thermal, Anafi USA, and Anafi Ai. These platforms are shown in
-\Cref{fig:drone_platforms}.
+For future physical integration, drones from the Parrot Anafi family were considered as the target platform.
+To represent a drone team with heterogeneous sensing capabilities, four variants were considered: the
+Parrot Anafi 4K, Anafi Thermal, Anafi USA, and Anafi Ai. These platforms are shown in \Cref{fig:drone_platforms}.
 
 \begin{figure}[H]
     \centering
@@ -400,9 +390,9 @@ Parrot Anafi 4K, Anafi Thermal, Anafi USA, and Anafi Ai. These platforms are sho
     \label{fig:drone_platforms}
 \end{figure}
 
-\Cref{tab:anafi_capabilities} summarizes the project-relevant specifications of the
-drone variants used in the experiments, together with the symbolic skills assigned to
-each platform in the planner.
+\Cref{tab:anafi_capabilities} summarizes the relevant specifications of the
+Anafi drone variants considered for future physical integration, together with the symbolic
+skills that could be assigned to each platform.
 
 \input{tables/anafi_drones.tex}
 
@@ -437,31 +427,3 @@ The LLM-based planner does not directly control the drone hardware. Instead, it 
 subtasks, which are translated by the mission execution layer into commands supported by the drone
 control interface. This separation allows the planning system to remain platform-independent, while
 the execution layer handles platform-specific communication with the Anafi drones.
-
-% \subsection{Experimental Setup}
-% This setup validates the execution layer of the proposed architecture. While the full LLM-based
-% replanning loop was not deployed on the physical drones, the experiments confirmed that generated
-% mission actions could be transferred to and executed by the Anafi control interface.
-
-% \subsubsection{Laboratory Environment}
-% The physical experiments were conducted in an indoor laboratory environment equipped with a Vicon
-% motion capture system \cite{vicon_tracker}. The Vicon system was used to provide accurate position feedback for the drone
-% during flight, since GPS-based localization is not available indoors. Reflective markers were mounted
-% on the drone, allowing the motion capture system to track its position and orientation within the
-% flight area.
-
-% Similar target objects to those used in the simulation environment were defined for the physical
-% experiments. However, unlike the two-dimensional simulation setup, the experimental environment was
-% represented in three dimensions. Each target object was assigned a position in the Vicon coordinate
-% frame, allowing the drone to navigate to target locations using 3D position feedback.
-
-% \subsubsection{Drone Control Interface}
-% The physical drone experiments used the \texttt{anafi\_autonomy} ROS package \cite{sarabakha2023anafiros} as the control interface
-% between the mission execution pipeline and the Parrot Anafi drones. The package provides ROS topics,
-% services for controlling the drone and accessing sensor data. In this thesis, it was used
-% to execute high-level mission commands such as takeoff, landing, navigation.
-
-% The LLM-based planner does not directly control the drone hardware. Instead, it generates symbolic
-% subtasks, which are translated by the mission execution layer into commands supported by the drone
-% control interface. This separation allows the planning system to remain platform-independent, while
-% the execution layer handles the platform-specific communication with the Anafi drones.
